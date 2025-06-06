@@ -6,7 +6,7 @@ from PIL import Image
 import matplotlib.gridspec as gridspec
 
 # --- Load Data ---
-file_path = r"Z:\PROJECTS\CVAG\Data Analysis\Visualization_Testing_(.py,.xlsx,.xlsb,.word)\NB Washington -Ave 52 to Hwy 111 - Resources\NB Washington - Avenue 52 to Hwy 111 - SPEED - 1hr - 0411-04202025.csv"
+file_path = "nb_washington_speed_april11.csv"
 df = pd.read_csv(file_path)
 
 # --- Parse datetime ---
@@ -49,12 +49,8 @@ fig.update_layout(
     template="plotly_white"
 )
 
-# --- Show Logo using matplotlib ---
-logo_path = r"Z:\PROJECTS\CVAG\Data Analysis\Logos\ACE-logo-HiRes.jpg"
-img = Image.open(logo_path)
 
 fig_logo, axs = plt.subplots(2, 1, figsize=(12, 8), gridspec_kw={'height_ratios': [1, 4]})
-axs[0].imshow(img)
 axs[0].axis('off')
 axs[1].axis('off')
 plt.tight_layout()
