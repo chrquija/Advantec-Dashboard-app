@@ -7,6 +7,8 @@ df = pd.read_csv("nb_washington_speed_april11.csv")
 
 # Parse datetime
 df['Datetime'] = pd.to_datetime(df['Datetime'])
+elif 'Time' in df.columns:
+    df['Datetime'] = pd.to_datetime(df['Time'])
 
 # Resample every 2 hours
 df.set_index('Datetime', inplace=True)
