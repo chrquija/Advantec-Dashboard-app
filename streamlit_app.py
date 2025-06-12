@@ -46,7 +46,56 @@ st.write("**Selected Variable:**", variable)
 st.write("**Direction:**", direction)
 st.write("**Date Range:**", date_range)
 st.write("**GitHub CSV File Path:**", selected_path)
+### Part 2 of generative Ai help
+import pandas as pd
+import plotly.express as px
 
+# === Display the selection and path ===
+st.title("📊 CVAG Data Dashboard")
+st.write("**Selected Variable:**", variable)
+st.write("**Direction:**", direction)
+st.write("**Date Range:**", date_range)
+st.write("**GitHub CSV File Path:**", selected_path)
+
+# === Chart Style Picker ===
+chart_type = st.selectbox("Choose chart type", ["Line", "Bar", "Scatter", "Box", "Heatmap"])
+
+# === Load and process the data ===
+try:
+    df = pd.read_csv(selected_path)
+
+    # Handle datetime parsing
+    time_col = "Datetime" if "Datetime" in df.columns else "Time"
+    df[time_col] = pd.to_datetime(df[time_col])
+    df.set_index(time_col, inplace=True)
+
+    # Auto-select numeric column to plot
+    numeric_cols = df.select_dtypes(include='number').columns
+    y_col = numeric_cols[0] if len(numeric_cols) > 0 else None
+
+    if y_col:
+        # Create chart based on type
+        if chart_type == "Line":
+            fig = px.line(df, x=df.index, y=y_col, title=f"{y_col} over Time")
+        elif chart_type == "Bar":
+            fig = px.bar(df, x=df.index, y=y_col, title=f"{y_col} over Time")
+        elif chart_type == "Scatter":
+            fig = px.scatter(df, x=df.index, y=y_col, title=f"{y_col} over Time")
+        elif chart_type == "Box":
+            fig = px.box(df.reset_index(), x=df.index.name, y=y_col, title=f"{y_col} Distribution")
+        elif chart_type == "Heatmap":
+            df_hour = df.copy()
+            df_hour['hour'] = df_hour.index.hour
+            df_hour['day'] = df_hour.index.date
+            pivot = df_hour.pivot_table(values=y_col, index='day', columns='hour')
+            fig = px.imshow(pivot, aspect='auto', title=f"{y_col} Heatmap (Hour vs Day)")
+
+        st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.warning("No numeric column found in dataset.")
+
+except Exception as e:
+    st.error(f"Error loading file: {e}")
 
 
 
