@@ -18,7 +18,7 @@ date_range = st.sidebar.selectbox(
 )
 
 # === Filepath Mapping Logic ===
-base_url = "https://raw.githubusercontent.com/chrquija/hwy111_to_ave52/main/"
+base_url = "https://raw.githubusercontent.com/chrquija/Advantec-Dashboard-app/main/hwy111_to_ave52/"
 
 path_map = {
     # === SPEED ===
