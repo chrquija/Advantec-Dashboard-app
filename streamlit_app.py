@@ -21,23 +21,25 @@ date_range = st.sidebar.selectbox(
 base_url = "https://raw.githubusercontent.com/chrquija/hwy111_to_ave52/main/"
 
 path_map = {
-    # SPEED
-    ("Speed", "NB", "April 11–20, 2025"): base_url + "SPEED/Weeks 04112025 to 04202025/NB Washington - Avenue 52 to Hwy 111 - SPEED - 1hr - 0411-04202025.csv",
-    ("Speed", "SB", "April 11–20, 2025"): base_url + "SPEED/Weeks 04112025 to 04202025/SB Washington - Hwy 111 to Avenue 52 - SPEED - 1hr - 0411-04202025.csv",
-    ("Speed", "NB", "May 9–18, 2025"): base_url + "SPEED/Weeks 05092025 to 05182025/NB Washington - Avenue 52 to Hwy 111 - SPEED - 1hr - 0509 - 05182025.csv",
-    ("Speed", "SB", "May 9–18, 2025"): base_url + "SPEED/Weeks 05092025 to 05182025/SB Washington - Hwy 111 to Avenue 52 - SPEED - 1hr - 0509 - 05182025.csv",
+    # === SPEED ===
+    ("Speed", "NB", "April 11–20, 2025"): base_url + "SPEED/Weeks_04112025_to_04202025/NB_Washington_Avenue_52_to_Hwy_111_SPEED_1hr_0411_04202025.csv",
+    ("Speed", "SB", "April 11–20, 2025"): base_url + "SPEED/Weeks_04112025_to_04202025/SB_Washington_Hwy_111_to_Avenue_52_SPEED_1hr_0411_04202025.csv",
+    ("Speed", "NB", "May 9–18, 2025"): base_url + "SPEED/Weeks_05092025_to_05182025/NB_Washington_Avenue_52_to_Hwy_111__SPEED_1hr_0509_05182025.csv",
+    ("Speed", "SB", "May 9–18, 2025"): base_url + "SPEED/Weeks_05092025_to_05182025/SB_Washington_Hwy_111_to_Avenue_52_SPEED_1hr_0509_05182025.csv",
 
-    # TRAVEL TIME
-    ("Travel Time", "NB", "April 11–20, 2025"): base_url + "TRAVEL TIME/Weeks 04112025 to 04202025/NB Washington - Avenue 52 to Hwy 111 - TRAVEL TIME - 1hr - 0411-04202025(1).csv",
-    ("Travel Time", "SB", "April 11–20, 2025"): base_url + "TRAVEL TIME/Weeks 04112025 to 04202025/SB Washington - Hwy 111 to Avenue 52 - TRAVEL TIME - 1hr - 0411-04202025.csv",
-    ("Travel Time", "NB", "May 9–18, 2025"): base_url + "TRAVEL TIME/Weeks 05092025 to 05182025/NB Washington - Avenue 52 to Hwy 111 - TRAVEL TIME - 1 hr - 0509-05182025.csv",
-    ("Travel Time", "SB", "May 9–18, 2025"): base_url + "TRAVEL TIME/Weeks 05092025 to 05182025/SB Washington - Hwy 111 to Avenue 52 - TRAVEL TIME - 1 hr - 0509 - 05182025.csv",
+    # === TRAVEL TIME ===
+    ("Travel Time", "NB", "April 11–20, 2025"): base_url + "TRAVEL_TIME/Weeks_04112025_to_04202025/NB_Washington_Avenue_52_to_Hwy_111_TRAVEL_TIME_1hr_0411_04202025.csv",
+    ("Travel Time", "SB", "April 11–20, 2025"): base_url + "TRAVEL_TIME/Weeks_04112025_to_04202025/SB_Washington_Hwy_111_to_Avenue_52_TRAVEL_TIME_1hr_0411_04202025.csv",
+    ("Travel Time", "NB", "May 9–18, 2025"): base_url + "TRAVEL_TIME/Weeks_05092025_to_05182025/NB_Washington_Avenue_52_to_Hwy_111_TRAVEL_TIME_1_hr_0509_05182025.csv",
+    ("Travel Time", "SB", "May 9–18, 2025"): base_url + "TRAVEL_TIME/Weeks_05092025_to_05182025/SB_Washington_Hwy_111_to_Avenue_52_TRAVEL_TIME_1_hr_0509_05182025.csv",
 
-    # VEHICLE VOLUME
-    ("Vehicle Volume", "NB", "April 10, 2025"): base_url + "VOLUME/Thursday april 10/Iteris Wash & Ave 52_NB and SB_VolumeDATA_THURSDAY APRIL10.csv",
-    ("Vehicle Volume", "SB", "April 10, 2025"): base_url + "VOLUME/Thursday april 10/Iteris Wash & Ave 52_NB and SB_VolumeDATA_THURSDAY APRIL10.csv",
-    ("Vehicle Volume", "NB", "Feb 13, 2025"): base_url + "VOLUME/Thursday feb 13/Iteris Wash & Ave 52_NB and SB_VolumeDATA_Thursday Feb 13.csv",
-    ("Vehicle Volume", "SB", "Feb 13, 2025"): base_url + "VOLUME/Thursday feb 13/Iteris Wash & Ave 52_NB and SB_VolumeDATA_Thursday Feb 13.csv"
+    # === VEHICLE VOLUME (April 10) ===
+    ("Vehicle Volume", "NB", "April 10, 2025"): base_url + "VOLUME/Thursday_April_10/Washington_and_Ave_52_NB_and_SB_VolumeDATA_THURSDAY_APRIL_10.csv",
+    ("Vehicle Volume", "SB", "April 10, 2025"): base_url + "VOLUME/Thursday_April_10/Washington_and_Ave_52_NB_and_SB_VolumeDATA_THURSDAY_APRIL_10.csv",
+
+    # === VEHICLE VOLUME (Feb 13) ===
+    ("Vehicle Volume", "NB", "Feb 13, 2025"): base_url + "VOLUME/Thursday_Feb_13/Washington_and_Ave_52_NB_and_SB_VolumeDATA_Thursday_Feb_13.csv",
+    ("Vehicle Volume", "SB", "Feb 13, 2025"): base_url + "VOLUME/Thursday_Feb_13/Washington_and_Ave_52_NB_and_SB_VolumeDATA_Thursday_Feb_13.csv",
 }
 
 selected_path = path_map.get((variable, direction, date_range), "No path available for selection.")
