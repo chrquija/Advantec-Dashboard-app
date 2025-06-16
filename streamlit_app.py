@@ -45,7 +45,7 @@ path_map = {
 selected_path = path_map.get((variable, direction, date_range), "No path available for selection.")
 
 # === Display UI selections ===
-st.title("📊 ACTIVE TRANSPORTATION OPERATIONS MANAGEMENT DASHBOARD")
+st.title("📊 ACTIVE TRANSPORTATION & OPERATIONS MANAGEMENT DASHBOARD")
 st.write("**Selected Variable:**", variable)
 st.write("**Direction:**", direction)
 st.write("**Date Range:**", date_range)
