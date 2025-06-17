@@ -58,6 +58,16 @@ path_map = {
 
 selected_path = path_map.get((variable, direction, date_range), "No path available for selection.")
 
+# Add this right after getting the selected_path:
+selected_path = get_file_path(variable, date_range, direction)
+
+# ADD THIS DEBUG LINE:
+st.write(f"**Debug - Using URL:** {selected_path}")
+
+if selected_path is None:
+    st.error("File path not found. Please check your selections.")
+    st.stop()
+
 # === Display UI selections ===
 st.title("📊 Active Transportation & Operations Management Dashboard")
 st.write("**Date Range:**", date_range)
