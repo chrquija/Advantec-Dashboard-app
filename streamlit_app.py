@@ -47,8 +47,9 @@ selected_path = path_map.get((variable, direction, date_range), "No path availab
 
 # === Display UI selections ===
 st.title("📊 Active Transportation & Operations Management Dashboard")
-st.write("**Corridor Segment:**", corridor_segment)
 st.write("**Date Range:**", date_range)
+st.write("**Corridor Segment:**", corridor_segment)
+st.write("**Selected Variable:**", variable)
 st.write("**Direction:**", direction)
 st.write("**GitHub CSV File Path:**", selected_path)
 
