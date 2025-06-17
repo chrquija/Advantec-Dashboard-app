@@ -221,3 +221,34 @@ try:
 
 except Exception as e:
     st.error(f"❌ Failed to load chart: {e}")
+# Update your get_file_path function to handle the corrected URLs
+def get_file_path(variable, date_range, direction):
+    base_url = "https://raw.githubusercontent.com/chrquija/Advantec-Dashboard-app/refs/heads/main/hwy111_to_ave52"
+    
+    if variable == "Vehicle Volume":
+        if date_range == "April 11-20, 2025":
+            return f"{base_url}/VOLUME/Weeks_04112025_to_04202025/volume_hwy111_to_ave52_0410_04202025.csv"
+        elif date_range == "May 9-18, 2025":
+            return f"{base_url}/VOLUME/Weeks_0509_to_05182025/volume_hwy111_to_ave52_0509_05182025.csv"
+    
+    elif variable == "Speed":
+        if date_range == "April 11-20, 2025":
+            nb_url = f"{base_url}/SPEED/Weeks_04112025_to_04202025/NB_Washington_Avenue_52_to_Hwy_111_SPEED_1hr_0411_04202025.csv"
+            sb_url = f"{base_url}/SPEED/Weeks_04112025_to_04202025/SB_Washington_Hwy_111_to_Avenue%2052_SPEED_1hr_0411_04202025.csv"
+        elif date_range == "May 9-18, 2025":
+            nb_url = f"{base_url}/SPEED/Weeks_05092025_to_05182025/NB_Washington_Avenue_52_to_Hwy_111_SPEED_1%20hr_0509_05182025.csv"
+            sb_url = f"{base_url}/SPEED/Weeks_05092025_to_05182025/SB_Washington_Hwy_111_to_Avenue_52_SPEED_1_hr_0509_05182025.csv"
+        
+        return nb_url if direction == "NB" else sb_url
+    
+    elif variable == "Travel Time":
+        if date_range == "April 11-20, 2025":
+            nb_url = f"{base_url}/TRAVEL_TIME/Weeks_04112025_to_04202025/NB_Washington_Avenue_52_to_Hwy_111_TRAVEL%20TIME_1hr_0411_04202025.csv"
+            sb_url = f"{base_url}/TRAVEL_TIME/Weeks_04112025_to_04202025/SB_Washington_Hwy_111_to_Avenue%2052_TRAVEL%20TIME_1hr_0411_04202025.csv"
+        elif date_range == "May 9-18, 2025":
+            nb_url = f"{base_url}/TRAVEL_TIME/Weeks_05092025_to_05182025/NB_Washington_Avenue_52_to_Hwy_111_TRAVEL_TIME_1%20hr_0509_05182025.csv"
+            sb_url = f"{base_url}/TRAVEL_TIME/Weeks_05092025_to_05182025/SB_Washington_Hwy_111_to_Avenue_52_TRAVEL_TIME_1_hr_0509_05182025.csv"
+        
+        return nb_url if direction == "NB" else sb_url
+    
+    return None
