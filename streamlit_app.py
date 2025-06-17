@@ -68,28 +68,55 @@ try:
     df.dropna(subset=[time_col], inplace=True)
     df.set_index(time_col, inplace=True)
 
-    # Use first numeric column
-    numeric_cols = df.select_dtypes(include='number').columns
-    y_col = numeric_cols[0] if len(numeric_cols) > 0 else None
+    # --- Plotting logic for "Both" ---
+    if direction == "Both":
+        # Detect all numeric columns
+        numeric_cols = df.select_dtypes(include='number').columns
+        if len(numeric_cols) >= 2:
+            fig = px.line(title="Both Directions Over Time") if chart_type == "Line" else go.Figure()
 
-    if y_col:
-        if chart_type == "Line":
-            fig = px.line(df, x=df.index, y=y_col, title=f"{y_col} Over Time")
-        elif chart_type == "Bar":
-            fig = px.bar(df, x=df.index, y=y_col, title=f"{y_col} Over Time")
-        elif chart_type == "Scatter":
-            fig = px.scatter(df, x=df.index, y=y_col, title=f"{y_col} Over Time")
-        elif chart_type == "Box":
-            fig = px.box(df.reset_index(), x=time_col, y=y_col, title=f"{y_col} Distribution")
-        elif chart_type == "Heatmap":
-            df['hour'] = df.index.hour
-            df['day'] = df.index.date
-            pivot = df.pivot_table(values=y_col, index='day', columns='hour')
-            fig = px.imshow(pivot, aspect='auto', title=f"{y_col} Heatmap (Hour vs Day)")
-
-        st.plotly_chart(fig, use_container_width=True)
+            for col in numeric_cols[:2]:  # Plot first two numeric cols (NB and SB)
+                if chart_type == "Line":
+                    fig.add_scatter(x=df.index, y=df[col], mode='lines+markers', name=col)
+                elif chart_type == "Bar":
+                    fig.add_bar(x=df.index, y=df[col], name=col)
+                elif chart_type == "Scatter":
+                    fig.add_scatter(x=df.index, y=df[col], mode='markers', name=col)
+                elif chart_type == "Box":
+                    fig.add_trace(go.Box(y=df[col], name=col))
+                elif chart_type == "Heatmap":
+                    df['hour'] = df.index.hour
+                    df['day'] = df.index.date
+                    pivot = df.pivot_table(values=col, index='day', columns='hour')
+                    heatmap = px.imshow(pivot, aspect='auto', title=f"{col} Heatmap (Hour vs Day)")
+                    st.plotly_chart(heatmap, use_container_width=True)
+            if chart_type != "Heatmap":
+                st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.warning("Not enough numeric columns found for 'Both' direction.")
     else:
-        st.warning("No numeric columns found to visualize.")
+        # --- Standard single-column chart ---
+        numeric_cols = df.select_dtypes(include='number').columns
+        y_col = numeric_cols[0] if len(numeric_cols) > 0 else None
+
+        if y_col:
+            if chart_type == "Line":
+                fig = px.line(df, x=df.index, y=y_col, title=f"{y_col} Over Time")
+            elif chart_type == "Bar":
+                fig = px.bar(df, x=df.index, y=y_col, title=f"{y_col} Over Time")
+            elif chart_type == "Scatter":
+                fig = px.scatter(df, x=df.index, y=y_col, title=f"{y_col} Over Time")
+            elif chart_type == "Box":
+                fig = px.box(df.reset_index(), x=time_col, y=y_col, title=f"{y_col} Distribution")
+            elif chart_type == "Heatmap":
+                df['hour'] = df.index.hour
+                df['day'] = df.index.date
+                pivot = df.pivot_table(values=y_col, index='day', columns='hour')
+                fig = px.imshow(pivot, aspect='auto', title=f"{y_col} Heatmap (Hour vs Day)")
+
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.warning("No numeric columns found to visualize.")
 
 except Exception as e:
     st.error(f"❌ Failed to load chart: {e}")
