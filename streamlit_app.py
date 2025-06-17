@@ -99,7 +99,7 @@ try:
             df_nb = pd.read_csv(path_nb)
             df_sb = pd.read_csv(path_sb)
 
-            time_col = "Datetime" if "Datetime" in df_nb.columns else "Time"
+            time_col = "Time"
             df_nb[time_col] = pd.to_datetime(df_nb[time_col], errors="coerce")
             df_sb[time_col] = pd.to_datetime(df_sb[time_col], errors="coerce")
 
@@ -109,46 +109,72 @@ try:
             df_nb.set_index(time_col, inplace=True)
             df_sb.set_index(time_col, inplace=True)
 
-            y_col_nb = df_nb.select_dtypes(include='number').columns[0]
-            y_col_sb = df_sb.select_dtypes(include='number').columns[0]
+            # Use "Firsts" column for the main metric
+            y_col = "Firsts"
+            df_nb[y_col] = pd.to_numeric(df_nb[y_col], errors='coerce')
+            df_sb[y_col] = pd.to_numeric(df_sb[y_col], errors='coerce')
 
-            df_nb = df_nb.rename(columns={y_col_nb: "NB"})
-            df_sb = df_sb.rename(columns={y_col_sb: "SB"})
+            df_nb = df_nb.rename(columns={y_col: "NB"})
+            df_sb = df_sb.rename(columns={y_col: "SB"})
 
             combined = pd.concat([df_nb["NB"], df_sb["SB"]], axis=1)
+            combined.dropna(inplace=True)
 
             fig = px.line(combined, y=["NB", "SB"], title=f"{variable} NB & SB Over Time")
             st.plotly_chart(fig, use_container_width=True)
 
     else:
-        # Single-direction logic
+        # Single-direction logic for Acyclica data
         df = pd.read_csv(selected_path)
-        time_col = "Datetime" if "Datetime" in df.columns else "Time"
+        
+        # Handle Acyclica column naming
+        time_col = "Time"
         df[time_col] = pd.to_datetime(df[time_col], errors="coerce")
         df.dropna(subset=[time_col], inplace=True)
         df.set_index(time_col, inplace=True)
-
-        numeric_cols = df.select_dtypes(include='number').columns
-        y_col = numeric_cols[0] if len(numeric_cols) > 0 else None
-
-        if y_col:
+        
+        # For Speed data, use "Firsts" column as the main metric
+        if variable == "Speed":
+            y_col = "Firsts"  # Speed values
+            df[y_col] = pd.to_numeric(df[y_col], errors='coerce')
+            chart_title = f"Speed (mph) - {direction}"
+            
+        elif variable == "Travel Time":
+            y_col = "Firsts"  # Travel time values
+            df[y_col] = pd.to_numeric(df[y_col], errors='coerce')
+            chart_title = f"Travel Time - {direction}"
+            
+        elif variable == "Vehicle Volume":
+            y_col = "Firsts"  # Volume count
+            df[y_col] = pd.to_numeric(df[y_col], errors='coerce')
+            chart_title = f"Vehicle Volume - {direction}"
+        
+        # Remove NaN values after conversion
+        df.dropna(subset=[y_col], inplace=True)
+        
+        if not df.empty and y_col in df.columns:
             if chart_type == "Line":
-                fig = px.line(df, x=df.index, y=y_col, title=f"{y_col} Over Time")
+                fig = px.line(df, x=df.index, y=y_col, title=chart_title)
             elif chart_type == "Bar":
-                fig = px.bar(df, x=df.index, y=y_col, title=f"{y_col} Over Time")
+                fig = px.bar(df, x=df.index, y=y_col, title=chart_title)
             elif chart_type == "Scatter":
-                fig = px.scatter(df, x=df.index, y=y_col, title=f"{y_col} Over Time")
+                fig = px.scatter(df, x=df.index, y=y_col, title=chart_title)
             elif chart_type == "Box":
-                fig = px.box(df.reset_index(), x=time_col, y=y_col, title=f"{y_col} Distribution")
+                fig = px.box(df.reset_index(), x=time_col, y=y_col, title=f"{chart_title} Distribution")
             elif chart_type == "Heatmap":
                 df['hour'] = df.index.hour
                 df['day'] = df.index.date
                 pivot = df.pivot_table(values=y_col, index='day', columns='hour')
-                fig = px.imshow(pivot, aspect='auto', title=f"{y_col} Heatmap (Hour vs Day)")
+                fig = px.imshow(pivot, aspect='auto', title=f"{chart_title} Heatmap (Hour vs Day)")
 
             st.plotly_chart(fig, use_container_width=True)
+            
+            # Show some stats
+            st.write(f"**Average {variable}:** {df[y_col].mean():.2f}")
+            st.write(f"**Min {variable}:** {df[y_col].min():.2f}")
+            st.write(f"**Max {variable}:** {df[y_col].max():.2f}")
         else:
-            st.warning("No numeric columns found to visualize.")
+            st.warning(f"No valid data found in {y_col} column.")
 
 except Exception as e:
     st.error(f"❌ Failed to load chart: {e}")
