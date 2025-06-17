@@ -17,17 +17,23 @@ st.title("📊 Active Transportation & Operations Management Dashboard")
 # === Sidebar Selections ===
 st.sidebar.title("🚦 CVAG Dashboard Filters")
 
-# Step 1: Pick variable type
-variable = st.sidebar.selectbox("Select Variable", ["Speed", "Travel Time", "Vehicle Volume"])
+# Sidebar controls
+st.sidebar.header("Dashboard Controls")
 
-# Step 2: Pick direction
-direction = st.sidebar.radio("Direction", ["NB", "SB", "Both"])
+# Make sure these EXACT strings match your get_file_path function
+variable = st.sidebar.selectbox(
+    "Select Variable",
+    ["Vehicle Volume", "Speed", "Travel Time"]  # Must match exactly
+)
 
-
-# Step 3: Pick date range
 date_range = st.sidebar.selectbox(
     "Select Date Range",
-    ["April 11–20, 2025", "May 9–18, 2025"] if variable != "Vehicle Volume" else ["April 10, 2025", "Feb 13, 2025"]
+    ["April 11-20, 2025", "May 9-18, 2025"]  # Must match exactly
+)
+
+direction = st.sidebar.selectbox(
+    "Select Direction",
+    ["NB", "SB", "Both"]  # Must match exactly
 )
 
 # === Filepath Mapping Logic ===
@@ -74,6 +80,35 @@ chart_type = st.selectbox("Choose chart type", ["Line", "Bar", "Scatter", "Box",
 
 # === Load and Render Chart ===
 try:
+    # Handle the "Both" direction case
+    if direction == "Both":
+        # For Vehicle Volume, there's only one file
+        if variable == "Vehicle Volume":
+            selected_path = get_file_path(variable, date_range, direction)
+            # Handle Vehicle Volume logic here
+        else:
+            # For Speed and Travel Time, get both files
+            nb_path = get_file_path(variable, date_range, "NB")
+            sb_path = get_file_path(variable, date_range, "SB")
+            
+            st.write(f"**Debug - NB Path:** {nb_path}")
+            st.write(f"**Debug - SB Path:** {sb_path}")
+            
+            if nb_path and sb_path:
+                # Process both files
+                # Your existing "Both" logic here
+                pass
+            else:
+                st.error("One or both directional files not found.")
+                st.stop()
+    else:
+        # Single direction
+        selected_path = get_file_path(variable, date_range, direction)
+        st.write(f"**Debug - Single Path:** {selected_path}")
+        
+        if selected_path is None:
+            st.error("File path not found. Please check your selections.")
+            st.stop()
     # If "Both", load two files or one with two columns
     if direction == "Both":
         if variable == "Vehicle Volume":
