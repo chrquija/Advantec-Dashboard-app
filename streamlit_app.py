@@ -52,20 +52,6 @@ st.write("**GitHub CSV File Path:**", selected_path)
 # === Chart Type Selector ===
 chart_type = st.selectbox("Choose chart type", ["Line", "Bar", "Scatter", "Box", "Heatmap"])
 
-# Add this right after getting the path to debug:
-selected_path = get_file_path(variable, date_range, direction)
-
-# Debug output
-st.write(f"**Debug Info:**")
-st.write(f"- Variable: {variable}")
-st.write(f"- Date Range: {date_range}")
-st.write(f"- Direction: {direction}")
-st.write(f"- Generated Path: {selected_path}")
-
-if selected_path is None:
-    st.error("File path not found. Please check your selections.")
-    st.stop()
-
 # === Load and Render Chart ===
 try:
     # Handle the "Both" direction case
