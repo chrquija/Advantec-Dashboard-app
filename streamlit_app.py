@@ -68,42 +68,62 @@ chart_type = st.selectbox("Choose chart type", ["Line", "Bar", "Scatter", "Box",
 
 # === Load and Render Chart ===
 try:
-    df = pd.read_csv(selected_path)
-
-    # Handle time
-    time_col = "Datetime" if "Datetime" in df.columns else "Time"
-    df[time_col] = pd.to_datetime(df[time_col], errors='coerce')
-    df.dropna(subset=[time_col], inplace=True)
-    df.set_index(time_col, inplace=True)
-
-    # --- Plotting logic for "Both" ---
+    # If "Both", load two files or one with two columns
     if direction == "Both":
-        # Detect all numeric columns
-        numeric_cols = df.select_dtypes(include='number').columns
-        if len(numeric_cols) >= 2:
-            fig = px.line(title="Both Directions Over Time") if chart_type == "Line" else go.Figure()
+        if variable == "Vehicle Volume":
+            df = pd.read_csv(selected_path)
+            time_col = "Time"
+            df[time_col] = pd.to_datetime(df[time_col], errors="coerce")
+            df.dropna(subset=[time_col], inplace=True)
+            df.set_index(time_col, inplace=True)
 
-            for col in numeric_cols[:2]:  # Plot first two numeric cols (NB and SB)
-                if chart_type == "Line":
-                    fig.add_scatter(x=df.index, y=df[col], mode='lines+markers', name=col)
-                elif chart_type == "Bar":
-                    fig.add_bar(x=df.index, y=df[col], name=col)
-                elif chart_type == "Scatter":
-                    fig.add_scatter(x=df.index, y=df[col], mode='markers', name=col)
-                elif chart_type == "Box":
-                    fig.add_trace(go.Box(y=df[col], name=col))
-                elif chart_type == "Heatmap":
-                    df['hour'] = df.index.hour
-                    df['day'] = df.index.date
-                    pivot = df.pivot_table(values=col, index='day', columns='hour')
-                    heatmap = px.imshow(pivot, aspect='auto', title=f"{col} Heatmap (Hour vs Day)")
-                    st.plotly_chart(heatmap, use_container_width=True)
-            if chart_type != "Heatmap":
-                st.plotly_chart(fig, use_container_width=True)
+            # Auto-detect NB/SB volume columns
+            nb_col = [col for col in df.columns if "Northbound" in col or "NB" in col][0]
+            sb_col = [col for col in df.columns if "Southbound" in col or "SB" in col][0]
+
+            fig = px.line(df, y=[nb_col, sb_col], title="NB & SB Volume Over Time")
+            st.plotly_chart(fig, use_container_width=True)
+
         else:
-            st.warning("Not enough numeric columns found for 'Both' direction.")
+            # Load both NB and SB separately using path_map
+            path_nb = path_map.get((variable, "NB", date_range))
+            path_sb = path_map.get((variable, "SB", date_range))
+
+            if not path_nb or not path_sb:
+                raise FileNotFoundError("One or both directional files not found.")
+
+            df_nb = pd.read_csv(path_nb)
+            df_sb = pd.read_csv(path_sb)
+
+            time_col = "Datetime" if "Datetime" in df_nb.columns else "Time"
+            df_nb[time_col] = pd.to_datetime(df_nb[time_col], errors="coerce")
+            df_sb[time_col] = pd.to_datetime(df_sb[time_col], errors="coerce")
+
+            df_nb.dropna(subset=[time_col], inplace=True)
+            df_sb.dropna(subset=[time_col], inplace=True)
+
+            df_nb.set_index(time_col, inplace=True)
+            df_sb.set_index(time_col, inplace=True)
+
+            y_col_nb = df_nb.select_dtypes(include='number').columns[0]
+            y_col_sb = df_sb.select_dtypes(include='number').columns[0]
+
+            df_nb = df_nb.rename(columns={y_col_nb: "NB"})
+            df_sb = df_sb.rename(columns={y_col_sb: "SB"})
+
+            combined = pd.concat([df_nb["NB"], df_sb["SB"]], axis=1)
+
+            fig = px.line(combined, y=["NB", "SB"], title=f"{variable} NB & SB Over Time")
+            st.plotly_chart(fig, use_container_width=True)
+
     else:
-        # --- Standard single-column chart ---
+        # Single-direction logic
+        df = pd.read_csv(selected_path)
+        time_col = "Datetime" if "Datetime" in df.columns else "Time"
+        df[time_col] = pd.to_datetime(df[time_col], errors="coerce")
+        df.dropna(subset=[time_col], inplace=True)
+        df.set_index(time_col, inplace=True)
+
         numeric_cols = df.select_dtypes(include='number').columns
         y_col = numeric_cols[0] if len(numeric_cols) > 0 else None
 
@@ -128,3 +148,4 @@ try:
 
 except Exception as e:
     st.error(f"❌ Failed to load chart: {e}")
+
