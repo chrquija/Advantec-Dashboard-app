@@ -19,19 +19,23 @@ date_range = st.sidebar.selectbox(
 )
 
 # === Filepath Mapping Logic ===
-base_url = "https://raw.githubusercontent.com/chrquija/Advantec-Dashboard-app/main/hwy111_to_ave52/"
+# Update your base_url to match the actual GitHub structure
+base_url = "https://raw.githubusercontent.com/chrquija/Advantec-Dashboard-app/refs/heads/main/hwy111_to_ave52/"
 corridor_segment = "Washington St: Highway 111 to Avenue 52"
 
+# And update the specific URL that has the extra space:
 path_map = {
     # === SPEED ===
     ("Speed", "NB", "April 11–20, 2025"): base_url + "SPEED/Weeks_04112025_to_04202025/NB_Washington_Avenue_52_to_Hwy_111_SPEED_1hr_0411_04202025.csv",
     ("Speed", "SB", "April 11–20, 2025"): base_url + "SPEED/Weeks_04112025_to_04202025/SB_Washington_Hwy_111_to_Avenue_52_SPEED_1hr_0411_04202025.csv",
-    ("Speed", "Both", "April 11–20, 2025"): "BOTH",  # Will handle both NB & SB in rendering
+    ("Speed", "Both", "April 11–20, 2025"): "BOTH",
 
-    ("Speed", "NB", "May 9–18, 2025"): base_url + "SPEED/Weeks_05092025_to_05182025/NB_Washington_Avenue_52_to_Hwy_111_SPEED_1hr_0509_05182025.csv",
+    # Fix this URL with the extra space:
+    ("Speed", "NB", "May 9–18, 2025"): base_url + "SPEED/Weeks_05092025_to_05182025/NB_Washington_Avenue_52_to_Hwy_111_%20SPEED_1hr_0509_05182025.csv",
     ("Speed", "SB", "May 9–18, 2025"): base_url + "SPEED/Weeks_05092025_to_05182025/SB_Washington_Hwy_111_to_Avenue_52_SPEED_1hr_0509_05182025.csv",
     ("Speed", "Both", "May 9–18, 2025"): "BOTH",
-
+    
+    # Continue with your other paths...
     # === TRAVEL TIME ===
     ("Travel Time", "NB", "April 11–20, 2025"): base_url + "TRAVEL_TIME/Weeks_04112025_to_04202025/NB_Washington_Avenue_52_to_Hwy_111_TRAVEL_TIME_1hr_0411_04202025.csv",
     ("Travel Time", "SB", "April 11–20, 2025"): base_url + "TRAVEL_TIME/Weeks_04112025_to_04202025/SB_Washington_Hwy_111_to_Avenue_52_TRAVEL_TIME_1hr_0411_04202025.csv",
