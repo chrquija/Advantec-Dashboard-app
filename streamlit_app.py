@@ -75,20 +75,39 @@ try:
     # If "Both", load two files or one with two columns
     if direction == "Both":
         if variable == "Vehicle Volume":
+            # KINETIC MOBILITY: Single file contains both directions
             df = pd.read_csv(selected_path)
             time_col = "Time"
             df[time_col] = pd.to_datetime(df[time_col], errors="coerce")
             df.dropna(subset=[time_col], inplace=True)
             df.set_index(time_col, inplace=True)
 
-            # Auto-detect NB/SB volume columns
-            nb_col = [col for col in df.columns if "Northbound" in col or "NB" in col][0]
-            sb_col = [col for col in df.columns if "Southbound" in col or "SB" in col][0]
+            # Find both direction columns
+            nb_cols = [col for col in df.columns if "northbound" in col.lower()]
+            sb_cols = [col for col in df.columns if "southbound" in col.lower()]
+            
+            if nb_cols and sb_cols:
+                nb_col = nb_cols[0]
+                sb_col = sb_cols[0]
+                
+                df[nb_col] = pd.to_numeric(df[nb_col], errors='coerce')
+                df[sb_col] = pd.to_numeric(df[sb_col], errors='coerce')
+                
+                # Rename for cleaner display
+                df = df.rename(columns={nb_col: "Northbound", sb_col: "Southbound"})
+                
+                combined = df[["Northbound", "Southbound"]]
+                combined.dropna(inplace=True)
 
-            fig = px.line(df, y=[nb_col, sb_col], title="NB & SB Volume Over Time")
-            st.plotly_chart(fig, use_container_width=True)
-
+                fig = px.line(combined, y=["Northbound", "Southbound"], 
+                             title="Vehicle Volume - Both Directions")
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.error("Could not find both direction columns in volume data")
+            
         else:
+            # FLIR ACYCLICA: Load both NB and SB files separately (existing logic)
+            # ... your existing "Both" logic for Speed/Travel Time
             # Load both NB and SB separately using path_map
             path_nb = path_map.get((variable, "NB", date_range))
             path_sb = path_map.get((variable, "SB", date_range))
@@ -124,34 +143,58 @@ try:
             st.plotly_chart(fig, use_container_width=True)
 
     else:
-        # Single-direction logic for Acyclica data
+    # Single-direction logic - handle different data sources
         df = pd.read_csv(selected_path)
         
-        # Handle Acyclica column naming
-        time_col = "Time"
-        df[time_col] = pd.to_datetime(df[time_col], errors="coerce")
-        df.dropna(subset=[time_col], inplace=True)
-        df.set_index(time_col, inplace=True)
-        
-        # For Speed data, use "Firsts" column as the main metric
-        if variable == "Speed":
-            y_col = "Firsts"  # Speed values
-            df[y_col] = pd.to_numeric(df[y_col], errors='coerce')
-            chart_title = f"Speed (mph) - {direction}"
+        # Determine data source based on columns
+        if variable == "Vehicle Volume":
+            # KINETIC MOBILITY FORMAT: Time, [Date] Northbound, [Date] Southbound
+            time_col = "Time"
+            df[time_col] = pd.to_datetime(df[time_col], errors="coerce")
+            df.dropna(subset=[time_col], inplace=True)
+            df.set_index(time_col, inplace=True)
             
-        elif variable == "Travel Time":
-            y_col = "Firsts"  # Travel time values
-            df[y_col] = pd.to_numeric(df[y_col], errors='coerce')
-            chart_title = f"Travel Time - {direction}"
+            # Find the correct column based on direction
+            if direction == "NB":
+                # Find column with "Northbound" in the name
+                nb_cols = [col for col in df.columns if "northbound" in col.lower()]
+                if nb_cols:
+                    y_col = nb_cols[0]
+                else:
+                    st.error("Northbound column not found")
+                    return
+            elif direction == "SB":
+                # Find column with "Southbound" in the name
+                sb_cols = [col for col in df.columns if "southbound" in col.lower()]
+                if sb_cols:
+                    y_col = sb_cols[0]
+                else:
+                    st.error("Southbound column not found")
+                    return
             
-        elif variable == "Vehicle Volume":
-            y_col = "Firsts"  # Volume count
             df[y_col] = pd.to_numeric(df[y_col], errors='coerce')
             chart_title = f"Vehicle Volume - {direction}"
-        
+            
+        else:
+            # FLIR ACYCLICA FORMAT: Time, Strength, Firsts, Lasts, Minimum, Maximum
+            time_col = "Time"
+            df[time_col] = pd.to_datetime(df[time_col], errors="coerce")
+            df.dropna(subset=[time_col], inplace=True)
+            df.set_index(time_col, inplace=True)
+            
+            # Use "Firsts" column for Speed and Travel Time
+            y_col = "Firsts"
+            df[y_col] = pd.to_numeric(df[y_col], errors='coerce')
+            
+            if variable == "Speed":
+                chart_title = f"Speed (mph) - {direction}"
+            elif variable == "Travel Time":
+                chart_title = f"Travel Time - {direction}"
+    
         # Remove NaN values after conversion
         df.dropna(subset=[y_col], inplace=True)
         
+        # Generate charts (same as before)
         if not df.empty and y_col in df.columns:
             if chart_type == "Line":
                 fig = px.line(df, x=df.index, y=y_col, title=chart_title)
@@ -160,16 +203,16 @@ try:
             elif chart_type == "Scatter":
                 fig = px.scatter(df, x=df.index, y=y_col, title=chart_title)
             elif chart_type == "Box":
-                fig = px.box(df.reset_index(), x=time_col, y=y_col, title=f"{chart_title} Distribution")
+                fig = px.box(df.reset_index(), y=y_col, title=f"{chart_title} Distribution")
             elif chart_type == "Heatmap":
                 df['hour'] = df.index.hour
                 df['day'] = df.index.date
                 pivot = df.pivot_table(values=y_col, index='day', columns='hour')
-                fig = px.imshow(pivot, aspect='auto', title=f"{chart_title} Heatmap (Hour vs Day)")
+                fig = px.imshow(pivot, aspect='auto', title=f"{chart_title} Heatmap")
 
             st.plotly_chart(fig, use_container_width=True)
             
-            # Show some stats
+            # Show stats
             st.write(f"**Average {variable}:** {df[y_col].mean():.2f}")
             st.write(f"**Min {variable}:** {df[y_col].min():.2f}")
             st.write(f"**Max {variable}:** {df[y_col].max():.2f}")
