@@ -61,7 +61,6 @@ path_map = {
 }
 
 selected_path = path_map.get((variable, direction, date_range), "No path available for selection.")
-
 # === Display UI selections ===
 st.write("**Date Range:**", date_range)
 st.write("**Corridor Segment:**", corridor_segment)
