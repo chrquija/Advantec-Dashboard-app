@@ -1,6 +1,18 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
+from datetime import datetime, timedelta
+
+# === Set up the app ===
+st.set_page_config(
+    page_title="Transportation Dashboard",
+    page_icon="📊",
+    layout="wide"
+)
+
+# App title
+st.title("📊 Active Transportation & Operations Management Dashboard")
 
 # === Sidebar Selections ===
 st.sidebar.title("🚦 CVAG Dashboard Filters")
