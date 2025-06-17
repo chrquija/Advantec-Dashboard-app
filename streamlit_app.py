@@ -10,6 +10,27 @@ st.set_page_config(
     page_icon="📊",
     layout="wide"
 )
+
+# === ADD USER INPUT WIDGETS HERE ===
+st.title("Transportation Dashboard")
+st.subheader("Select your analysis parameters:")
+
+# Create the input widgets to define the variables
+variable = st.selectbox(
+    "Select Variable",
+    ["Speed", "Vehicle Volume", "Travel Time"]
+)
+
+direction = st.selectbox(
+    "Select Direction",
+    ["NB", "SB", "Both"]
+)
+
+date_range = st.selectbox(
+    "Select Date Range",
+    ["April 11–20, 2025", "May 9–18, 2025", "April 10, 2025", "Feb 13, 2025"]
+)
+
 # === Filepath Mapping Logic ===
 # Update your base_url to match the actual GitHub structure
 base_url = "https://raw.githubusercontent.com/chrquija/Advantec-Dashboard-app/refs/heads/main/hwy111_to_ave52/"
@@ -40,7 +61,9 @@ path_map = {
     ("Vehicle Volume", "Both", "Feb 13, 2025"): base_url + "VOLUME/Thursday_Feb_13/Washington_and_Ave_52_NB_and_SB_VolumeDATA_Thursday_Feb_13.csv",
 }
 
+# NOW the variables are defined, so this line will work
 selected_path = path_map.get((variable, direction, date_range), "No path available for selection.")
+
 # === Display UI selections ===
 st.write("**Date Range:**", date_range)
 st.write("**Corridor Segment:**", corridor_segment)
