@@ -162,7 +162,7 @@ try:
                     y_col = nb_cols[0]
                 else:
                     st.error("Northbound column not found")
-                    st.stop()  # Use st.stop() instead of return
+                    st.stop()
             elif direction == "SB":
                 # Find column with "Southbound" in the name
                 sb_cols = [col for col in df.columns if "southbound" in col.lower()]
@@ -170,54 +170,54 @@ try:
                     y_col = sb_cols[0]
                 else:
                     st.error("Southbound column not found")
-                    st.stop()  # Use st.stop() instead of return
+                    st.stop()
         
-        df[y_col] = pd.to_numeric(df[y_col], errors='coerce')
-        chart_title = f"Vehicle Volume - {direction}"
+            df[y_col] = pd.to_numeric(df[y_col], errors='coerce')
+            chart_title = f"Vehicle Volume - {direction}"
         
-    else:
-        # FLIR ACYCLICA FORMAT: Time, Strength, Firsts, Lasts, Minimum, Maximum
-        time_col = "Time"
-        df[time_col] = pd.to_datetime(df[time_col], errors="coerce")
-        df.dropna(subset=[time_col], inplace=True)
-        df.set_index(time_col, inplace=True)
+        else:  # This should be properly aligned with the "if variable == 'Vehicle Volume':" above
+            # FLIR ACYCLICA FORMAT: Time, Strength, Firsts, Lasts, Minimum, Maximum
+            time_col = "Time"
+            df[time_col] = pd.to_datetime(df[time_col], errors="coerce")
+            df.dropna(subset=[time_col], inplace=True)
+            df.set_index(time_col, inplace=True)
         
-        # Use "Firsts" column for Speed and Travel Time
-        y_col = "Firsts"
-        df[y_col] = pd.to_numeric(df[y_col], errors='coerce')
+            # Use "Firsts" column for Speed and Travel Time
+            y_col = "Firsts"
+            df[y_col] = pd.to_numeric(df[y_col], errors='coerce')
         
-        if variable == "Speed":
-            chart_title = f"Speed (mph) - {direction}"
-        elif variable == "Travel Time":
-            chart_title = f"Travel Time - {direction}"
+            if variable == "Speed":
+                chart_title = f"Speed (mph) - {direction}"
+            elif variable == "Travel Time":
+                chart_title = f"Travel Time - {direction}"
     
-    # Remove NaN values after conversion
-    df.dropna(subset=[y_col], inplace=True)
+        # Remove NaN values after conversion (this should be at the same level as the if/else above)
+        df.dropna(subset=[y_col], inplace=True)
     
-    # Generate charts (same as before)
-    if not df.empty and y_col in df.columns:
-        if chart_type == "Line":
-            fig = px.line(df, x=df.index, y=y_col, title=chart_title)
-        elif chart_type == "Bar":
-            fig = px.bar(df, x=df.index, y=y_col, title=chart_title)
-        elif chart_type == "Scatter":
-            fig = px.scatter(df, x=df.index, y=y_col, title=chart_title)
-        elif chart_type == "Box":
-            fig = px.box(df.reset_index(), y=y_col, title=f"{chart_title} Distribution")
-        elif chart_type == "Heatmap":
-            df['hour'] = df.index.hour
-            df['day'] = df.index.date
-            pivot = df.pivot_table(values=y_col, index='day', columns='hour')
-            fig = px.imshow(pivot, aspect='auto', title=f"{chart_title} Heatmap")
+        # Generate charts
+        if not df.empty and y_col in df.columns:
+            if chart_type == "Line":
+                fig = px.line(df, x=df.index, y=y_col, title=chart_title)
+            elif chart_type == "Bar":
+                fig = px.bar(df, x=df.index, y=y_col, title=chart_title)
+            elif chart_type == "Scatter":
+                fig = px.scatter(df, x=df.index, y=y_col, title=chart_title)
+            elif chart_type == "Box":
+                fig = px.box(df.reset_index(), y=y_col, title=f"{chart_title} Distribution")
+            elif chart_type == "Heatmap":
+                df['hour'] = df.index.hour
+                df['day'] = df.index.date
+                pivot = df.pivot_table(values=y_col, index='day', columns='hour')
+                fig = px.imshow(pivot, aspect='auto', title=f"{chart_title} Heatmap")
 
-        st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, use_container_width=True)
         
-        # Show stats
-        st.write(f"**Average {variable}:** {df[y_col].mean():.2f}")
-        st.write(f"**Min {variable}:** {df[y_col].min():.2f}")
-        st.write(f"**Max {variable}:** {df[y_col].max():.2f}")
-    else:
-        st.warning(f"No valid data found in {y_col} column.")
+            # Show stats
+            st.write(f"**Average {variable}:** {df[y_col].mean():.2f}")
+            st.write(f"**Min {variable}:** {df[y_col].min():.2f}")
+            st.write(f"**Max {variable}:** {df[y_col].max():.2f}")
+        else:
+            st.warning(f"No valid data found in {y_col} column.")
 
 except Exception as e:
     st.error(f"❌ Failed to load chart: {e}")
