@@ -19,6 +19,7 @@ date_range = st.sidebar.selectbox(
 
 # === Filepath Mapping Logic ===
 base_url = "https://raw.githubusercontent.com/chrquija/Advantec-Dashboard-app/main/hwy111_to_ave52/"
+corridor_segment = "Washington St: Highway 111 to Avenue 52"
 
 path_map = {
     # === SPEED ===
@@ -49,7 +50,9 @@ st.title("📊 Active Transportation & Operations Management Dashboard")
 st.write("**Selected Variable:**", variable)
 st.write("**Direction:**", direction)
 st.write("**Date Range:**", date_range)
+st.write("**Corridor Segment:**", corridor_segment)
 st.write("**GitHub CSV File Path:**", selected_path)
+st.write("**Data Source::**", website_url)
 
 # === Chart Type Selector ===
 chart_type = st.selectbox("Choose chart type", ["Line", "Bar", "Scatter", "Box", "Heatmap"])
