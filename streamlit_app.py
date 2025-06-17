@@ -52,7 +52,7 @@ st.write("**Direction:**", direction)
 st.write("**Date Range:**", date_range)
 st.write("**Corridor Segment:**", corridor_segment)
 st.write("**GitHub CSV File Path:**", selected_path)
-st.write("**Data Source::**", website_url)
+
 
 # === Chart Type Selector ===
 chart_type = st.selectbox("Choose chart type", ["Line", "Bar", "Scatter", "Box", "Heatmap"])
