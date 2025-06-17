@@ -66,6 +66,28 @@ st.write("**GitHub CSV File Path:**", selected_path)
 # === Chart Type Selector ===
 chart_type = st.selectbox("Choose chart type", ["Line", "Bar", "Scatter", "Box", "Heatmap"])
 
+# Add this debugging section before the chart rendering
+st.write("**Debugging Information:**")
+st.write(f"Trying to access: {selected_path}")
+
+# Test if URL is accessible
+import requests
+try:
+    if selected_path != "BOTH" and "http" in selected_path:
+        response = requests.head(selected_path)
+        st.write(f"URL Status Code: {response.status_code}")
+        if response.status_code == 404:
+            st.error("❌ File not found at this URL. Please check:")
+            st.write("1. Repository is public")
+            st.write("2. File path is correct")
+            st.write("3. File exists in the repository")
+        elif response.status_code == 200:
+            st.success("✅ URL is accessible")
+    else:
+        st.info("Skipping URL test for 'Both' direction")
+except Exception as e:
+    st.warning(f"URL test failed: {e}")
+
 # === Load and Render Chart ===
 try:
     # If "Both", load two files or one with two columns
@@ -148,4 +170,3 @@ try:
 
 except Exception as e:
     st.error(f"❌ Failed to load chart: {e}")
-
