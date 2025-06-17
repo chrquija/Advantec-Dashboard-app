@@ -62,6 +62,20 @@ path_map = {
 
 selected_path = path_map.get((variable, direction, date_range), "No path available for selection.")
 
+# Add this right after getting the path to debug:
+selected_path = get_file_path(variable, date_range, direction)
+
+# Debug output
+st.write(f"**Debug Info:**")
+st.write(f"- Variable: {variable}")
+st.write(f"- Date Range: {date_range}")
+st.write(f"- Direction: {direction}")
+st.write(f"- Generated Path: {selected_path}")
+
+if selected_path is None:
+    st.error("File path not found. Please check your selections.")
+    st.stop()
+
 # === Display UI selections ===
 st.write("**Date Range:**", date_range)
 st.write("**Corridor Segment:**", corridor_segment)
