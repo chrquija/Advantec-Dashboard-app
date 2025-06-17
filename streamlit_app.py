@@ -9,7 +9,11 @@ st.sidebar.title("🚦 CVAG Dashboard Filters")
 variable = st.sidebar.selectbox("Select Variable", ["Speed", "Travel Time", "Vehicle Volume"])
 
 # Step 2: Pick direction
-direction = st.sidebar.radio("Direction", ["NB", "SB"])
+if variable == "Vehicle Volume":
+    direction = st.sidebar.radio("Direction", ["NB", "SB", "Both"])
+else:
+    direction = st.sidebar.radio("Direction", ["NB", "SB"])
+
 
 # Step 3: Pick date range
 date_range = st.sidebar.selectbox(
