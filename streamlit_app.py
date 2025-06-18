@@ -4,31 +4,30 @@ import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
 
-# Page configuration
+# === Set up the app ===
 st.set_page_config(
     page_title="Transportation Dashboard",
     page_icon="📊",
     layout="wide"
 )
 
-# === ADD USER INPUT WIDGETS HERE ===
-st.title("Transportation Dashboard")
-st.subheader("Select your analysis parameters:")
+# App title
+st.title("📊 Active Transportation & Operations Management Dashboard")
 
-# Create the input widgets to define the variables
-variable = st.selectbox(
-    "Select Variable",
-    ["Speed", "Vehicle Volume", "Travel Time"]
-)
+# === Sidebar Selections ===
+st.sidebar.title("🚦 CVAG Dashboard Filters")
 
-direction = st.selectbox(
-    "Select Direction",
-    ["NB", "SB", "Both"]
-)
+# Step 1: Pick variable type
+variable = st.sidebar.selectbox("Select Variable", ["Speed", "Travel Time", "Vehicle Volume"])
 
-date_range = st.selectbox(
+# Step 2: Pick direction
+direction = st.sidebar.radio("Direction", ["NB", "SB", "Both"])
+
+
+# Step 3: Pick date range
+date_range = st.sidebar.selectbox(
     "Select Date Range",
-    ["April 11–20, 2025", "May 9–18, 2025", "April 10, 2025", "Feb 13, 2025"]
+    ["April 11–20, 2025", "May 9–18, 2025"] if variable != "Vehicle Volume" else ["April 10, 2025", "Feb 13, 2025"]
 )
 
 # === Filepath Mapping Logic ===
@@ -49,6 +48,14 @@ path_map = {
     ("Speed", "Both", "May 9–18, 2025"): "BOTH",
     
     # Continue with your other paths...
+    # === TRAVEL TIME ===
+    ("Travel Time", "NB", "April 11–20, 2025"): base_url + "TRAVEL_TIME/Weeks_04112025_to_04202025/NB_Washington_Avenue_52_to_Hwy_111_TRAVEL_TIME_1hr_0411_04202025.csv",
+    ("Travel Time", "SB", "April 11–20, 2025"): base_url + "TRAVEL_TIME/Weeks_04112025_to_04202025/SB_Washington_Hwy_111_to_Avenue_52_TRAVEL_TIME_1hr_0411_04202025.csv",
+    ("Travel Time", "Both", "April 11–20, 2025"): "BOTH",
+
+    ("Travel Time", "NB", "May 9–18, 2025"): base_url + "TRAVEL_TIME/Weeks_05092025_to_05182025/NB_Washington_Avenue_52_to_Hwy_111_TRAVEL_TIME_1_hr_0509_05182025.csv",
+    ("Travel Time", "SB", "May 9–18, 2025"): base_url + "TRAVEL_TIME/Weeks_05092025_to_05182025/SB_Washington_Hwy_111_to_Avenue_52_TRAVEL_TIME_1_hr_0509_05182025.csv",
+    ("Travel Time", "Both", "May 9–18, 2025"): "BOTH",
 
     # === VEHICLE VOLUME (April 10) — All 3 use same file ===
     ("Vehicle Volume", "NB", "April 10, 2025"): base_url + "VOLUME/Thursday_April_10/Washington_and_Ave_52_NB_and_SB_VolumeDATA_THURSDAY_APRIL_10.csv",
@@ -61,7 +68,6 @@ path_map = {
     ("Vehicle Volume", "Both", "Feb 13, 2025"): base_url + "VOLUME/Thursday_Feb_13/Washington_and_Ave_52_NB_and_SB_VolumeDATA_Thursday_Feb_13.csv",
 }
 
-# NOW the variables are defined, so this line will work
 selected_path = path_map.get((variable, direction, date_range), "No path available for selection.")
 
 # === Display UI selections ===
@@ -77,35 +83,6 @@ chart_type = st.selectbox("Choose chart type", ["Line", "Bar", "Scatter", "Box",
 
 # === Load and Render Chart ===
 try:
-    # Handle the "Both" direction case
-    if direction == "Both":
-        # For Vehicle Volume, there's only one file
-        if variable == "Vehicle Volume":
-            selected_path = get_file_path(variable, date_range, direction)
-            # Handle Vehicle Volume logic here
-        else:
-            # For Speed and Travel Time, get both files
-            nb_path = get_file_path(variable, date_range, "NB")
-            sb_path = get_file_path(variable, date_range, "SB")
-            
-            st.write(f"**Debug - NB Path:** {nb_path}")
-            st.write(f"**Debug - SB Path:** {sb_path}")
-            
-            if nb_path and sb_path:
-                # Process both files
-                # Your existing "Both" logic here
-                pass
-            else:
-                st.error("One or both directional files not found.")
-                st.stop()
-    else:
-        # Single direction
-        selected_path = get_file_path(variable, date_range, direction)
-        st.write(f"**Debug - Single Path:** {selected_path}")
-        
-        if selected_path is None:
-            st.error("File path not found. Please check your selections.")
-            st.stop()
     # If "Both", load two files or one with two columns
     if direction == "Both":
         if variable == "Vehicle Volume":
