@@ -15,10 +15,10 @@ st.set_page_config(
 st.title("📊 Active Transportation & Operations Management Dashboard")
 
 # === Sidebar Selections ===
-st.sidebar.title("🚦 CVAG Dashboard Filters")
+st.sidebar.title("🚦 CVAG DASHBOARD FILTERS")
 
 # Step 1: Pick variable type
-variable = st.sidebar.selectbox("Select Variable", ["Speed", "Travel Time", "Vehicle Volume"])
+variable = st.sidebar.selectbox("SELECT CATEGORY", ["AVG SPEED", "TRAVEL TIME", "VEHICLE VOLUME"])
 
 # Step 2: Pick direction
 direction = st.sidebar.radio("Direction", ["NB", "SB", "Both"])
