@@ -3,6 +3,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
+import numpy as np
 
 # === Set up the app ===
 st.set_page_config(
@@ -23,7 +24,6 @@ variable = st.sidebar.selectbox("SELECT CATEGORY", ["Speed", "Travel Time", "Veh
 # Step 2: Pick direction
 direction = st.sidebar.radio("Direction", ["NB", "SB", "Both"])
 
-
 # Step 3: Pick date range
 date_range = st.sidebar.selectbox(
     "Select Date Range",
@@ -31,23 +31,19 @@ date_range = st.sidebar.selectbox(
 )
 
 # === Filepath Mapping Logic ===
-# Update your base_url to match the actual GitHub structure
 base_url = "https://raw.githubusercontent.com/chrquija/Advantec-Dashboard-app/refs/heads/main/hwy111_to_ave52/"
 corridor_segment = "Washington St: Highway 111 to Avenue 52"
 
-# And update the specific URL that has the extra space:
 path_map = {
     # === SPEED ===
     ("Speed", "NB", "April 11–20, 2025"): base_url + "SPEED/Weeks_04112025_to_04202025/NB_Washington_Avenue_52_to_Hwy_111_SPEED_1hr_0411_04202025.csv",
     ("Speed", "SB", "April 11–20, 2025"): base_url + "SPEED/Weeks_04112025_to_04202025/SB_Washington_Hwy_111_to_Avenue_52_SPEED_1hr_0411_04202025.csv",
     ("Speed", "Both", "April 11–20, 2025"): "BOTH",
 
-    # Fix this URL with the extra space:
     ("Speed", "NB", "May 9–18, 2025"): base_url + "SPEED/Weeks_05092025_to_05182025/NB_Washington_Avenue_52_to_Hwy_111_%20SPEED_1hr_0509_05182025.csv",
     ("Speed", "SB", "May 9–18, 2025"): base_url + "SPEED/Weeks_05092025_to_05182025/SB_Washington_Hwy_111_to_Avenue_52_SPEED_1hr_0509_05182025.csv",
     ("Speed", "Both", "May 9–18, 2025"): "BOTH",
     
-    # Continue with your other paths...
     # === TRAVEL TIME ===
     ("Travel Time", "NB", "April 11–20, 2025"): base_url + "TRAVEL_TIME/Weeks_04112025_to_04202025/NB_Washington_Avenue_52_to_Hwy_111_TRAVEL_TIME_1hr_0411_04202025.csv",
     ("Travel Time", "SB", "April 11–20, 2025"): base_url + "TRAVEL_TIME/Weeks_04112025_to_04202025/SB_Washington_Hwy_111_to_Avenue_52_TRAVEL_TIME_1hr_0411_04202025.csv",
@@ -77,9 +73,239 @@ st.write("**Selected Variable:**", variable)
 st.write("**Direction:**", direction)
 st.write("**GitHub CSV File Path:**", selected_path)
 
-
 # === Chart Type Selector ===
 chart_type = st.selectbox("Choose chart type", ["Line", "Bar", "Scatter", "Box", "Heatmap"])
+
+# === Enhanced Chart Creation Function ===
+def create_enhanced_line_chart(df, x_col, y_col, chart_title, color_name="blue"):
+    """Create an enhanced line chart with day shading and peak/low annotations"""
+    
+    # Create the base figure using Graph Objects for more control
+    fig = go.Figure()
+    
+    # Add the main line trace
+    fig.add_trace(go.Scatter(
+        x=df[x_col],
+        y=df[y_col],
+        mode='lines+markers',
+        name=color_name.title(),
+        line=dict(color=color_name, width=2),
+        marker=dict(size=4)
+    ))
+    
+    # Add alternating day shading
+    if not df.empty:
+        # Get date range
+        start_date = df[x_col].min().date()
+        end_date = df[x_col].max().date()
+        
+        # Create alternating day bands
+        current_date = start_date
+        shade_toggle = True
+        
+        while current_date <= end_date:
+            if shade_toggle:
+                fig.add_vrect(
+                    x0=current_date,
+                    x1=current_date + timedelta(days=1),
+                    fillcolor="lightgray",
+                    opacity=0.1,
+                    layer="below",
+                    line_width=0,
+                )
+            shade_toggle = not shade_toggle
+            current_date += timedelta(days=1)
+    
+    # Find top 5 highest and lowest points
+    if len(df) >= 5:
+        # Get indices of top 5 highest and lowest values
+        highest_indices = df[y_col].nlargest(5).index
+        lowest_indices = df[y_col].nsmallest(5).index
+        
+        # Add annotations for highest points (orange with up arrow)
+        for i, idx in enumerate(highest_indices):
+            fig.add_annotation(
+                x=df.loc[idx, x_col],
+                y=df.loc[idx, y_col],
+                text=f"▲ {df.loc[idx, y_col]:.2f}",
+                showarrow=True,
+                arrowhead=2,
+                arrowsize=1,
+                arrowwidth=2,
+                arrowcolor="orange",
+                ax=0,
+                ay=-30 - (i * 10),  # Offset to prevent overlap
+                bgcolor="rgba(0,0,0,0.8)",
+                bordercolor="orange",
+                borderwidth=2,
+                font=dict(color="orange", size=10),
+                opacity=0.9
+            )
+        
+        # Add annotations for lowest points (pink with down arrow)
+        for i, idx in enumerate(lowest_indices):
+            fig.add_annotation(
+                x=df.loc[idx, x_col],
+                y=df.loc[idx, y_col],
+                text=f"▼ {df.loc[idx, y_col]:.2f}",
+                showarrow=True,
+                arrowhead=2,
+                arrowsize=1,
+                arrowwidth=2,
+                arrowcolor="hotpink",
+                ax=0,
+                ay=30 + (i * 10),  # Offset to prevent overlap
+                bgcolor="rgba(0,0,0,0.8)",
+                bordercolor="hotpink",
+                borderwidth=2,
+                font=dict(color="hotpink", size=10),
+                opacity=0.9
+            )
+    
+    # Update layout with prominent title
+    fig.update_layout(
+        title=dict(
+            text=chart_title,
+            x=0.5,
+            y=0.95,
+            xanchor='center',
+            yanchor='top',
+            font=dict(size=18, color="darkblue", family="Arial Black")
+        ),
+        xaxis_title="Time",
+        yaxis_title=y_col,
+        hovermode='x unified',
+        showlegend=True,
+        plot_bgcolor='white',
+        margin=dict(t=80, b=50, l=50, r=50),
+        height=500
+    )
+    
+    # Update axes
+    fig.update_xaxes(
+        showgrid=True,
+        gridwidth=1,
+        gridcolor="lightgray",
+        showline=True,
+        linewidth=1,
+        linecolor="black"
+    )
+    
+    fig.update_yaxes(
+        showgrid=True,
+        gridwidth=1,
+        gridcolor="lightgray",
+        showline=True,
+        linewidth=1,
+        linecolor="black"
+    )
+    
+    return fig
+
+def create_enhanced_multi_line_chart(df, x_col, y_cols, chart_title):
+    """Create an enhanced multi-line chart for 'Both' direction data"""
+    
+    fig = go.Figure()
+    
+    colors = ["blue", "red"]
+    
+    # Add traces for each direction
+    for i, col in enumerate(y_cols):
+        fig.add_trace(go.Scatter(
+            x=df[x_col],
+            y=df[col],
+            mode='lines+markers',
+            name=col,
+            line=dict(color=colors[i], width=2),
+            marker=dict(size=4)
+        ))
+    
+    # Add alternating day shading
+    if not df.empty:
+        start_date = df[x_col].min().date()
+        end_date = df[x_col].max().date()
+        
+        current_date = start_date
+        shade_toggle = True
+        
+        while current_date <= end_date:
+            if shade_toggle:
+                fig.add_vrect(
+                    x0=current_date,
+                    x1=current_date + timedelta(days=1),
+                    fillcolor="lightgray",
+                    opacity=0.1,
+                    layer="below",
+                    line_width=0,
+                )
+            shade_toggle = not shade_toggle
+            current_date += timedelta(days=1)
+    
+    # Add annotations for each line's peaks and lows
+    for i, col in enumerate(y_cols):
+        if len(df) >= 3:  # Reduced to top 3 for multi-line to avoid clutter
+            highest_indices = df[col].nlargest(3).index
+            lowest_indices = df[col].nsmallest(3).index
+            
+            # Peaks
+            for j, idx in enumerate(highest_indices):
+                fig.add_annotation(
+                    x=df.loc[idx, x_col],
+                    y=df.loc[idx, col],
+                    text=f"▲ {df.loc[idx, col]:.2f}",
+                    showarrow=True,
+                    arrowhead=2,
+                    arrowcolor=colors[i],
+                    ax=0,
+                    ay=-25 - (j * 8),
+                    bgcolor="rgba(0,0,0,0.8)",
+                    bordercolor=colors[i],
+                    borderwidth=1,
+                    font=dict(color=colors[i], size=9),
+                    opacity=0.8
+                )
+            
+            # Lows
+            for j, idx in enumerate(lowest_indices):
+                fig.add_annotation(
+                    x=df.loc[idx, x_col],
+                    y=df.loc[idx, col],
+                    text=f"▼ {df.loc[idx, col]:.2f}",
+                    showarrow=True,
+                    arrowhead=2,
+                    arrowcolor=colors[i],
+                    ax=0,
+                    ay=25 + (j * 8),
+                    bgcolor="rgba(0,0,0,0.8)",
+                    bordercolor=colors[i],
+                    borderwidth=1,
+                    font=dict(color=colors[i], size=9),
+                    opacity=0.8
+                )
+    
+    # Update layout
+    fig.update_layout(
+        title=dict(
+            text=chart_title,
+            x=0.5,
+            y=0.95,
+            xanchor='center',
+            yanchor='top',
+            font=dict(size=18, color="darkblue", family="Arial Black")
+        ),
+        xaxis_title="Time",
+        yaxis_title="Value",
+        hovermode='x unified',
+        showlegend=True,
+        plot_bgcolor='white',
+        margin=dict(t=80, b=50, l=50, r=50),
+        height=500
+    )
+    
+    fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor="lightgray")
+    fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor="lightgray")
+    
+    return fig
 
 # === Load and Render Chart ===
 try:
@@ -107,19 +333,17 @@ try:
                 # Rename for cleaner display
                 df = df.rename(columns={nb_col: "Northbound", sb_col: "Southbound"})
                 
-                combined = df[["Northbound", "Southbound"]]
+                combined = df[["Northbound", "Southbound"]].copy()
                 combined.dropna(inplace=True)
+                combined.reset_index(inplace=True)
 
-                fig = px.line(combined, y=["Northbound", "Southbound"], 
-                             title="Vehicle Volume - Both Directions")
+                fig = create_enhanced_multi_line_chart(combined, time_col, ["Northbound", "Southbound"], "Vehicle Volume - Both Directions")
                 st.plotly_chart(fig, use_container_width=True)
             else:
                 st.error("Could not find both direction columns in volume data")
             
         else:
-            # FLIR ACYCLICA: Load both NB and SB files separately (existing logic)
-            # ... your existing "Both" logic for Speed/Travel Time
-            # Load both NB and SB separately using path_map
+            # FLIR ACYCLICA: Load both NB and SB files separately
             path_nb = path_map.get((variable, "NB", date_range))
             path_sb = path_map.get((variable, "SB", date_range))
 
@@ -149,12 +373,13 @@ try:
 
             combined = pd.concat([df_nb["NB"], df_sb["SB"]], axis=1)
             combined.dropna(inplace=True)
+            combined.reset_index(inplace=True)
 
-            fig = px.line(combined, y=["NB", "SB"], title=f"{variable} NB & SB Over Time")
+            fig = create_enhanced_multi_line_chart(combined, time_col, ["NB", "SB"], f"{variable} NB & SB Over Time")
             st.plotly_chart(fig, use_container_width=True)
 
     else:
-    # Single-direction logic - handle different data sources
+        # Single-direction logic - handle different data sources
         df = pd.read_csv(selected_path)
         
         # Determine data source based on columns
@@ -167,7 +392,6 @@ try:
             
             # Find the correct column based on direction
             if direction == "NB":
-                # Find column with "Northbound" in the name
                 nb_cols = [col for col in df.columns if "northbound" in col.lower()]
                 if nb_cols:
                     y_col = nb_cols[0]
@@ -175,7 +399,6 @@ try:
                     st.error("Northbound column not found")
                     st.stop()
             elif direction == "SB":
-                # Find column with "Southbound" in the name
                 sb_cols = [col for col in df.columns if "southbound" in col.lower()]
                 if sb_cols:
                     y_col = sb_cols[0]
@@ -186,7 +409,7 @@ try:
             df[y_col] = pd.to_numeric(df[y_col], errors='coerce')
             chart_title = f"Vehicle Volume - {direction}"
         
-        else:  # This should be properly aligned with the "if variable == 'Vehicle Volume':" above
+        else:
             # FLIR ACYCLICA FORMAT: Time, Strength, Firsts, Lasts, Minimum, Maximum
             time_col = "Time"
             df[time_col] = pd.to_datetime(df[time_col], errors="coerce")
@@ -202,64 +425,52 @@ try:
             elif variable == "Travel Time":
                 chart_title = f"Travel Time - {direction}"
     
-        # Remove NaN values after conversion (this should be at the same level as the if/else above)
+        # Remove NaN values after conversion
         df.dropna(subset=[y_col], inplace=True)
+        df.reset_index(inplace=True)
     
-        # Generate charts
+        # Generate enhanced charts
         if not df.empty and y_col in df.columns:
             if chart_type == "Line":
-                fig = px.line(df, x=df.index, y=y_col, title=chart_title)
+                fig = create_enhanced_line_chart(df, time_col, y_col, chart_title)
+                st.plotly_chart(fig, use_container_width=True)
             elif chart_type == "Bar":
-                fig = px.bar(df, x=df.index, y=y_col, title=chart_title)
+                fig = px.bar(df, x=time_col, y=y_col, title=chart_title)
+                st.plotly_chart(fig, use_container_width=True)
             elif chart_type == "Scatter":
-                fig = px.scatter(df, x=df.index, y=y_col, title=chart_title)
+                fig = px.scatter(df, x=time_col, y=y_col, title=chart_title)
+                st.plotly_chart(fig, use_container_width=True)
             elif chart_type == "Box":
-                fig = px.box(df.reset_index(), y=y_col, title=f"{chart_title} Distribution")
+                fig = px.box(df, y=y_col, title=f"{chart_title} Distribution")
+                st.plotly_chart(fig, use_container_width=True)
             elif chart_type == "Heatmap":
-                df['hour'] = df.index.hour
-                df['day'] = df.index.date
+                df['hour'] = df[time_col].dt.hour
+                df['day'] = df[time_col].dt.date
                 pivot = df.pivot_table(values=y_col, index='day', columns='hour')
                 fig = px.imshow(pivot, aspect='auto', title=f"{chart_title} Heatmap")
+                st.plotly_chart(fig, use_container_width=True)
 
-            st.plotly_chart(fig, use_container_width=True)
-        
-            # Show stats
-            st.write(f"**Average {variable}:** {df[y_col].mean():.2f}")
-            st.write(f"**Min {variable}:** {df[y_col].min():.2f}")
-            st.write(f"**Max {variable}:** {df[y_col].max():.2f}")
+            # Show stats with proper units
+            if variable == "Travel Time":
+                # Check if Travel_time_units column exists
+                if 'Travel_time_units' in df.columns:
+                    units = df['Travel_time_units'].iloc[0] if not df['Travel_time_units'].empty else "min"
+                else:
+                    units = "min"  # default assumption
+                
+                st.write(f"**Average {variable}:** {df[y_col].mean():.2f} {units}")
+                st.write(f"**Min {variable}:** {df[y_col].min():.2f} {units}")
+                st.write(f"**Max {variable}:** {df[y_col].max():.2f} {units}")
+            elif variable == "Speed":
+                st.write(f"**Average {variable}:** {df[y_col].mean():.2f} mph")
+                st.write(f"**Min {variable}:** {df[y_col].min():.2f} mph")
+                st.write(f"**Max {variable}:** {df[y_col].max():.2f} mph")
+            else:
+                st.write(f"**Average {variable}:** {df[y_col].mean():.2f}")
+                st.write(f"**Min {variable}:** {df[y_col].min():.2f}")
+                st.write(f"**Max {variable}:** {df[y_col].max():.2f}")
         else:
             st.warning(f"No valid data found in {y_col} column.")
 
 except Exception as e:
     st.error(f"❌ Failed to load chart: {e}")
-# Update your get_file_path function to handle the corrected URLs
-def get_file_path(variable, date_range, direction):
-    base_url = "https://raw.githubusercontent.com/chrquija/Advantec-Dashboard-app/refs/heads/main/hwy111_to_ave52"
-    
-    if variable == "Vehicle Volume":
-        if date_range == "April 11-20, 2025":
-            return f"{base_url}/VOLUME/Weeks_04112025_to_04202025/volume_hwy111_to_ave52_0410_04202025.csv"
-        elif date_range == "May 9-18, 2025":
-            return f"{base_url}/VOLUME/Weeks_0509_to_05182025/volume_hwy111_to_ave52_0509_05182025.csv"
-    
-    elif variable == "Speed":
-        if date_range == "April 11-20, 2025":
-            nb_url = f"{base_url}/SPEED/Weeks_04112025_to_04202025/NB_Washington_Avenue_52_to_Hwy_111_SPEED_1hr_0411_04202025.csv"
-            sb_url = f"{base_url}/SPEED/Weeks_04112025_to_04202025/SB_Washington_Hwy_111_to_Avenue%2052_SPEED_1hr_0411_04202025.csv"
-        elif date_range == "May 9-18, 2025":
-            nb_url = f"{base_url}/SPEED/Weeks_05092025_to_05182025/NB_Washington_Avenue_52_to_Hwy_111_SPEED_1%20hr_0509_05182025.csv"
-            sb_url = f"{base_url}/SPEED/Weeks_05092025_to_05182025/SB_Washington_Hwy_111_to_Avenue_52_SPEED_1_hr_0509_05182025.csv"
-        
-        return nb_url if direction == "NB" else sb_url
-    
-    elif variable == "Travel Time":
-        if date_range == "April 11-20, 2025":
-            nb_url = f"{base_url}/TRAVEL_TIME/Weeks_04112025_to_04202025/NB_Washington_Avenue_52_to_Hwy_111_TRAVEL%20TIME_1hr_0411_04202025.csv"
-            sb_url = f"{base_url}/TRAVEL_TIME/Weeks_04112025_to_04202025/SB_Washington_Hwy_111_to_Avenue%2052_TRAVEL%20TIME_1hr_0411_04202025.csv"
-        elif date_range == "May 9-18, 2025":
-            nb_url = f"{base_url}/TRAVEL_TIME/Weeks_05092025_to_05182025/NB_Washington_Avenue_52_to_Hwy_111_TRAVEL_TIME_1%20hr_0509_05182025.csv"
-            sb_url = f"{base_url}/TRAVEL_TIME/Weeks_05092025_to_05182025/SB_Washington_Hwy_111_to_Avenue_52_TRAVEL_TIME_1_hr_0509_05182025.csv"
-        
-        return nb_url if direction == "NB" else sb_url
-    
-    return None
