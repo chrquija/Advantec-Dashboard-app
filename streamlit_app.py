@@ -16,7 +16,7 @@ st.set_page_config(
 st.title("📊 Active Transportation & Operations Management Dashboard")
 
 # === Sidebar Selections ===
-st.sidebar.title("⚙️ Dashboard Filters")
+st.sidebar.title("⚙️ Dashboard Filters and more")
 
 # Step 1: Pick variable type
 variable = st.sidebar.selectbox("SELECT CATEGORY", ["Speed", "Travel Time", "Vehicle Volume"])
