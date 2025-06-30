@@ -121,47 +121,47 @@ def create_enhanced_line_chart(df, x_col, y_col, chart_title, color_name="blue")
         # Get indices of top 5 highest and lowest values
         highest_indices = df[y_col].nlargest(5).index
         lowest_indices = df[y_col].nsmallest(5).index
-        
-        # Add annotations for highest points (orange with up arrow)
+
+        # Add annotations for highest points (orange with up arrow) - LARGER SIZE
         for i, idx in enumerate(highest_indices):
             fig.add_annotation(
                 x=df.loc[idx, x_col],
                 y=df.loc[idx, y_col],
                 text=f"▲ {df.loc[idx, y_col]:.2f}",
                 showarrow=True,
-                arrowhead=2,
-                arrowsize=1,
-                arrowwidth=2,
+                arrowhead=3,  # Increased from 2
+                arrowsize=1.5,  # Increased from 1
+                arrowwidth=3,  # Increased from 2
                 arrowcolor="orange",
                 ax=0,
-                ay=-30 - (i * 10),  # Offset to prevent overlap
-                bgcolor="rgba(0,0,0,0.8)",
+                ay=-35 - (i * 12),  # Increased spacing from -30 and 10
+                bgcolor="rgba(0,0,0,0.9)",  # Slightly more opaque
                 bordercolor="orange",
-                borderwidth=2,
-                font=dict(color="orange", size=10),
-                opacity=0.9
+                borderwidth=3,  # Increased from 2
+                font=dict(color="orange", size=14),  # Increased from 10
+                opacity=0.95  # Increased from 0.9
             )
-        
-        # Add annotations for lowest points (pink with down arrow)
-        for i, idx in enumerate(lowest_indices):
-            fig.add_annotation(
-                x=df.loc[idx, x_col],
-                y=df.loc[idx, y_col],
-                text=f"▼ {df.loc[idx, y_col]:.2f}",
-                showarrow=True,
-                arrowhead=2,
-                arrowsize=1,
-                arrowwidth=2,
-                arrowcolor="hotpink",
-                ax=0,
-                ay=30 + (i * 10),  # Offset to prevent overlap
-                bgcolor="rgba(0,0,0,0.8)",
-                bordercolor="hotpink",
-                borderwidth=2,
-                font=dict(color="hotpink", size=10),
-                opacity=0.9
-            )
-    
+
+            # Add annotations for lowest points (pink with down arrow) - LARGER SIZE
+            for i, idx in enumerate(lowest_indices):
+                fig.add_annotation(
+                    x=df.loc[idx, x_col],
+                    y=df.loc[idx, y_col],
+                    text=f"▼ {df.loc[idx, y_col]:.2f}",
+                    showarrow=True,
+                    arrowhead=3,  # Increased from 2
+                    arrowsize=1.5,  # Increased from 1
+                    arrowwidth=3,  # Increased from 2
+                    arrowcolor="hotpink",
+                    ax=0,
+                    ay=35 + (i * 12),  # Increased spacing from 30 and 10
+                    bgcolor="rgba(0,0,0,0.9)",  # Slightly more opaque
+                    bordercolor="hotpink",
+                    borderwidth=3,  # Increased from 2
+                    font=dict(color="hotpink", size=14),  # Increased from 10
+                    opacity=0.95  # Increased from 0.9
+                )
+
     # Update layout with prominent title
     fig.update_layout(
         title=dict(
@@ -246,43 +246,47 @@ def create_enhanced_multi_line_chart(df, x_col, y_cols, chart_title):
         if len(df) >= 3:  # Reduced to top 3 for multi-line to avoid clutter
             highest_indices = df[col].nlargest(3).index
             lowest_indices = df[col].nsmallest(3).index
-            
-            # Peaks
+
+            # Peaks - LARGER SIZE
             for j, idx in enumerate(highest_indices):
                 fig.add_annotation(
                     x=df.loc[idx, x_col],
                     y=df.loc[idx, col],
                     text=f"▲ {df.loc[idx, col]:.2f}",
                     showarrow=True,
-                    arrowhead=2,
+                    arrowhead=3,  # Increased from 2
+                    arrowsize=1.3,  # Increased
+                    arrowwidth=2.5,  # Increased
                     arrowcolor=colors[i],
                     ax=0,
-                    ay=-25 - (j * 8),
-                    bgcolor="rgba(0,0,0,0.8)",
+                    ay=-30 - (j * 10),
+                    bgcolor="rgba(0,0,0,0.9)",  # More opaque
                     bordercolor=colors[i],
-                    borderwidth=1,
-                    font=dict(color=colors[i], size=9),
-                    opacity=0.8
+                    borderwidth=2,
+                    font=dict(color=colors[i], size=12),  # Increased from 9
+                    opacity=0.9  # Increased from 0.8
                 )
-            
-            # Lows
+
+            # Lows - LARGER SIZE
             for j, idx in enumerate(lowest_indices):
                 fig.add_annotation(
                     x=df.loc[idx, x_col],
                     y=df.loc[idx, col],
                     text=f"▼ {df.loc[idx, col]:.2f}",
                     showarrow=True,
-                    arrowhead=2,
+                    arrowhead=3,  # Increased from 2
+                    arrowsize=1.3,  # Increased
+                    arrowwidth=2.5,  # Increased
                     arrowcolor=colors[i],
                     ax=0,
-                    ay=25 + (j * 8),
-                    bgcolor="rgba(0,0,0,0.8)",
+                    ay=30 + (j * 10),
+                    bgcolor="rgba(0,0,0,0.9)",  # More opaque
                     bordercolor=colors[i],
-                    borderwidth=1,
-                    font=dict(color=colors[i], size=9),
-                    opacity=0.8
+                    borderwidth=2,
+                    font=dict(color=colors[i], size=12),  # Increased from 9
+                    opacity=0.9  # Increased from 0.8
                 )
-    
+
     # Update layout
     fig.update_layout(
         title=dict(
