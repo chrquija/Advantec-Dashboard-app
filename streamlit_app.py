@@ -16,7 +16,7 @@ st.set_page_config(
 st.title("📊 Active Transportation & Operations Management Dashboard")
 
 # === Sidebar Selections ===
-st.sidebar.image("Logos/ACE-logo-HiRes.jpg", width=110)
+st.sidebar.image("Logos/ACE-logo-HiRes.jpg", width=200)
 st.sidebar.title("⚙️ Dashboard Filters")
 
 # Step 1: Pick variable type
