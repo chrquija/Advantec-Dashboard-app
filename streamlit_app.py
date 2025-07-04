@@ -16,7 +16,8 @@ st.set_page_config(
 st.title("📊 Active Transportation & Operations Management Dashboard")
 
 # === Sidebar Selections ===
-st.sidebar.title("⚙️ Dashboard Filters and more")
+st.sidebar.image("Logos/ACE-logo-HiRes.jpg", width=110)
+st.sidebar.title("⚙️ Dashboard Filters")
 
 # Step 1: Pick variable type
 variable = st.sidebar.selectbox("SELECT CATEGORY", ["Speed", "Travel Time", "Vehicle Volume"])
