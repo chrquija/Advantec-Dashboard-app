@@ -670,7 +670,7 @@ if variable == "Vehicle Volume":
                         peak_cong_time = period_df.loc[period_df[speed_col].idxmin(), time_col].strftime("%H:%M")
                         st.metric("Congestion (Min Speed)", f"{min_speed:.1f} mph")
                         st.caption(f"at {peak_cong_time}")
-                        elif kpi_type == "Hourly Cycle Length Table":
+                    elif kpi_type == "Hourly Cycle Length Table":
                         vol_col = nb_vol_col if direction_choice == "NB" else sb_vol_col
                         if vol_col in period_df:
                             hourly_df = period_df.copy()
