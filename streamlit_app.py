@@ -532,7 +532,7 @@ def filter_by_period(df, time_col, period):
 # Only show KPI panels for Vehicle Volume data
 if variable == "Vehicle Volume":
     st.markdown("---")
-    st.subheader("🧠 Key Performance Indicators")
+    st.subheader("📈 Key Performance Indicators")
 
     # Create 4 columns for KPI panels
     col1, col2, col3, col4 = st.columns(4)
@@ -618,8 +618,10 @@ if variable == "Vehicle Volume":
                     # Calculate volume for consecutive hours period
                     consecutive_df = period_df[period_df[time_col].isin(consecutive_hours)]
                     consecutive_volume = consecutive_df[peak_vol_col].sum()
+
+                    # Get the hourly volumes for each hour in the consecutive period
                     hourly_volumes = consecutive_df[peak_vol_col].tolist()
-                    cycle_rec = get_cycle_length_recommendation(hourly_volumes)
+                    cycle_rec = get_cycle_length_recommendation(hourly_volumes)  # Pass the list!
 
                     st.metric("Peak Direction", peak_direction)
                     st.metric("Peak Period", hours_str)
