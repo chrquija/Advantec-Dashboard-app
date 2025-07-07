@@ -494,18 +494,25 @@ def find_column(df, patterns):
     return None
 
 # Helper function to get cycle length recommendation
-def get_cycle_length_recommendation(total_volume):
-    """Return recommended cycle length based on volume thresholds"""
-    if total_volume >= 2400:
-        return "140 sec"
-    elif total_volume >= 1500:
-        return "130 sec"
-    elif total_volume >= 600:
-        return "120 sec"
-    elif total_volume >= 300:
-        return "110 sec"
-    else:
-        return "Free mode"
+def get_cycle_length_recommendation(hourly_volumes):
+    """
+    Return recommended cycle length based on the highest volume hour in the period.
+    Volume thresholds are: 305, 605, 1505, 2405 (all +5 from your original table).
+    """
+    cycle = "Free mode"
+    for v in hourly_volumes:
+        if v >= 2405:
+            return "140 sec"
+        elif v >= 1505:
+            cycle = "130 sec"
+        elif v >= 605:
+            if cycle not in ["130 sec", "140 sec"]:
+                cycle = "120 sec"
+        elif v >= 305:
+            if cycle not in ["120 sec", "130 sec", "140 sec"]:
+                cycle = "110 sec"
+    return cycle
+
 
 # Helper function to filter data by time period
 def filter_by_period(df, time_col, period):
@@ -525,7 +532,7 @@ def filter_by_period(df, time_col, period):
 # Only show KPI panels for Vehicle Volume data
 if variable == "Vehicle Volume":
     st.markdown("---")
-    st.subheader("📶 Key Performance Indicators")
+    st.subheader("🧠 Key Performance Indicators")
 
     # Create 4 columns for KPI panels
     col1, col2, col3, col4 = st.columns(4)
@@ -611,8 +618,8 @@ if variable == "Vehicle Volume":
                     # Calculate volume for consecutive hours period
                     consecutive_df = period_df[period_df[time_col].isin(consecutive_hours)]
                     consecutive_volume = consecutive_df[peak_vol_col].sum()
-
-                    cycle_rec = get_cycle_length_recommendation(consecutive_volume)
+                    hourly_volumes = consecutive_df[peak_vol_col].tolist()
+                    cycle_rec = get_cycle_length_recommendation(hourly_volumes)
 
                     st.metric("Peak Direction", peak_direction)
                     st.metric("Peak Period", hours_str)
