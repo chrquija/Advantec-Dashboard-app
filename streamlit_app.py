@@ -1,3 +1,4 @@
+```python
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -628,4 +629,4 @@ if variable == "Vehicle Volume":
                     if kpi_type == "Average Speed" and nb_speed_col and sb_speed_col:
                         speed_col = nb_speed_col if direction_choice == "NB" else sb_speed_col
                         avg_speed = period_df[speed_col].mean()
-                        st.metric("Average Speed", f"{avg_speed:.1f
+                        st.metric("Average Speed", f"{avg_speed:.1f}")
