@@ -525,7 +525,7 @@ def filter_by_period(df, time_col, period):
 # Only show KPI panels for Vehicle Volume data
 if variable == "Vehicle Volume":
     st.markdown("---")
-    st.subheader("🧠 Key Performance Indicators (KPI)")
+    st.subheader("📶 Key Performance Indicators")
 
     # Create 4 columns for KPI panels
     col1, col2, col3, col4 = st.columns(4)
@@ -572,7 +572,7 @@ if variable == "Vehicle Volume":
 
         # === KPI 1: Peak Volume - Highest Direction ===
         with col1:
-            st.markdown("### 🚦 Peak Volume - Cycle Length Recommendation")
+            st.markdown("### 🚦 Suggested Cycle Length")
 
             if not period_df.empty:
                 # Calculate total volume for each direction
