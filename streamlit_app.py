@@ -313,173 +313,81 @@ def create_enhanced_multi_line_chart(df, x_col, y_cols, chart_title):
     
     return fig
 
-# === Load and Render Chart ===
-try:
-    # If "Both", load two files or one with two columns
-    if direction == "Both":
-        if variable == "Vehicle Volume":
-            # KINETIC MOBILITY: Single file contains both directions
-            df = pd.read_csv(selected_path)
-            time_col = "Time"
-            df[time_col] = pd.to_datetime(df[time_col], errors="coerce")
-            df.dropna(subset=[time_col], inplace=True)
-            df.set_index(time_col, inplace=True)
+# === 2x2 Chart Grid Layout ===
+st.markdown("## 📊 Interactive Chart Panels")
 
-            # Find both direction columns
-            nb_cols = [col for col in df.columns if "northbound" in col.lower()]
-            sb_cols = [col for col in df.columns if "southbound" in col.lower()]
-            
-            if nb_cols and sb_cols:
-                nb_col = nb_cols[0]
-                sb_col = sb_cols[0]
-                
-                df[nb_col] = pd.to_numeric(df[nb_col], errors='coerce')
-                df[sb_col] = pd.to_numeric(df[sb_col], errors='coerce')
-                
-                # Rename for cleaner display
-                df = df.rename(columns={nb_col: "Northbound", sb_col: "Southbound"})
-                
-                combined = df[["Northbound", "Southbound"]].copy()
-                combined.dropna(inplace=True)
-                combined.reset_index(inplace=True)
+# Create 2 rows with 2 columns each
+row1_col1, row1_col2 = st.columns(2)
+row2_col1, row2_col2 = st.columns(2)
+chart_cols = [row1_col1, row1_col2, row2_col1, row2_col2]
 
-                fig = create_enhanced_multi_line_chart(combined, time_col, ["Northbound", "Southbound"], "Vehicle Volume - Both Directions")
-                st.plotly_chart(fig, use_container_width=True)
-            else:
-                st.error("Could not find both direction columns in volume data")
-            
-        else:
-            # FLIR ACYCLICA: Load both NB and SB files separately
-            path_nb = path_map.get((variable, "NB", date_range))
-            path_sb = path_map.get((variable, "SB", date_range))
+panel_titles = ["Panel 1", "Panel 2", "Panel 3", "Panel 4"]
+chart_options = ["Speed", "Travel Time", "Vehicle Volume"]
+direction_options = ["NB", "SB", "Both"]
+chart_types = ["Line", "Bar", "Scatter", "Box", "Heatmap"]
 
-            if not path_nb or not path_sb:
-                raise FileNotFoundError("One or both directional files not found.")
+for i, col in enumerate(chart_cols):
+    with col:
+        st.markdown(f"### {panel_titles[i]}")
+        # Panel-specific filters (can use sidebar values if you want everything synced)
+        panel_variable = st.selectbox(f"Variable ({panel_titles[i]})", chart_options, key=f"var_{i}")
+        panel_direction = st.radio(f"Direction ({panel_titles[i]})", direction_options, key=f"dir_{i}")
+        panel_chart_type = st.selectbox(f"Chart Type ({panel_titles[i]})", chart_types, key=f"chart_{i}")
 
-            df_nb = pd.read_csv(path_nb)
-            df_sb = pd.read_csv(path_sb)
+        # Get the correct file path for this panel
+        panel_path = path_map.get((panel_variable, panel_direction, date_range), None)
+        if panel_path and "No path" not in panel_path:
+            try:
+                panel_df = pd.read_csv(panel_path)
+                # Standardize 'Time'
+                if "Time" in panel_df.columns:
+                    panel_df["Time"] = pd.to_datetime(panel_df["Time"], errors="coerce")
+                    panel_df = panel_df.dropna(subset=["Time"])
+                    # Find y_col
+                    y_col = None
+                    if panel_variable == "Speed":
+                        y_col = "Firsts" if "Firsts" in panel_df.columns else panel_df.columns[1]
+                    elif panel_variable == "Travel Time":
+                        y_col = "Firsts" if "Firsts" in panel_df.columns else panel_df.columns[1]
+                    elif panel_variable == "Vehicle Volume":
+                        if panel_direction == "NB":
+                            y_col = [col for col in panel_df.columns if "northbound" in col.lower()]
+                            y_col = y_col[0] if y_col else panel_df.columns[1]
+                        elif panel_direction == "SB":
+                            y_col = [col for col in panel_df.columns if "southbound" in col.lower()]
+                            y_col = y_col[0] if y_col else panel_df.columns[1]
+                        else:
+                            y_col = panel_df.columns[1]
 
-            time_col = "Time"
-            df_nb[time_col] = pd.to_datetime(df_nb[time_col], errors="coerce")
-            df_sb[time_col] = pd.to_datetime(df_sb[time_col], errors="coerce")
-
-            df_nb.dropna(subset=[time_col], inplace=True)
-            df_sb.dropna(subset=[time_col], inplace=True)
-
-            df_nb.set_index(time_col, inplace=True)
-            df_sb.set_index(time_col, inplace=True)
-
-            # Use "Firsts" column for the main metric
-            y_col = "Firsts"
-            df_nb[y_col] = pd.to_numeric(df_nb[y_col], errors='coerce')
-            df_sb[y_col] = pd.to_numeric(df_sb[y_col], errors='coerce')
-
-            df_nb = df_nb.rename(columns={y_col: "NB"})
-            df_sb = df_sb.rename(columns={y_col: "SB"})
-
-            combined = pd.concat([df_nb["NB"], df_sb["SB"]], axis=1)
-            combined.dropna(inplace=True)
-            combined.reset_index(inplace=True)
-
-            fig = create_enhanced_multi_line_chart(combined, time_col, ["NB", "SB"], f"{variable} NB & SB Over Time")
-            st.plotly_chart(fig, use_container_width=True)
-
-    else:
-        # Single-direction logic - handle different data sources
-        df = pd.read_csv(selected_path)
-        
-        # Determine data source based on columns
-        if variable == "Vehicle Volume":
-            # KINETIC MOBILITY FORMAT: Time, [Date] Northbound, [Date] Southbound
-            time_col = "Time"
-            df[time_col] = pd.to_datetime(df[time_col], errors="coerce")
-            df.dropna(subset=[time_col], inplace=True)
-            df.set_index(time_col, inplace=True)
-            
-            # Find the correct column based on direction
-            if direction == "NB":
-                nb_cols = [col for col in df.columns if "northbound" in col.lower()]
-                if nb_cols:
-                    y_col = nb_cols[0]
+                    if y_col and y_col in panel_df.columns:
+                        if panel_chart_type == "Line":
+                            fig = px.line(panel_df, x="Time", y=y_col, title=f"{panel_variable} - {panel_direction}")
+                            st.plotly_chart(fig, use_container_width=True)
+                        elif panel_chart_type == "Bar":
+                            fig = px.bar(panel_df, x="Time", y=y_col, title=f"{panel_variable} - {panel_direction}")
+                            st.plotly_chart(fig, use_container_width=True)
+                        elif panel_chart_type == "Scatter":
+                            fig = px.scatter(panel_df, x="Time", y=y_col, title=f"{panel_variable} - {panel_direction}")
+                            st.plotly_chart(fig, use_container_width=True)
+                        elif panel_chart_type == "Box":
+                            fig = px.box(panel_df, y=y_col, title=f"{panel_variable} - {panel_direction}")
+                            st.plotly_chart(fig, use_container_width=True)
+                        elif panel_chart_type == "Heatmap":
+                            panel_df['hour'] = panel_df["Time"].dt.hour
+                            pivot = panel_df.pivot_table(values=y_col, index=panel_df["Time"].dt.date, columns='hour')
+                            fig = px.imshow(pivot, aspect='auto', title=f"{panel_variable} Heatmap")
+                            st.plotly_chart(fig, use_container_width=True)
+                        else:
+                            st.info("Chart type not available.")
+                    else:
+                        st.info("No valid data columns for this variable/direction.")
                 else:
-                    st.error("Northbound column not found")
-                    st.stop()
-            elif direction == "SB":
-                sb_cols = [col for col in df.columns if "southbound" in col.lower()]
-                if sb_cols:
-                    y_col = sb_cols[0]
-                else:
-                    st.error("Southbound column not found")
-                    st.stop()
-        
-            df[y_col] = pd.to_numeric(df[y_col], errors='coerce')
-            chart_title = f"Vehicle Volume - {direction}"
-        
+                    st.info("No 'Time' column in file.")
+            except Exception as e:
+                st.warning(f"Error loading chart: {e}")
         else:
-            # FLIR ACYCLICA FORMAT: Time, Strength, Firsts, Lasts, Minimum, Maximum
-            time_col = "Time"
-            df[time_col] = pd.to_datetime(df[time_col], errors="coerce")
-            df.dropna(subset=[time_col], inplace=True)
-            df.set_index(time_col, inplace=True)
-        
-            # Use "Firsts" column for Speed and Travel Time
-            y_col = "Firsts"
-            df[y_col] = pd.to_numeric(df[y_col], errors='coerce')
-        
-            if variable == "Speed":
-                chart_title = f"Speed (mph) - {direction}"
-            elif variable == "Travel Time":
-                chart_title = f"Travel Time - {direction}"
-    
-        # Remove NaN values after conversion
-        df.dropna(subset=[y_col], inplace=True)
-        df.reset_index(inplace=True)
-    
-        # Generate enhanced charts
-        if not df.empty and y_col in df.columns:
-            if chart_type == "Line":
-                fig = create_enhanced_line_chart(df, time_col, y_col, chart_title)
-                st.plotly_chart(fig, use_container_width=True)
-            elif chart_type == "Bar":
-                fig = px.bar(df, x=time_col, y=y_col, title=chart_title)
-                st.plotly_chart(fig, use_container_width=True)
-            elif chart_type == "Scatter":
-                fig = px.scatter(df, x=time_col, y=y_col, title=chart_title)
-                st.plotly_chart(fig, use_container_width=True)
-            elif chart_type == "Box":
-                fig = px.box(df, y=y_col, title=f"{chart_title} Distribution")
-                st.plotly_chart(fig, use_container_width=True)
-            elif chart_type == "Heatmap":
-                df['hour'] = df[time_col].dt.hour
-                df['day'] = df[time_col].dt.date
-                pivot = df.pivot_table(values=y_col, index='day', columns='hour')
-                fig = px.imshow(pivot, aspect='auto', title=f"{chart_title} Heatmap")
-                st.plotly_chart(fig, use_container_width=True)
+            st.info("No data found for this selection.")
 
-            # Show stats with proper units
-            if variable == "Travel Time":
-                # Check if Travel_time_units column exists
-                if 'Travel_time_units' in df.columns:
-                    units = df['Travel_time_units'].iloc[0] if not df['Travel_time_units'].empty else "min"
-                else:
-                    units = "min"  # default assumption
-                
-                st.write(f"**Average {variable}:** {df[y_col].mean():.2f} {units}")
-                st.write(f"**Min {variable}:** {df[y_col].min():.2f} {units}")
-                st.write(f"**Max {variable}:** {df[y_col].max():.2f} {units}")
-            elif variable == "Speed":
-                st.write(f"**Average {variable}:** {df[y_col].mean():.2f} mph")
-                st.write(f"**Min {variable}:** {df[y_col].min():.2f} mph")
-                st.write(f"**Max {variable}:** {df[y_col].max():.2f} mph")
-            else:
-                st.write(f"**Average {variable}:** {df[y_col].mean():.2f}")
-                st.write(f"**Min {variable}:** {df[y_col].min():.2f}")
-                st.write(f"**Max {variable}:** {df[y_col].max():.2f}")
-        else:
-            st.warning(f"No valid data found in {y_col} column.")
-
-except Exception as e:
-    st.error(f"❌ Failed to load chart: {e}")
 
 # === KPI PANELS SECTION ===
 # Add this after DataFrame load and before chart creation
