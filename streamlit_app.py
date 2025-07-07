@@ -1,4 +1,4 @@
-
+```python
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -14,7 +14,7 @@ st.set_page_config(
 )
 
 # App title
-st.title("📊 Active Transportation & Operations Management Dashboard")
+st.markdown("<h1 style='text-align: center;'>📊 Active Transportation & Operations Management Dashboard</h1>", unsafe_allow_html=True)
 
 # === Sidebar Selections ===
 st.sidebar.image("Logos/ACE-logo-HiRes.jpg", width=200)
@@ -634,35 +634,4 @@ if variable == "Vehicle Volume":
         for i, col in enumerate([col2, col3, col4]):
             with col:
                 kpi_type = st.selectbox(f"KPI {i + 2}:", kpi_options, key=f"kpi_{i + 2}")
-                direction_choice = st.radio("Direction:", ["NB", "SB"], key=f"dir_{i + 2}")
-
-                st.markdown(f"### 📈 {kpi_type} - {direction_choice}")
-
-                if not period_df.empty:
-                    # KPIs for Speed (if available)
-                    if kpi_type == "Average Speed" and nb_speed_col and sb_speed_col:
-                        speed_col = nb_speed_col if direction_choice == "NB" else sb_speed_col
-                        avg_speed = period_df[speed_col].mean()
-                        st.metric("Average Speed", f"{avg_speed:.1f} mph")
-                    elif kpi_type == "Peak Speed" and nb_speed_col and sb_speed_col:
-                        speed_col = nb_speed_col if direction_choice == "NB" else sb_speed_col
-                        peak_speed = period_df[speed_col].max()
-                        peak_time = period_df.loc[period_df[speed_col].idxmax(), time_col].strftime("%H:%M")
-                        st.metric("Peak Speed", f"{peak_speed:.1f} mph")
-                        st.caption(f"at {peak_time}")
-                    elif kpi_type == "Total Volume":
-                        vol_col = nb_vol_col if direction_choice == "NB" else sb_vol_col
-                        total_volume = period_df[vol_col].sum()
-                        st.metric("Total Volume", f"{total_volume:,.0f} vph")
-                    elif kpi_type == "Peak Congestion Time" and nb_speed_col and sb_speed_col:
-                        speed_col = nb_speed_col if direction_choice == "NB" else sb_speed_col
-                        min_speed = period_df[speed_col].min()
-                        peak_cong_time = period_df.loc[period_df[speed_col].idxmin(), time_col].strftime("%H:%M")
-                        st.metric("Congestion (Min Speed)", f"{min_speed:.1f} mph")
-                        st.caption(f"at {peak_cong_time}")
-                    else:
-                        st.write("KPI not available for this direction or period.")
-                else:
-                    st.write("No data for selected period")
-    else:
-        st.warning("Could not find NB/SB columns in this dataset.")
+                direction_choice = st.radio("Direction:", ["NB", "
