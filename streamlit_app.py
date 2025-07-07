@@ -615,7 +615,7 @@ if variable == "Vehicle Volume":
                     cycle_rec = get_cycle_length_recommendation(consecutive_volume)
 
                     st.metric("Direction", peak_direction)
-                    st.metric("Time Range", hours_str)
+                    st.metric("Peak Time-Range (within period)", hours_str)
                     st.metric("Total Volume", f"{consecutive_volume:,.0f} vph")
                     st.metric("Cycle Length", cycle_rec)
                 else:
