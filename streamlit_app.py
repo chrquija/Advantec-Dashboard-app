@@ -521,51 +521,64 @@ def filter_by_period(df, time_col, period):
         return df_copy[(df_copy['hour'] >= 16) & (df_copy['hour'] < 20)]
     return df_copy
 
+
 # Only show KPI panels for Vehicle Volume data
 if variable == "Vehicle Volume":
     st.markdown("---")
     st.subheader("📊 Key Performance Indicators")
-    
+
     # Create 4 columns for KPI panels
     col1, col2, col3, col4 = st.columns(4)
-    
+
     # Time period selector (shared across all KPIs)
     time_period = st.selectbox("Select Time Period:", ["AM (5:00-10:00)", "MD (11:00-15:00)", "PM (16:00-20:00)"])
     period_key = time_period.split(" ")[0]  # Extract AM/MD/PM
-    
+
     # Prepare data for KPIs
     kpi_df = df.copy()
     time_col = "Time"
-    
-    # Find volume columns
-    nb_vol_col = find_column(kpi_df, ["nb volume", "northbound volume", "nb_volume"])
-    sb_vol_col = find_column(kpi_df, ["sb volume", "southbound volume", "sb_volume"])
-    
-    # Find speed columns (if available)
-    nb_speed_col = find_column(kpi_df, ["nb speed", "northbound speed", "nb_speed"])
-    sb_speed_col = find_column(kpi_df, ["sb speed", "southbound speed", "sb_speed"])
-    
+
+    # Ensure 'Time' is datetime
+    if not np.issubdtype(kpi_df[time_col].dtype, np.datetime64):
+        kpi_df[time_col] = pd.to_datetime(kpi_df[time_col], errors='coerce')
+
+    # --- Robust column finding for your specific format ---
+    nb_vol_col = None
+    sb_vol_col = None
+    for col in kpi_df.columns:
+        if "northbound" in col.lower():
+            nb_vol_col = col
+        if "southbound" in col.lower():
+            sb_vol_col = col
+
+    # Try to find speed columns if they exist (optional)
+    nb_speed_col = None
+    sb_speed_col = None
+    for col in kpi_df.columns:
+        if "speed" in col.lower() and "northbound" in col.lower():
+            nb_speed_col = col
+        if "speed" in col.lower() and "southbound" in col.lower():
+            sb_speed_col = col
+
     if nb_vol_col and sb_vol_col:
         # Convert to numeric
         kpi_df[nb_vol_col] = pd.to_numeric(kpi_df[nb_vol_col], errors='coerce')
         kpi_df[sb_vol_col] = pd.to_numeric(kpi_df[sb_vol_col], errors='coerce')
-        
-        if nb_speed_col and sb_speed_col:
-            kpi_df[nb_speed_col] = pd.to_numeric(kpi_df[nb_speed_col], errors='coerce')
-            kpi_df[sb_speed_col] = pd.to_numeric(kpi_df[sb_speed_col], errors='coerce')
-        
+        if nb_speed_col: kpi_df[nb_speed_col] = pd.to_numeric(kpi_df[nb_speed_col], errors='coerce')
+        if sb_speed_col: kpi_df[sb_speed_col] = pd.to_numeric(kpi_df[sb_speed_col], errors='coerce')
+
         # Filter by selected time period
         period_df = filter_by_period(kpi_df, time_col, period_key)
-        
+
         # === KPI 1: Peak Volume - Highest Direction ===
         with col1:
             st.markdown("### 🚦 Peak Volume - Highest Direction")
-            
+
             if not period_df.empty:
                 # Calculate total volume for each direction
                 nb_total = period_df[nb_vol_col].sum()
                 sb_total = period_df[sb_vol_col].sum()
-                
+
                 # Determine highest direction
                 if nb_total >= sb_total:
                     peak_direction = "NB"
@@ -575,11 +588,11 @@ if variable == "Vehicle Volume":
                     peak_direction = "SB"
                     peak_volume = sb_total
                     peak_vol_col = sb_vol_col
-                
+
                 # Find consecutive hours with volume >= 300
                 consecutive_hours = []
                 current_sequence = []
-                
+
                 for _, row in period_df.iterrows():
                     if row[peak_vol_col] >= 300:
                         current_sequence.append(row[time_col])
@@ -587,22 +600,20 @@ if variable == "Vehicle Volume":
                         if len(current_sequence) > len(consecutive_hours):
                             consecutive_hours = current_sequence.copy()
                         current_sequence = []
-                
-                # Check final sequence
                 if len(current_sequence) > len(consecutive_hours):
                     consecutive_hours = current_sequence.copy()
-                
+
                 if consecutive_hours:
                     start_time = consecutive_hours[0].strftime("%H:%M")
                     end_time = consecutive_hours[-1].strftime("%H:%M")
                     hours_str = f"{start_time} - {end_time}"
-                    
+
                     # Calculate volume for consecutive hours period
                     consecutive_df = period_df[period_df[time_col].isin(consecutive_hours)]
                     consecutive_volume = consecutive_df[peak_vol_col].sum()
-                    
+
                     cycle_rec = get_cycle_length_recommendation(consecutive_volume)
-                    
+
                     st.metric("Direction", peak_direction)
                     st.metric("Time Range", hours_str)
                     st.metric("Total Volume", f"{consecutive_volume:,.0f} vph")
@@ -614,19 +625,44 @@ if variable == "Vehicle Volume":
                     st.metric("Cycle Length", "Free mode")
             else:
                 st.write("No data for selected period")
-        
+
         # === KPI 2-4: Dynamic KPIs ===
-        kpi_options = ["Average Speed", "Peak Speed", "Total Volume", "Peak Congestion Time"]
-        
+        kpi_options = ["Average Speed", "Total Volume", "Peak Congestion Time"]
+        if nb_speed_col and sb_speed_col:
+            kpi_options = ["Average Speed", "Peak Speed", "Total Volume", "Peak Congestion Time"]
+
         for i, col in enumerate([col2, col3, col4]):
             with col:
-                kpi_type = st.selectbox(f"KPI {i+2}:", kpi_options, key=f"kpi_{i+2}")
-                direction_choice = st.radio("Direction:", ["NB", "SB"], key=f"dir_{i+2}")
-                
+                kpi_type = st.selectbox(f"KPI {i + 2}:", kpi_options, key=f"kpi_{i + 2}")
+                direction_choice = st.radio("Direction:", ["NB", "SB"], key=f"dir_{i + 2}")
+
                 st.markdown(f"### 📈 {kpi_type} - {direction_choice}")
-                
+
                 if not period_df.empty:
+                    # KPIs for Speed (if available)
                     if kpi_type == "Average Speed" and nb_speed_col and sb_speed_col:
                         speed_col = nb_speed_col if direction_choice == "NB" else sb_speed_col
                         avg_speed = period_df[speed_col].mean()
-                        st.metric("Average Speed", f"{avg_speed:.1f}")
+                        st.metric("Average Speed", f"{avg_speed:.1f} mph")
+                    elif kpi_type == "Peak Speed" and nb_speed_col and sb_speed_col:
+                        speed_col = nb_speed_col if direction_choice == "NB" else sb_speed_col
+                        peak_speed = period_df[speed_col].max()
+                        peak_time = period_df.loc[period_df[speed_col].idxmax(), time_col].strftime("%H:%M")
+                        st.metric("Peak Speed", f"{peak_speed:.1f} mph")
+                        st.caption(f"at {peak_time}")
+                    elif kpi_type == "Total Volume":
+                        vol_col = nb_vol_col if direction_choice == "NB" else sb_vol_col
+                        total_volume = period_df[vol_col].sum()
+                        st.metric("Total Volume", f"{total_volume:,.0f} vph")
+                    elif kpi_type == "Peak Congestion Time" and nb_speed_col and sb_speed_col:
+                        speed_col = nb_speed_col if direction_choice == "NB" else sb_speed_col
+                        min_speed = period_df[speed_col].min()
+                        peak_cong_time = period_df.loc[period_df[speed_col].idxmin(), time_col].strftime("%H:%M")
+                        st.metric("Congestion (Min Speed)", f"{min_speed:.1f} mph")
+                        st.caption(f"at {peak_cong_time}")
+                    else:
+                        st.write("KPI not available for this direction or period.")
+                else:
+                    st.write("No data for selected period")
+    else:
+        st.warning("Could not find NB/SB columns in this dataset.")
