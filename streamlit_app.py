@@ -479,3 +479,153 @@ try:
 
 except Exception as e:
     st.error(f"❌ Failed to load chart: {e}")
+
+# === KPI PANELS SECTION ===
+# Add this after DataFrame load and before chart creation
+
+# Helper function to robustly find columns
+def find_column(df, patterns):
+    """Find column that matches any of the patterns (case-insensitive)"""
+    for pattern in patterns:
+        for col in df.columns:
+            if pattern.lower() in col.lower():
+                return col
+    return None
+
+# Helper function to get cycle length recommendation
+def get_cycle_length_recommendation(total_volume):
+    """Return recommended cycle length based on volume thresholds"""
+    if total_volume >= 2400:
+        return "140 sec"
+    elif total_volume >= 1500:
+        return "130 sec"
+    elif total_volume >= 600:
+        return "120 sec"
+    elif total_volume >= 300:
+        return "110 sec"
+    else:
+        return "Free mode"
+
+# Helper function to filter data by time period
+def filter_by_period(df, time_col, period):
+    """Filter dataframe by time period"""
+    df_copy = df.copy()
+    df_copy['hour'] = df_copy[time_col].dt.hour
+    
+    if period == "AM":
+        return df_copy[(df_copy['hour'] >= 5) & (df_copy['hour'] < 10)]
+    elif period == "MD":
+        return df_copy[(df_copy['hour'] >= 11) & (df_copy['hour'] < 15)]
+    elif period == "PM":
+        return df_copy[(df_copy['hour'] >= 16) & (df_copy['hour'] < 20)]
+    return df_copy
+
+# Only show KPI panels for Vehicle Volume data
+if variable == "Vehicle Volume":
+    st.markdown("---")
+    st.subheader("📊 Key Performance Indicators")
+    
+    # Create 4 columns for KPI panels
+    col1, col2, col3, col4 = st.columns(4)
+    
+    # Time period selector (shared across all KPIs)
+    time_period = st.selectbox("Select Time Period:", ["AM (5:00-10:00)", "MD (11:00-15:00)", "PM (16:00-20:00)"])
+    period_key = time_period.split(" ")[0]  # Extract AM/MD/PM
+    
+    # Prepare data for KPIs
+    kpi_df = df.copy()
+    time_col = "Time"
+    
+    # Find volume columns
+    nb_vol_col = find_column(kpi_df, ["nb volume", "northbound volume", "nb_volume"])
+    sb_vol_col = find_column(kpi_df, ["sb volume", "southbound volume", "sb_volume"])
+    
+    # Find speed columns (if available)
+    nb_speed_col = find_column(kpi_df, ["nb speed", "northbound speed", "nb_speed"])
+    sb_speed_col = find_column(kpi_df, ["sb speed", "southbound speed", "sb_speed"])
+    
+    if nb_vol_col and sb_vol_col:
+        # Convert to numeric
+        kpi_df[nb_vol_col] = pd.to_numeric(kpi_df[nb_vol_col], errors='coerce')
+        kpi_df[sb_vol_col] = pd.to_numeric(kpi_df[sb_vol_col], errors='coerce')
+        
+        if nb_speed_col and sb_speed_col:
+            kpi_df[nb_speed_col] = pd.to_numeric(kpi_df[nb_speed_col], errors='coerce')
+            kpi_df[sb_speed_col] = pd.to_numeric(kpi_df[sb_speed_col], errors='coerce')
+        
+        # Filter by selected time period
+        period_df = filter_by_period(kpi_df, time_col, period_key)
+        
+        # === KPI 1: Peak Volume - Highest Direction ===
+        with col1:
+            st.markdown("### 🚦 Peak Volume - Highest Direction")
+            
+            if not period_df.empty:
+                # Calculate total volume for each direction
+                nb_total = period_df[nb_vol_col].sum()
+                sb_total = period_df[sb_vol_col].sum()
+                
+                # Determine highest direction
+                if nb_total >= sb_total:
+                    peak_direction = "NB"
+                    peak_volume = nb_total
+                    peak_vol_col = nb_vol_col
+                else:
+                    peak_direction = "SB"
+                    peak_volume = sb_total
+                    peak_vol_col = sb_vol_col
+                
+                # Find consecutive hours with volume >= 300
+                consecutive_hours = []
+                current_sequence = []
+                
+                for _, row in period_df.iterrows():
+                    if row[peak_vol_col] >= 300:
+                        current_sequence.append(row[time_col])
+                    else:
+                        if len(current_sequence) > len(consecutive_hours):
+                            consecutive_hours = current_sequence.copy()
+                        current_sequence = []
+                
+                # Check final sequence
+                if len(current_sequence) > len(consecutive_hours):
+                    consecutive_hours = current_sequence.copy()
+                
+                if consecutive_hours:
+                    start_time = consecutive_hours[0].strftime("%H:%M")
+                    end_time = consecutive_hours[-1].strftime("%H:%M")
+                    hours_str = f"{start_time} - {end_time}"
+                    
+                    # Calculate volume for consecutive hours period
+                    consecutive_df = period_df[period_df[time_col].isin(consecutive_hours)]
+                    consecutive_volume = consecutive_df[peak_vol_col].sum()
+                    
+                    cycle_rec = get_cycle_length_recommendation(consecutive_volume)
+                    
+                    st.metric("Direction", peak_direction)
+                    st.metric("Time Range", hours_str)
+                    st.metric("Total Volume", f"{consecutive_volume:,.0f} vph")
+                    st.metric("Cycle Length", cycle_rec)
+                else:
+                    st.metric("Direction", peak_direction)
+                    st.metric("Time Range", "Free mode")
+                    st.metric("Total Volume", "Free mode")
+                    st.metric("Cycle Length", "Free mode")
+            else:
+                st.write("No data for selected period")
+        
+        # === KPI 2-4: Dynamic KPIs ===
+        kpi_options = ["Average Speed", "Peak Speed", "Total Volume", "Peak Congestion Time"]
+        
+        for i, col in enumerate([col2, col3, col4]):
+            with col:
+                kpi_type = st.selectbox(f"KPI {i+2}:", kpi_options, key=f"kpi_{i+2}")
+                direction_choice = st.radio("Direction:", ["NB", "SB"], key=f"dir_{i+2}")
+                
+                st.markdown(f"### 📈 {kpi_type} - {direction_choice}")
+                
+                if not period_df.empty:
+                    if kpi_type == "Average Speed" and nb_speed_col and sb_speed_col:
+                        speed_col = nb_speed_col if direction_choice == "NB" else sb_speed_col
+                        avg_speed = period_df[speed_col].mean()
+                        st.metric("Average Speed", f"{avg_speed:.1f
