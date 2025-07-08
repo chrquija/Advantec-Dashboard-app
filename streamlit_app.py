@@ -638,7 +638,7 @@ if variable == "Vehicle Volume":
 
                     st.metric("Busiest Direction (NB or SB)", peak_direction)
                     st.metric("Recommended Cycle Length Activation Period (24-Hour)", "Free mode")
-                    st.metric("Total Vehicle Volume During Activation Period (Vehicles Per Hour)", "Free mode")
+                    st.metric("Total Vehicle Volume During Activation Period", "Free mode")
                     st.metric("Total (direction) Vehicle Volume", "Free mode")
 
             else:
