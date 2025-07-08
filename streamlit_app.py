@@ -175,8 +175,8 @@ def create_enhanced_line_chart(df, x_col, y_col, chart_title, color_name="blue")
             font=dict(size=18, color="darkblue", family="Arial Black")
         ),
         xaxis_title="Time",
-        yaxis_title=y_col,
-        hovermode='x unified',
+        yaxis_title="Vehicle Volume" if "Vehicle Volume" in chart_title else y_col,  # Fixed Y-axis title
+        hovermode='x unified'
         showlegend=True,
         plot_bgcolor='white',
         margin=dict(t=80, b=50, l=50, r=50),
@@ -300,7 +300,7 @@ def create_enhanced_multi_line_chart(df, x_col, y_cols, chart_title):
             font=dict(size=18, color="darkblue", family="Arial Black")
         ),
         xaxis_title="Time",
-        yaxis_title="Value",
+        yaxis_title="Vehicle Volume" if "Vehicle Volume" in chart_title else "Value",  # Fixed Y-axis title
         hovermode='x unified',
         showlegend=True,
         plot_bgcolor='white',
@@ -442,18 +442,22 @@ try:
                 st.plotly_chart(fig, use_container_width=True)
             elif chart_type == "Bar":
                 fig = px.bar(df, x=time_col, y=y_col, title=chart_title)
+                fig.update_layout(yaxis_title="Vehicle Volume" if variable == "Vehicle Volume" else y_col)
                 st.plotly_chart(fig, use_container_width=True)
             elif chart_type == "Scatter":
                 fig = px.scatter(df, x=time_col, y=y_col, title=chart_title)
+                fig.update_layout(yaxis_title="Vehicle Volume" if variable == "Vehicle Volume" else y_col)
                 st.plotly_chart(fig, use_container_width=True)
             elif chart_type == "Box":
                 fig = px.box(df, y=y_col, title=f"{chart_title} Distribution")
+                fig.update_layout(yaxis_title="Vehicle Volume" if variable == "Vehicle Volume" else y_col)
                 st.plotly_chart(fig, use_container_width=True)
             elif chart_type == "Heatmap":
                 df['hour'] = df[time_col].dt.hour
                 df['day'] = df[time_col].dt.date
                 pivot = df.pivot_table(values=y_col, index='day', columns='hour')
                 fig = px.imshow(pivot, aspect='auto', title=f"{chart_title} Heatmap")
+                fig.update_layout(yaxis_title="Date", coloraxis_colorbar_title="Vehicle Volume" if variable == "Vehicle Volume" else y_col)
                 st.plotly_chart(fig, use_container_width=True)
 
             # Show stats with proper units
@@ -501,14 +505,14 @@ def get_cycle_length_recommendation(hourly_volumes):
     """
     cycle = "Free mode"
     for v in hourly_volumes:
-        if v >= 2405:
+        if v >= 2400:
             return "140 sec"
-        elif v >= 1505:
+        elif v >= 1500:
             cycle = "130 sec"
-        elif v >= 605:
+        elif v >= 600:
             if cycle not in ["130 sec", "140 sec"]:
                 cycle = "120 sec"
-        elif v >= 305:
+        elif v >= 300:
             if cycle not in ["120 sec", "130 sec", "140 sec"]:
                 cycle = "110 sec"
     return cycle
@@ -680,13 +684,13 @@ if variable == "Vehicle Volume":
 
                             # Function for each hour
                             def get_hourly_cycle_length(volume):
-                                if volume >= 2405:
+                                if volume >= 2400:
                                     return "140 sec"
-                                elif volume >= 1505:
+                                elif volume >= 1500:
                                     return "130 sec"
-                                elif volume >= 605:
+                                elif volume >= 600:
                                     return "120 sec"
-                                elif volume >= 305:
+                                elif volume >= 300:
                                     return "110 sec"
                                 else:
                                     return "Free mode"
