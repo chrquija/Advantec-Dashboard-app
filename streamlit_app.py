@@ -525,11 +525,11 @@ def filter_by_period(df, time_col, period):
     df_copy['hour'] = df_copy[time_col].dt.hour
     
     if period == "AM":
-        return df_copy[(df_copy['hour'] >= 5) & (df_copy['hour'] < 10)]
+        return df_copy[(df_copy['hour'] >= 5) & (df_copy['hour'] <= 10)]
     elif period == "MD":
-        return df_copy[(df_copy['hour'] >= 11) & (df_copy['hour'] < 15)]
+        return df_copy[(df_copy['hour'] >= 11) & (df_copy['hour'] <= 15)]
     elif period == "PM":
-        return df_copy[(df_copy['hour'] >= 16) & (df_copy['hour'] < 20)]
+        return df_copy[(df_copy['hour'] >= 16) & (df_copy['hour'] <= 20)]
     return df_copy
 
 
