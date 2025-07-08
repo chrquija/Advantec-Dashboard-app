@@ -583,7 +583,7 @@ if variable == "Vehicle Volume":
 
         # === KPI 1: Peak Volume - Highest Direction ===
         with col1:
-            st.markdown("### 🚦 Suggested Cycle Length")
+            st.markdown("### 🚦 Peak Vehicle Volume Data")
 
             if not period_df.empty:
                 # Calculate total volume for each direction
