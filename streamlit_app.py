@@ -518,18 +518,18 @@ def get_cycle_length_recommendation(hourly_volumes):
     return cycle
 
 
-# Helper function to filter data by time period
+# Helper function to filter data by time period, Recommended Cycle Length Activation Period (RCLAP)
 def filter_by_period(df, time_col, period):
     """Filter dataframe by time period"""
     df_copy = df.copy()
     df_copy['hour'] = df_copy[time_col].dt.hour
     
     if period == "AM":
-        return df_copy[(df_copy['hour'] >= 5) & (df_copy['hour'] <= 10)]
+        return df_copy[(df_copy['hour'] >= 5) & (df_copy['hour'] <= 10)]  # 5:00 - 10:00
     elif period == "MD":
-        return df_copy[(df_copy['hour'] >= 11) & (df_copy['hour'] <= 15)]
+        return df_copy[(df_copy['hour'] >= 11) & (df_copy['hour'] <= 15)]  # 11:00 - 15:00
     elif period == "PM":
-        return df_copy[(df_copy['hour'] >= 16) & (df_copy['hour'] <= 20)]
+        return df_copy[(df_copy['hour'] >= 16) & (df_copy['hour'] <= 20)]  # 16:00 - 20:00
     return df_copy
 
 
