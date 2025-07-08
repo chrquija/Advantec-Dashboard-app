@@ -631,14 +631,14 @@ if variable == "Vehicle Volume":
                     busiest_direction_volume = period_df[peak_vol_col].sum()
 
                     st.metric("Busiest Direction", peak_direction)
-                    st.metric("Cycle Length Activation Period (24-Hour)", hours_str)
-                    st.metric("Total Peak Period Volume", f"{consecutive_volume:,.0f} vph")
+                    st.metric("Recommended Cycle Length Activation Period (24-Hour)", hours_str)
+                    st.metric("Vehicle Volume During Activation Period (Vehicles Per Hour)", f"{consecutive_volume:,.0f} vph")
                     st.metric("Busiest Direction Total Volume", f"{busiest_direction_volume:,.0f} vph")
                 else:
 
                     st.metric("Busiest Direction", peak_direction)
-                    st.metric("Cycle Length Activation Period (24-Hour)", "Free mode")
-                    st.metric("Total Peak Period Volume", "Free mode")
+                    st.metric("Recommended Cycle Length Activation Period (24-Hour)", "Free mode")
+                    st.metric("Vehicle Volume During Activation Period (Vehicles Per Hour)", "Free mode")
                     st.metric("Busiest Direction Total Volume", "Free mode")
 
             else:
