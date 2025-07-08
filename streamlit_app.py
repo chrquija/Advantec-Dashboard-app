@@ -628,7 +628,7 @@ if variable == "Vehicle Volume":
                     cycle_rec = get_cycle_length_recommendation(hourly_volumes)  # Pass the list!
 
                     # Calculate total volume for the busiest direction
-                    busiest_direction_volume = df_filtered[peak_direction].sum()
+                    busiest_direction_volume = period_df[peak_vol_col].sum()
 
                     st.metric("Busiest Direction", peak_direction)
                     st.metric("Peak Period (24-Hour)", hours_str)
