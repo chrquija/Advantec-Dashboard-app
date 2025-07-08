@@ -627,15 +627,15 @@ if variable == "Vehicle Volume":
                     hourly_volumes = consecutive_df[peak_vol_col].tolist()
                     cycle_rec = get_cycle_length_recommendation(hourly_volumes)  # Pass the list!
 
+                    st.metric("Busiest Direction", peak_direction)
                     st.metric("Peak Period (24-Hour)", hours_str)
                     st.metric("Total Peak Period Volume", f"{consecutive_volume:,.0f} vph")
-                    st.metric("Busiest Direction", peak_direction)
                     st.metric("Cycle Length Recommendation", cycle_rec)
                 else:
 
+                    st.metric("Busiest Direction", peak_direction)
                     st.metric("Peak Period (24-Hour)", "Free mode")
                     st.metric("Total Peak Period Volume", "Free mode")
-                    st.metric("Busiest Direction", peak_direction)
                     st.metric("Cycle Length Recommendation", "Free mode")
             else:
                 st.write("No data for selected period")
