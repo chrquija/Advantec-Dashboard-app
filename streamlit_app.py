@@ -600,16 +600,12 @@ if variable == "Vehicle Volume":
                     peak_volume = sb_total
                     peak_vol_col = sb_vol_col
 
-                # After determining the peak direction and before the consecutive hours calculation
-                # Calculate total volume for each direction across the entire period
-                sb_total = period_df[sb_vol_col].sum()
-                nb_total = period_df[nb_vol_col].sum()
 
-                # Get the total for "Total (direction) Vehicle Volume"
+                # Get the total sum of the selected column for "Total (direction) Vehicle Volume"
                 if peak_vol_col == sb_vol_col:
-                    total_peak_direction_volume = sb_total
+                    total_peak_direction_volume = kpi_df[sb_vol_col].sum()  # Full day SB total
                 else:
-                    total_peak_direction_volume = nb_total
+                    total_peak_direction_volume = kpi_df[nb_vol_col].sum()  # Full day NB total
 
                 # Find consecutive hours with volume >= 300
                 consecutive_hours = []
@@ -648,7 +644,7 @@ if variable == "Vehicle Volume":
                     st.metric("Busiest Direction (NB or SB)", peak_direction)
                     st.metric("Recommended Cycle Length Activation Period (24-Hour)", "Free mode")
                     st.metric("Total Activation Period Vehicle Volume", "Free mode")
-                    st.metric("Total (direction) Vehicle Volume", "Free mode")
+                    st.metric("Total (direction) Vehicle Volume", f"{total_peak_direction_volume:,.0f} Vehicles")
 
             else:
                 st.write("No data for selected period")
