@@ -16,64 +16,436 @@ st.set_page_config(
 # App title
 st.title("📊 Active Transportation & Operations Management Dashboard")
 
-# === Sidebar Selections ===
+# === SIDEBAR ===
 st.sidebar.image("Logos/ACE-logo-HiRes.jpg", width=200)
-st.sidebar.title("⚙️ Dashboard Filters")
 
-# Step 1: Pick variable type
-variable = st.sidebar.selectbox("SELECT CATEGORY", ["Speed", "Travel Time", "Vehicle Volume"])
-
-# Step 2: Pick direction
-direction = st.sidebar.radio("Direction", ["NB", "SB", "Both"])
-
-# Step 3: Pick date range
-date_range = st.sidebar.selectbox(
-    "Select Date Range",
-    ["April 11–20, 2025", "May 9–18, 2025"] if variable != "Vehicle Volume" else ["April 10, 2025", "Feb 13, 2025"]
-)
-#Code for Select Time Period inside of Sidebar
-# ADD THIS NEW SECTION:
-st.sidebar.markdown("### 🎯 KPI Settings")
-time_period = st.sidebar.selectbox(
-    "Select Time Period",
-    ["AM (5:00-10:00)", "MD (11:00-15:00)", "PM (16:00-20:00)"]
+# === 1. DATA SOURCE SELECTION ===
+st.markdown("## 📊 Data Source")
+data_source = st.radio(
+    "Choose your data source:",
+    ["GitHub Repository", "Uploaded CSV", "API Connection"],
+    key="data_source"
 )
 
+# === 2. CSV UPLOAD SECTION ===
+if data_source == "Uploaded CSV":
+    st.markdown("## ⬆️ Upload CSV Files")
+
+    # Initialize session state for uploaded files
+    if 'uploaded_files' not in st.session_state:
+        st.session_state.uploaded_files = {}
+
+    # File uploader
+    uploaded_file = st.file_uploader(
+        "Drag and drop CSV files here",
+        type=['csv'],
+        accept_multiple_files=False,
+        help="Maximum file size: 200MB"
+    )
+
+    # Store uploaded file
+    if uploaded_file is not None:
+        st.session_state.uploaded_files[uploaded_file.name] = uploaded_file
+        st.success(f"✅ {uploaded_file.name} uploaded successfully!")
+
+    # File selection dropdown
+    if st.session_state.uploaded_files:
+        file_options = ["Select uploaded file..."] + list(st.session_state.uploaded_files.keys())
+        selected_file = st.selectbox(
+            "Select file to analyze:",
+            file_options,
+            key="selected_file"
+        )
+
+        # === 3. COLUMN MAPPING ===
+        if selected_file != "Select uploaded file...":
+            st.markdown("## 🧩 Map Your Columns")
+
+            # Load the selected file
+            df = pd.read_csv(st.session_state.uploaded_files[selected_file])
+
+            # Column mapping dropdowns
+            date_column = st.selectbox(
+                "Select column for date:",
+                ["Select column..."] + list(df.columns),
+                key="date_column"
+            )
+
+            direction_column = st.selectbox(
+                "Select column for direction:",
+                ["Select column..."] + list(df.columns),
+                key="direction_column"
+            )
+
+            variable_column = st.selectbox(
+                "Select column for variable:",
+                ["Select column..."] + list(df.columns),
+                key="variable_column"
+            )
+
+            # Validation
+            if date_column == "Select column..." or direction_column == "Select column..." or variable_column == "Select column...":
+                st.warning("⚠️ Please map all columns to continue")
+                st.stop()
+    else:
+        st.info("📁 No files uploaded yet. Upload a CSV file to get started.")
+        st.stop()
+
+# === 3. API CONNECTION SECTION ===
+elif data_source == "API Connection":
+    st.markdown("## 🔌 API Configuration")
+
+    # API Type Selection
+    api_type = st.selectbox(
+        "Select API Type:",
+        ["REST API", "GraphQL", "Database API", "Custom Endpoint"],
+        key="api_type"
+    )
+
+    # API Configuration
+    if api_type == "REST API":
+        api_url = st.text_input(
+            "API Endpoint URL:",
+            placeholder="https://api.example.com/traffic-data",
+            key="api_url"
+        )
+
+        # Authentication
+        auth_method = st.selectbox(
+            "Authentication Method:",
+            ["None", "API Key", "Bearer Token", "Basic Auth"],
+            key="auth_method"
+        )
+
+        if auth_method == "API Key":
+            api_key = st.text_input(
+                "API Key:",
+                type="password",
+                placeholder="Enter your API key",
+                key="api_key"
+            )
+            key_header = st.text_input(
+                "Header Name:",
+                value="X-API-Key",
+                key="key_header"
+            )
+
+        elif auth_method == "Bearer Token":
+            bearer_token = st.text_input(
+                "Bearer Token:",
+                type="password",
+                placeholder="Enter your bearer token",
+                key="bearer_token"
+            )
+
+        elif auth_method == "Basic Auth":
+            username = st.text_input("Username:", key="api_username")
+            password = st.text_input("Password:", type="password", key="api_password")
+
+        # Query Parameters
+        with st.expander("🔧 Query Parameters (Optional)"):
+            st.text_area(
+                "Parameters (JSON format):",
+                placeholder='{"date_from": "2025-01-01", "date_to": "2025-12-31"}',
+                key="query_params"
+            )
+
+        # Test Connection
+        if st.button("🔍 Test API Connection"):
+            st.info("Testing API connection... (Feature coming soon)")
+            # Future: Implement actual API testing
+
+    elif api_type == "Database API":
+        db_type = st.selectbox(
+            "Database Type:",
+            ["PostgreSQL", "MySQL", "SQLite", "MongoDB"],
+            key="db_type"
+        )
+
+        connection_string = st.text_input(
+            "Connection String:",
+            type="password",
+            placeholder="postgresql://user:password@host:port/database",
+            key="connection_string"
+        )
+
+        query = st.text_area(
+            "SQL Query:",
+            placeholder="SELECT date, direction, speed FROM traffic_data WHERE date >= '2025-01-01'",
+            key="sql_query"
+        )
+
+    # Data Mapping for API
+    st.markdown("## 🧩 API Data Mapping")
+    st.info("🚧 Configure how API response maps to your data structure (Feature coming soon)")
+
+    # Placeholder for future API mapping
+    with st.expander("📝 Response Structure"):
+        st.code("""
+        Expected API Response Format:
+        {
+            "data": [
+                {
+                    "date": "2025-01-01T10:00:00Z",
+                    "direction": "NB",
+                    "value": 45.5
+                }
+            ]
+        }
+        """)
+
+    st.warning("🚧 API integration coming in future update!")
+    st.stop()
+
+# === 4. DASHBOARD FILTERS ===
+st.markdown("## 🔍 Dashboard Filters")
+
+# Category selection (same for all data sources)
+variable = st.selectbox(
+    "SELECT CATEGORY",
+    ["Vehicle Volume", "Speed", "Travel Time"],
+    key="variable"
+)
+
+# Direction selection (same for all data sources)
+direction = st.radio(
+    "Direction",
+    ["NB", "SB", "Both"],
+    index=1,  # Default to SB
+    key="direction"
+)
+
+# Date range selection (GitHub only, API will have different logic)
+if data_source == "GitHub Repository":
+    if variable == "Vehicle Volume":
+        date_options = ["April 10, 2025", "Feb 13, 2025"]
+    else:  # Speed or Travel Time
+        date_options = ["April 11–20, 2025", "May 9–18, 2025"]
+
+    date_range = st.selectbox(
+        "Select Date Range",
+        date_options,
+        key="date_range"
+    )
+
+# === 5. KPI SETTINGS ===
+st.markdown("## ⚙️ KPI Settings")
+time_period = st.selectbox(
+    "Time Period",
+    ["AM (5:00-10:00)", "MD (11:00-15:00)", "PM (16:00-20:00)"],
+    index=0,
+    key="time_period"
+)
 # === Filepath Mapping Logic ===
 base_url = "https://raw.githubusercontent.com/chrquija/Advantec-Dashboard-app/refs/heads/main/hwy111_to_ave52/"
 corridor_segment = "Washington St: Highway 111 to Avenue 52"
 
 path_map = {
     # === SPEED ===
-    ("Speed", "NB", "April 11–20, 2025"): base_url + "SPEED/Weeks_04112025_to_04202025/NB_Washington_Avenue_52_to_Hwy_111_SPEED_1hr_0411_04202025.csv",
-    ("Speed", "SB", "April 11–20, 2025"): base_url + "SPEED/Weeks_04112025_to_04202025/SB_Washington_Hwy_111_to_Avenue_52_SPEED_1hr_0411_04202025.csv",
+    ("Speed", "NB",
+     "April 11–20, 2025"): base_url + "SPEED/Weeks_04112025_to_04202025/NB_Washington_Avenue_52_to_Hwy_111_SPEED_1hr_0411_04202025.csv",
+    ("Speed", "SB",
+     "April 11–20, 2025"): base_url + "SPEED/Weeks_04112025_to_04202025/SB_Washington_Hwy_111_to_Avenue_52_SPEED_1hr_0411_04202025.csv",
     ("Speed", "Both", "April 11–20, 2025"): "BOTH",
 
-    ("Speed", "NB", "May 9–18, 2025"): base_url + "SPEED/Weeks_05092025_to_05182025/NB_Washington_Avenue_52_to_Hwy_111_%20SPEED_1hr_0509_05182025.csv",
-    ("Speed", "SB", "May 9–18, 2025"): base_url + "SPEED/Weeks_05092025_to_05182025/SB_Washington_Hwy_111_to_Avenue_52_SPEED_1hr_0509_05182025.csv",
+    ("Speed", "NB",
+     "May 9–18, 2025"): base_url + "SPEED/Weeks_05092025_to_05182025/NB_Washington_Avenue_52_to_Hwy_111_%20SPEED_1hr_0509_05182025.csv",
+    ("Speed", "SB",
+     "May 9–18, 2025"): base_url + "SPEED/Weeks_05092025_to_05182025/SB_Washington_Hwy_111_to_Avenue_52_SPEED_1hr_0509_05182025.csv",
     ("Speed", "Both", "May 9–18, 2025"): "BOTH",
-    
+
     # === TRAVEL TIME ===
-    ("Travel Time", "NB", "April 11–20, 2025"): base_url + "TRAVEL_TIME/Weeks_04112025_to_04202025/NB_Washington_Avenue_52_to_Hwy_111_TRAVEL_TIME_1hr_0411_04202025.csv",
-    ("Travel Time", "SB", "April 11–20, 2025"): base_url + "TRAVEL_TIME/Weeks_04112025_to_04202025/SB_Washington_Hwy_111_to_Avenue_52_TRAVEL_TIME_1hr_0411_04202025.csv",
+    ("Travel Time", "NB",
+     "April 11–20, 2025"): base_url + "TRAVEL_TIME/Weeks_04112025_to_04202025/NB_Washington_Avenue_52_to_Hwy_111_TRAVEL_TIME_1hr_0411_04202025.csv",
+    ("Travel Time", "SB",
+     "April 11–20, 2025"): base_url + "TRAVEL_TIME/Weeks_04112025_to_04202025/SB_Washington_Hwy_111_to_Avenue_52_TRAVEL_TIME_1hr_0411_04202025.csv",
     ("Travel Time", "Both", "April 11–20, 2025"): "BOTH",
 
-    ("Travel Time", "NB", "May 9–18, 2025"): base_url + "TRAVEL_TIME/Weeks_05092025_to_05182025/NB_Washington_Avenue_52_to_Hwy_111_TRAVEL_TIME_1_hr_0509_05182025.csv",
-    ("Travel Time", "SB", "May 9–18, 2025"): base_url + "TRAVEL_TIME/Weeks_05092025_to_05182025/SB_Washington_Hwy_111_to_Avenue_52_TRAVEL_TIME_1_hr_0509_05182025.csv",
+    ("Travel Time", "NB",
+     "May 9–18, 2025"): base_url + "TRAVEL_TIME/Weeks_05092025_to_05182025/NB_Washington_Avenue_52_to_Hwy_111_TRAVEL_TIME_1_hr_0509_05182025.csv",
+    ("Travel Time", "SB",
+     "May 9–18, 2025"): base_url + "TRAVEL_TIME/Weeks_05092025_to_05182025/SB_Washington_Hwy_111_to_Avenue_52_TRAVEL_TIME_1_hr_0509_05182025.csv",
     ("Travel Time", "Both", "May 9–18, 2025"): "BOTH",
 
     # === VEHICLE VOLUME (April 10) — All 3 use same file ===
-    ("Vehicle Volume", "NB", "April 10, 2025"): base_url + "VOLUME/Thursday_April_10/Washington_and_Ave_52_NB_and_SB_VolumeDATA_THURSDAY_APRIL_10.csv",
-    ("Vehicle Volume", "SB", "April 10, 2025"): base_url + "VOLUME/Thursday_April_10/Washington_and_Ave_52_NB_and_SB_VolumeDATA_THURSDAY_APRIL_10.csv",
-    ("Vehicle Volume", "Both", "April 10, 2025"): base_url + "VOLUME/Thursday_April_10/Washington_and_Ave_52_NB_and_SB_VolumeDATA_THURSDAY_APRIL_10.csv",
+    ("Vehicle Volume", "NB",
+     "April 10, 2025"): base_url + "VOLUME/Thursday_April_10/Washington_and_Ave_52_NB_and_SB_VolumeDATA_THURSDAY_APRIL_10.csv",
+    ("Vehicle Volume", "SB",
+     "April 10, 2025"): base_url + "VOLUME/Thursday_April_10/Washington_and_Ave_52_NB_and_SB_VolumeDATA_THURSDAY_APRIL_10.csv",
+    ("Vehicle Volume", "Both",
+     "April 10, 2025"): base_url + "VOLUME/Thursday_April_10/Washington_and_Ave_52_NB_and_SB_VolumeDATA_THURSDAY_APRIL_10.csv",
 
     # === VEHICLE VOLUME (Feb 13) — All 3 use same file ===
-    ("Vehicle Volume", "NB", "Feb 13, 2025"): base_url + "VOLUME/Thursday_Feb_13/Washington_and_Ave_52_NB_and_SB_VolumeDATA_Thursday_Feb_13.csv",
-    ("Vehicle Volume", "SB", "Feb 13, 2025"): base_url + "VOLUME/Thursday_Feb_13/Washington_and_Ave_52_NB_and_SB_VolumeDATA_Thursday_Feb_13.csv",
-    ("Vehicle Volume", "Both", "Feb 13, 2025"): base_url + "VOLUME/Thursday_Feb_13/Washington_and_Ave_52_NB_and_SB_VolumeDATA_Thursday_Feb_13.csv",
+    ("Vehicle Volume", "NB",
+     "Feb 13, 2025"): base_url + "VOLUME/Thursday_Feb_13/Washington_and_Ave_52_NB_and_SB_VolumeDATA_Thursday_Feb_13.csv",
+    ("Vehicle Volume", "SB",
+     "Feb 13, 2025"): base_url + "VOLUME/Thursday_Feb_13/Washington_and_Ave_52_NB_and_SB_VolumeDATA_Thursday_Feb_13.csv",
+    ("Vehicle Volume", "Both",
+     "Feb 13, 2025"): base_url + "VOLUME/Thursday_Feb_13/Washington_and_Ave_52_NB_and_SB_VolumeDATA_Thursday_Feb_13.csv",
 }
 
 selected_path = path_map.get((variable, direction, date_range), "No path available for selection.")
+
+# === EXTENSIBLE DATA LOADING SYSTEM (helps the sidebar do its job) ===
+
+class DataLoader:
+    """Centralized data loading system supporting multiple sources"""
+
+    @staticmethod
+    def load_github_data(url):
+        """Load data from GitHub repository"""
+        try:
+            if url == "BOTH":
+                return None
+            return pd.read_csv(url)
+        except Exception as e:
+            st.error(f"Error loading GitHub data: {e}")
+            return None
+
+    @staticmethod
+    def load_uploaded_data(file_obj, date_col, direction_col, variable_col):
+        """Load and process uploaded CSV data"""
+        try:
+            df = pd.read_csv(file_obj)
+
+            # Rename columns to match expected format
+            df = df.rename(columns={
+                date_col: 'Date',
+                direction_col: 'Direction',
+                variable_col: 'Value'
+            })
+
+            # Convert date column to datetime
+            df['Date'] = pd.to_datetime(df['Date'])
+
+            return df
+        except Exception as e:
+            st.error(f"Error processing uploaded file: {e}")
+            return None
+
+    @staticmethod
+    def load_api_data(api_config):
+        """Load data from API (Future implementation)"""
+        # This will be implemented when API feature is ready
+        try:
+            if api_config.get('type') == 'REST API':
+                return DataLoader._load_rest_api(api_config)
+            elif api_config.get('type') == 'Database API':
+                return DataLoader._load_database_api(api_config)
+            else:
+                st.error("Unsupported API type")
+                return None
+        except Exception as e:
+            st.error(f"Error loading API data: {e}")
+            return None
+
+    @staticmethod
+    def _load_rest_api(config):
+        """Load data from REST API"""
+        # Future implementation
+        import requests
+
+        headers = {}
+        if config.get('auth_method') == 'API Key':
+            headers[config.get('key_header')] = config.get('api_key')
+        elif config.get('auth_method') == 'Bearer Token':
+            headers['Authorization'] = f"Bearer {config.get('bearer_token')}"
+
+        response = requests.get(config.get('url'), headers=headers)
+        # Process response and return DataFrame
+        return pd.DataFrame(response.json().get('data', []))
+
+    @staticmethod
+    def _load_database_api(config):
+        """Load data from database"""
+        # Future implementation with SQLAlchemy
+        # import sqlalchemy
+        # engine = sqlalchemy.create_engine(config.get('connection_string'))
+        # return pd.read_sql(config.get('query'), engine)
+        pass
+
+
+# === MAIN DATA LOADING WITH ROUTER ===
+def load_data_by_source(data_source, **kwargs):
+    """Route data loading based on selected source"""
+
+    if data_source == "GitHub Repository":
+        return DataLoader.load_github_data(kwargs.get('url'))
+
+    elif data_source == "Uploaded CSV":
+        return DataLoader.load_uploaded_data(
+            kwargs.get('file_obj'),
+            kwargs.get('date_col'),
+            kwargs.get('direction_col'),
+            kwargs.get('variable_col')
+        )
+
+    elif data_source == "API Connection":
+        return DataLoader.load_api_data(kwargs.get('api_config'))
+
+    else:
+        st.error(f"Unknown data source: {data_source}")
+        return None
+
+
+# === USAGE IN MAIN APP ===
+if data_source == "GitHub Repository":
+    # Existing GitHub logic
+    selected_path = path_map.get((variable, direction, date_range), "No path available for selection.")
+
+    if selected_path == "No path available for selection.":
+        st.error("No data available for the selected combination.")
+        st.stop()
+    elif selected_path == "BOTH":
+        # Handle "Both" direction
+        nb_path = path_map.get((variable, "NB", date_range))
+        sb_path = path_map.get((variable, "SB", date_range))
+
+        if nb_path and sb_path:
+            df_nb = load_data_by_source("GitHub Repository", url=nb_path)
+            df_sb = load_data_by_source("GitHub Repository", url=sb_path)
+
+            if df_nb is not None and df_sb is not None:
+                df = pd.concat([df_nb, df_sb], ignore_index=True)
+            else:
+                st.error("Error loading data for both directions.")
+                st.stop()
+        else:
+            st.error("Data not available for both directions.")
+            st.stop()
+    else:
+        df = load_data_by_source("GitHub Repository", url=selected_path)
+        if df is None:
+            st.stop()
+
+elif data_source == "Uploaded CSV":
+    df = load_data_by_source(
+        "Uploaded CSV",
+        file_obj=st.session_state.uploaded_files[selected_file],
+        date_col=date_column,
+        direction_col=direction_column,
+        variable_col=variable_column
+    )
+
+    if df is None:
+        st.stop()
+
+    # Filter by direction if not "Both"
+    if direction != "Both":
+        df = df[df['Direction'] == direction]
+
+elif data_source == "API Connection":
+    # Future API implementation
+    api_config = {
+        'type': api_type,
+        'url': api_url if 'api_url' in locals() else None,
+        'auth_method': auth_method if 'auth_method' in locals() else None,
+        # Add other API config parameters
+    }
+
+    df = load_data_by_source("API Connection", api_config=api_config)
+    if df is None:
+        st.stop()
 
 # === Display UI selections ===
 st.write("**Date Range:**", date_range)
