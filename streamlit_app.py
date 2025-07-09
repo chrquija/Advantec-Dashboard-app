@@ -27,6 +27,45 @@ with st.sidebar:
     ["GitHub Repository", "Uploaded CSV", "API Connection"],
     key="data_source"
 )
+    # === 4. DASHBOARD FILTERS ===
+    st.markdown("## 🔍 Dashboard Filters")
+
+    # Category selection (same for all data sources)
+    variable = st.selectbox(
+        "SELECT CATEGORY",
+        ["Vehicle Volume", "Speed", "Travel Time"],
+        key="variable"
+    )
+
+    # Direction selection (same for all data sources)
+    direction = st.radio(
+        "Direction",
+        ["NB", "SB", "Both"],
+        index=1,  # Default to SB
+        key="direction"
+    )
+
+    # Date range selection (GitHub only, API will have different logic)
+    if data_source == "GitHub Repository":
+        if variable == "Vehicle Volume":
+            date_options = ["April 10, 2025", "Feb 13, 2025"]
+        else:  # Speed or Travel Time
+            date_options = ["April 11–20, 2025", "May 9–18, 2025"]
+
+        date_range = st.selectbox(
+            "Select Date Range",
+            date_options,
+            key="date_range"
+        )
+
+    # === 5. KPI SETTINGS ===
+    st.markdown("## ⚙️ KPI Settings")
+    time_period = st.selectbox(
+        "Time Period",
+        ["AM (5:00-10:00)", "MD (11:00-15:00)", "PM (16:00-20:00)"],
+        index=0,
+        key="time_period"
+    )
 
 # === 2. CSV UPLOAD SECTION ===
 if data_source == "Uploaded CSV":
@@ -198,45 +237,7 @@ elif data_source == "API Connection":
     st.warning("🚧 API integration coming in future update!")
     st.stop()
 
-# === 4. DASHBOARD FILTERS ===
-st.markdown("## 🔍 Dashboard Filters")
 
-# Category selection (same for all data sources)
-variable = st.selectbox(
-    "SELECT CATEGORY",
-    ["Vehicle Volume", "Speed", "Travel Time"],
-    key="variable"
-)
-
-# Direction selection (same for all data sources)
-direction = st.radio(
-    "Direction",
-    ["NB", "SB", "Both"],
-    index=1,  # Default to SB
-    key="direction"
-)
-
-# Date range selection (GitHub only, API will have different logic)
-if data_source == "GitHub Repository":
-    if variable == "Vehicle Volume":
-        date_options = ["April 10, 2025", "Feb 13, 2025"]
-    else:  # Speed or Travel Time
-        date_options = ["April 11–20, 2025", "May 9–18, 2025"]
-
-    date_range = st.selectbox(
-        "Select Date Range",
-        date_options,
-        key="date_range"
-    )
-
-# === 5. KPI SETTINGS ===
-st.markdown("## ⚙️ KPI Settings")
-time_period = st.selectbox(
-    "Time Period",
-    ["AM (5:00-10:00)", "MD (11:00-15:00)", "PM (16:00-20:00)"],
-    index=0,
-    key="time_period"
-)
 # === Filepath Mapping Logic ===
 base_url = "https://raw.githubusercontent.com/chrquija/Advantec-Dashboard-app/refs/heads/main/hwy111_to_ave52/"
 corridor_segment = "Washington St: Highway 111 to Avenue 52"
