@@ -31,6 +31,13 @@ date_range = st.sidebar.selectbox(
     "Select Date Range",
     ["April 11–20, 2025", "May 9–18, 2025"] if variable != "Vehicle Volume" else ["April 10, 2025", "Feb 13, 2025"]
 )
+#Code for Select Time Period inside of Sidebar
+# ADD THIS NEW SECTION:
+st.sidebar.markdown("### 🎯 KPI Settings")
+time_period = st.sidebar.selectbox(
+    "Select Time Period",
+    ["AM (5:00-10:00)", "MD (11:00-15:00)", "PM (16:00-20:00)"]
+)
 
 # === Filepath Mapping Logic ===
 base_url = "https://raw.githubusercontent.com/chrquija/Advantec-Dashboard-app/refs/heads/main/hwy111_to_ave52/"
@@ -541,8 +548,7 @@ if variable == "Vehicle Volume":
     # Create 4 columns for KPI panels
     col1, col2, col3, col4 = st.columns(4)
 
-    # Time period selector (shared across all KPIs)
-    time_period = st.selectbox("Select Time Period:", ["AM (5:00-10:00)", "MD (11:00-15:00)", "PM (16:00-20:00)"])
+    # Period_key is needed for processing - it extracts "AM, MD, or PM" from full string like "AM (5:00-10:00) and this line belongs in main logic flow - not side bar setup
     period_key = time_period.split(" ")[0]  # Extract AM/MD/PM
 
     # Prepare data for KPIs
