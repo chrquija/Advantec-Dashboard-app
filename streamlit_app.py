@@ -600,6 +600,17 @@ if variable == "Vehicle Volume":
                     peak_volume = sb_total
                     peak_vol_col = sb_vol_col
 
+                # After determining the peak direction and before the consecutive hours calculation
+                # Calculate total volume for each direction across the entire period
+                sb_total = period_df[sb_vol_col].sum()
+                nb_total = period_df[nb_vol_col].sum()
+
+                # Get the total for "Total (direction) Vehicle Volume"
+                if peak_vol_col == sb_vol_col:
+                    total_peak_direction_volume = sb_total
+                else:
+                    total_peak_direction_volume = nb_total
+
                 # Find consecutive hours with volume >= 300
                 consecutive_hours = []
                 current_sequence = []
@@ -619,7 +630,7 @@ if variable == "Vehicle Volume":
                     end_time = consecutive_hours[-1].strftime("%H:%M")
                     hours_str = f"{start_time} - {end_time}"
 
-                    # Calculate volume for consecutive hours period
+                    # Calculate volume for "Recommended Cycle Length Activation Period (24 Hour)"
                     consecutive_df = period_df[period_df[time_col].isin(consecutive_hours)]
                     consecutive_volume = consecutive_df[peak_vol_col].sum()
 
@@ -627,18 +638,16 @@ if variable == "Vehicle Volume":
                     hourly_volumes = consecutive_df[peak_vol_col].tolist()
                     cycle_rec = get_cycle_length_recommendation(hourly_volumes)  # Pass the list!
 
-                    # Calculate total volume for the busiest direction
-                    busiest_direction_volume = period_df[peak_vol_col].sum()
 
                     st.metric("Busiest Direction (NB or SB)", peak_direction)
                     st.metric("Recommended Cycle Length Activation Period (24-Hour)", hours_str)
                     st.metric("Total Vehicle Volume During Activation Period", f"{consecutive_volume:,.0f} Vehicles")
-                    st.metric("Total (direction) Vehicle Volume", f"{busiest_direction_volume:,.0f} Vehicles")
+                    st.metric("Total (direction) Vehicle Volume", f"{total_peak_direction_volume:,.0f} Vehicles")
                 else:
 
                     st.metric("Busiest Direction (NB or SB)", peak_direction)
                     st.metric("Recommended Cycle Length Activation Period (24-Hour)", "Free mode")
-                    st.metric("Total Vehicle Volume During Activation Period", "Free mode")
+                    st.metric("Total Activation Period Vehicle Volume", "Free mode")
                     st.metric("Total (direction) Vehicle Volume", "Free mode")
 
             else:
