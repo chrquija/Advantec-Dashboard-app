@@ -17,11 +17,12 @@ st.set_page_config(
 st.title("📊 Active Transportation & Operations Management Dashboard")
 
 # === SIDEBAR ===
-st.sidebar.image("Logos/ACE-logo-HiRes.jpg", width=200)
+with st.sidebar:
+    st.image("Logos/ACE-logo-HiRes.jpg", width=200)
 
-# === 1. DATA SOURCE SELECTION ===
-st.markdown("## 📊 Data Source")
-data_source = st.radio(
+    # === 1. DATA SOURCE SELECTION ===
+    st.markdown("## 📊 Data Source")
+    data_source = st.radio(
     "Choose your data source:",
     ["GitHub Repository", "Uploaded CSV", "API Connection"],
     key="data_source"
