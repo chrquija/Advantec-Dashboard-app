@@ -198,14 +198,14 @@ elif data_source == "API Connection":
     st.warning("🚧 API integration coming in future update!")
     st.stop()
 
-# === 4. DASHBOARD FILTERS ===
-st.markdown("## 🔍 Dashboard Filters")
+    # === 4. DASHBOARD FILTERS ===
+    st.markdown("## 🔍 Dashboard Filters")
 
-# Category selection (same for all data sources)
-variable = st.selectbox(
-    "SELECT CATEGORY",
-    ["Vehicle Volume", "Speed", "Travel Time"],
-    key="variable"
+    # Category selection (same for all data sources)
+    variable = st.selectbox(
+            "SELECT CATEGORY",
+            ["Vehicle Volume", "Speed", "Travel Time"],
+            key="variable"
 )
 
 # Direction selection (same for all data sources)
