@@ -27,7 +27,7 @@ with st.sidebar:
     ["GitHub Repository", "Uploaded CSV", "API Connection"],
     key="data_source"
 )
-    # === 4. DASHBOARD FILTERS ===
+    # === 2. DASHBOARD FILTERS ===
     st.markdown("## 🔍 Dashboard Filters")
 
     # Category selection (same for all data sources)
@@ -58,7 +58,7 @@ with st.sidebar:
             key="date_range"
         )
 
-    # === 5. KPI SETTINGS ===
+    # === 3. KPI SETTINGS ===
     st.markdown("## ⚙️ KPI Settings")
     time_period = st.selectbox(
         "Time Period",
@@ -67,7 +67,7 @@ with st.sidebar:
         key="time_period"
     )
 
-# === 2. CSV UPLOAD SECTION ===
+# === CSV UPLOAD SECTION ===
 if data_source == "Uploaded CSV":
     st.markdown("## ⬆️ Upload CSV Files")
 
@@ -131,7 +131,7 @@ if data_source == "Uploaded CSV":
         st.info("📁 No files uploaded yet. Upload a CSV file to get started.")
         st.stop()
 
-# === 3. API CONNECTION SECTION ===
+# === API CONNECTION SECTION ===
 elif data_source == "API Connection":
     st.markdown("## 🔌 API Configuration")
 
@@ -458,6 +458,21 @@ st.write("**GitHub CSV File Path:**", selected_path)
 
 # === Chart Type Selector ===
 chart_type = st.selectbox("Choose chart type", ["Line", "Bar", "Scatter", "Box", "Heatmap"])
+
+def get_units(variable):
+    """Get the appropriate units for each variable type"""
+    units_map = {
+        "Vehicle Volume": "Vehicles",
+        "Speed": "mph",
+        "Travel Time": "mins"
+    }
+    return units_map.get(variable, "")
+
+def format_value_with_units(value, variable):
+    """Format value with appropriate units"""
+    units = get_units(variable)
+    return f"{value:.2f} {units}"
+
 
 # === Enhanced Chart Creation Function ===
 def create_enhanced_line_chart(df, x_col, y_col, chart_title, color_name="blue"):
