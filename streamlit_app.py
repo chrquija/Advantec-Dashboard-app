@@ -459,6 +459,7 @@ st.write("**GitHub CSV File Path:**", selected_path)
 # === Chart Type Selector ===
 chart_type = st.selectbox("Choose chart type", ["Line", "Bar", "Scatter", "Box", "Heatmap"])
 
+#Create Unit Helper Functions for appropriate Units for each Variable Type
 def get_units(variable):
     """Get the appropriate units for each variable type"""
     units_map = {
@@ -472,10 +473,10 @@ def format_value_with_units(value, variable):
     """Format value with appropriate units"""
     units = get_units(variable)
     return f"{value:.2f} {units}"
-
+# end of Creating Unit Helper Functions code
 
 # === Enhanced Chart Creation Function ===
-def create_enhanced_line_chart(df, x_col, y_col, chart_title, color_name="blue"):
+def create_enhanced_line_chart(df, x_col, y_col, chart_title, direction, date_range, variable, color_name="blue"):
     """Create an enhanced line chart with day shading and peak/low annotations"""
     
     # Create the base figure using Graph Objects for more control
