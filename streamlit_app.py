@@ -476,12 +476,12 @@ def format_value_with_units(value, variable):
 # end of Creating Unit Helper Functions code
 
 # === Enhanced Chart Creation Function ===
-def create_enhanced_line_chart(df, x_col, y_col, chart_title, direction, date_range, variable, color_name="blue"):
+def create_enhanced_line_chart(df, x_col, y_col, chart_title, color_name="blue"):
     """Create an enhanced line chart with day shading and peak/low annotations"""
     
     # Create the base figure using Graph Objects for more control
     fig = go.Figure()
-    
+
     # Add the main line trace
     fig.add_trace(go.Scatter(
         x=df[x_col],
@@ -491,7 +491,7 @@ def create_enhanced_line_chart(df, x_col, y_col, chart_title, direction, date_ra
         line=dict(color=color_name, width=2),
         marker=dict(size=4)
     ))
-    
+
     # Add alternating day shading
     if not df.empty:
         # Get date range
