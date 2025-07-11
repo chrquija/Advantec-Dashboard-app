@@ -885,7 +885,7 @@ try:
                     st.plotly_chart(fig_sb, use_container_width=True)
 
             # Show combined stats with proper units
-            st.subheader("📊 Combined Statistics")
+            st.subheader("📊 Directional Statistics")
             col1, col2 = st.columns(2)
 
             # Determine units based on variable
