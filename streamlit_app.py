@@ -775,14 +775,11 @@ try:
             df.dropna(subset=[time_col], inplace=True)
             df.set_index(time_col, inplace=True)
 
-            # Find both direction columns
-            nb_cols = [col for col in df.columns if "northbound" in col.lower()]
-            sb_cols = [col for col in df.columns if "southbound" in col.lower()]
+            # Find both direction columns - UPDATED LOGIC
+            nb_col = find_column(df, ["northbound", "nb"])
+            sb_col = find_column(df, ["southbound", "sb"])
 
-            if nb_cols and sb_cols:
-                nb_col = nb_cols[0]
-                sb_col = sb_cols[0]
-
+            if nb_col and sb_col:
                 df[nb_col] = pd.to_numeric(df[nb_col], errors='coerce')
                 df[sb_col] = pd.to_numeric(df[sb_col], errors='coerce')
 
@@ -866,6 +863,7 @@ try:
                     st.write(f"Daily Total: **{combined[['Northbound', 'Southbound']].sum().sum():.0f} vehicles**")
             else:
                 st.error("Could not find both direction columns in volume data")
+                st.write("Available columns:", list(df.columns))
 
         else:
             # FLIR ACYCLICA: Load both NB and SB files separately
@@ -1005,10 +1003,13 @@ try:
 
         # Determine column and chart rendering based on data source
         if variable == "Vehicle Volume":
-            # KINETIC MOBILITY: Find the appropriate column
-            dir_cols = [col for col in df.columns if direction.lower() in col.lower()]
-            if dir_cols:
-                y_col = dir_cols[0]
+            # KINETIC MOBILITY: Find the appropriate column - UPDATED LOGIC
+            if direction == "NB":
+                y_col = find_column(df, ["northbound", "nb"])
+            else:  # SB
+                y_col = find_column(df, ["southbound", "sb"])
+
+            if y_col:
                 df[y_col] = pd.to_numeric(df[y_col], errors='coerce')
                 df.dropna(subset=[y_col], inplace=True)
                 df.reset_index(inplace=True)
@@ -1053,6 +1054,7 @@ try:
                 st.write(f"**Standard Deviation:** {df[y_col].std():.1f} vph")
             else:
                 st.error(f"Could not find {direction} column in volume data")
+                st.write("Available columns:", list(df.columns))
         else:
             # FLIR ACYCLICA: Use "Strength" column
             y_col = "Strength"
@@ -1120,6 +1122,7 @@ try:
 
 except Exception as e:
     st.error(f"❌ Failed to load chart: {e}")
+    st.write("Debug info - Available columns:", list(df.columns) if 'df' in locals() else "DataFrame not loaded")
 
 # === KPI PANELS SECTION ===
 # Add this after DataFrame load and before chart creation
