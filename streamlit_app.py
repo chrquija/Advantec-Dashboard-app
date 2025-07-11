@@ -788,8 +788,8 @@ try:
                         fig_sb.update_layout(coloraxis_colorbar_title="Vehicle Volume")
                         st.plotly_chart(fig_sb, use_container_width=True)
 
-                # Show combined stats
-                st.subheader("📊 Combined Statistics")
+                # Show combined stats for Vehicle Volume
+                st.subheader("📊 Directional Statistics")
                 col1, col2 = st.columns(2)
                 with col1:
                     st.write("**Northbound:**")
