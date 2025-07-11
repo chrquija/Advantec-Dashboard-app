@@ -789,7 +789,7 @@ try:
                         st.plotly_chart(fig_sb, use_container_width=True)
 
                 # Show combined stats for Vehicle Volume
-                st.subheader("📊 Directional Statistics")
+                st.subheader("📊 Quick Statistics")
                 col1, col2 = st.columns(2)
                 with col1:
                     st.write("**Northbound:**")
@@ -885,7 +885,7 @@ try:
                     st.plotly_chart(fig_sb, use_container_width=True)
 
             # Show combined stats with proper units
-            st.subheader("📊 Directional Statistics")
+            st.subheader("📊 Quick Statistics")
             col1, col2 = st.columns(2)
 
             # Determine units based on variable
