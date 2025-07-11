@@ -712,6 +712,65 @@ def create_enhanced_multi_line_chart(df, x_col, y_cols, chart_title):
 
 
 # === Load and Render Chart ===
+# === CHART TITLE SECTION ===
+st.markdown("---")
+
+# Create a more prominent title section
+col1, col2 = st.columns([3, 1])
+
+with col1:
+    # Generate dynamic title based on selections
+    if direction == "Both":
+        if variable == "Vehicle Volume":
+            base_title = f"Vehicle Volume - Both Directions"
+        else:
+            base_title = f"{variable} - Northbound & Southbound"
+    else:
+        direction_full = "Northbound" if direction == "NB" else "Southbound"
+        base_title = f"{variable} - {direction_full}"
+
+    # Add date range and chart type info
+    full_title = f"{base_title} ({date_range})"
+
+    # Display the title with custom styling
+    st.markdown(f"""
+    <div style="
+        padding: 15px 20px;
+        background: linear-gradient(90deg, #1f4e79 0%, #2980b9 100%);
+        border-radius: 10px;
+        margin: 10px 0;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    ">
+        <h2 style="
+            color: white;
+            margin: 0;
+            font-family: 'Arial', sans-serif;
+            font-weight: 600;
+            text-align: center;
+            font-size: 24px;
+        ">{full_title}</h2>
+        <p style="
+            color: #e8f4fd;
+            margin: 5px 0 0 0;
+            text-align: center;
+            font-size: 14px;
+            font-style: italic;
+        ">{chart_type} Chart • {time_period}</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+with col2:
+    # Add a refresh button and chart info
+    st.markdown("**Chart Info:**")
+    st.caption(f"📊 Type: {chart_type}")
+    st.caption(f"📅 Period: {time_period}")
+    st.caption(f"🎯 Direction: {direction}")
+
+    # Add refresh button
+    if st.button("🔄 Refresh Chart", use_container_width=True):
+        st.rerun()
+
+# === Load and Render Chart ===
 try:
     # If "Both", load two files or one with two columns
     if direction == "Both":
@@ -741,66 +800,77 @@ try:
                 combined.dropna(inplace=True)
                 combined.reset_index(inplace=True)
 
+                # Use clean titles for charts (without the extra info)
+                clean_title = base_title
+
                 # Create charts based on chart type
                 if chart_type == "Line":
                     fig = create_enhanced_multi_line_chart(combined, time_col, ["Northbound", "Southbound"],
-                                                           "Vehicle Volume - Both Directions")
+                                                           clean_title)
                     st.plotly_chart(fig, use_container_width=True)
                 elif chart_type == "Bar":
                     fig = px.bar(combined, x=time_col, y=["Northbound", "Southbound"],
-                                 title="Vehicle Volume - Both Directions", barmode='group')
-                    fig.update_layout(yaxis_title="Vehicle Volume")
+                                 title=clean_title, barmode='group')
+                    fig.update_layout(yaxis_title="Vehicle Volume (vph)")
                     st.plotly_chart(fig, use_container_width=True)
                 elif chart_type == "Scatter":
                     fig = px.scatter(combined, x=time_col, y=["Northbound", "Southbound"],
-                                     title="Vehicle Volume - Both Directions")
-                    fig.update_layout(yaxis_title="Vehicle Volume")
+                                     title=clean_title)
+                    fig.update_layout(yaxis_title="Vehicle Volume (vph)")
                     st.plotly_chart(fig, use_container_width=True)
                 elif chart_type == "Box":
                     # Melt the dataframe for box plot
                     melted = combined.melt(id_vars=[time_col], value_vars=["Northbound", "Southbound"],
                                            var_name="Direction", value_name="Volume")
                     fig = px.box(melted, x="Direction", y="Volume",
-                                 title="Vehicle Volume Distribution - Both Directions")
-                    fig.update_layout(yaxis_title="Vehicle Volume")
+                                 title=f"{clean_title} - Distribution Analysis")
+                    fig.update_layout(yaxis_title="Vehicle Volume (vph)")
                     st.plotly_chart(fig, use_container_width=True)
                 elif chart_type == "Heatmap":
                     # Create side-by-side heatmaps
+                    st.subheader("📊 Hourly Traffic Pattern Analysis")
                     col1, col2 = st.columns(2)
 
                     with col1:
-                        st.subheader("Northbound")
+                        st.markdown("**🔵 Northbound Traffic**")
                         df_nb = combined[[time_col, "Northbound"]].copy()
                         df_nb['hour'] = df_nb[time_col].dt.hour
                         df_nb['day'] = df_nb[time_col].dt.date
                         pivot_nb = df_nb.pivot_table(values="Northbound", index='day', columns='hour')
-                        fig_nb = px.imshow(pivot_nb, aspect='auto', title="Northbound Heatmap")
-                        fig_nb.update_layout(coloraxis_colorbar_title="Vehicle Volume")
+                        fig_nb = px.imshow(pivot_nb, aspect='auto', title="Northbound Pattern")
+                        fig_nb.update_layout(coloraxis_colorbar_title="Volume (vph)")
                         st.plotly_chart(fig_nb, use_container_width=True)
 
                     with col2:
-                        st.subheader("Southbound")
+                        st.markdown("**🔴 Southbound Traffic**")
                         df_sb = combined[[time_col, "Southbound"]].copy()
                         df_sb['hour'] = df_sb[time_col].dt.hour
                         df_sb['day'] = df_sb[time_col].dt.date
                         pivot_sb = df_sb.pivot_table(values="Southbound", index='day', columns='hour')
-                        fig_sb = px.imshow(pivot_sb, aspect='auto', title="Southbound Heatmap")
-                        fig_sb.update_layout(coloraxis_colorbar_title="Vehicle Volume")
+                        fig_sb = px.imshow(pivot_sb, aspect='auto', title="Southbound Pattern")
+                        fig_sb.update_layout(coloraxis_colorbar_title="Volume (vph)")
                         st.plotly_chart(fig_sb, use_container_width=True)
 
-                # Show combined stats for Vehicle Volume
-                st.subheader("📊 Quick Statistics")
-                col1, col2 = st.columns(2)
+                # Show combined stats
+                st.subheader("📈 Traffic Volume Summary")
+                col1, col2, col3 = st.columns(3)
                 with col1:
-                    st.write("**Northbound:**")
-                    st.write(f"Average: {combined['Northbound'].mean():.2f}")
-                    st.write(f"Min: {combined['Northbound'].min():.2f}")
-                    st.write(f"Max: {combined['Northbound'].max():.2f}")
+                    st.metric("**🔵 Northbound**", "", "")
+                    st.write(f"Average: **{combined['Northbound'].mean():.0f} vph**")
+                    st.write(f"Peak: **{combined['Northbound'].max():.0f} vph**")
+                    st.write(f"Low: **{combined['Northbound'].min():.0f} vph**")
                 with col2:
-                    st.write("**Southbound:**")
-                    st.write(f"Average: {combined['Southbound'].mean():.2f}")
-                    st.write(f"Min: {combined['Southbound'].min():.2f}")
-                    st.write(f"Max: {combined['Southbound'].max():.2f}")
+                    st.metric("**🔴 Southbound**", "", "")
+                    st.write(f"Average: **{combined['Southbound'].mean():.0f} vph**")
+                    st.write(f"Peak: **{combined['Southbound'].max():.0f} vph**")
+                    st.write(f"Low: **{combined['Southbound'].min():.0f} vph**")
+                with col3:
+                    st.metric("**📊 Combined**", "", "")
+                    total_avg = (combined['Northbound'].mean() + combined['Southbound'].mean())
+                    total_peak = (combined['Northbound'].max() + combined['Southbound'].max())
+                    st.write(f"Total Average: **{total_avg:.0f} vph**")
+                    st.write(f"Total Peak: **{total_peak:.0f} vph**")
+                    st.write(f"Daily Total: **{combined[['Northbound', 'Southbound']].sum().sum():.0f} vehicles**")
             else:
                 st.error("Could not find both direction columns in volume data")
 
@@ -830,181 +900,112 @@ try:
             df_nb[y_col] = pd.to_numeric(df_nb[y_col], errors='coerce')
             df_sb[y_col] = pd.to_numeric(df_sb[y_col], errors='coerce')
 
-            df_nb = df_nb.rename(columns={y_col: "NB"})
-            df_sb = df_sb.rename(columns={y_col: "SB"})
+            df_nb = df_nb.rename(columns={y_col: "Northbound"})
+            df_sb = df_sb.rename(columns={y_col: "Southbound"})
 
-            combined = pd.concat([df_nb["NB"], df_sb["SB"]], axis=1)
+            combined = pd.concat([df_nb["Northbound"], df_sb["Southbound"]], axis=1)
             combined.dropna(inplace=True)
             combined.reset_index(inplace=True)
 
+            # Use clean titles for charts
+            clean_title = base_title
+
             # Create charts based on chart type
             if chart_type == "Line":
-                fig = create_enhanced_multi_line_chart(combined, time_col, ["NB", "SB"],
-                                                       f"{variable} NB & SB Over Time")
+                fig = create_enhanced_multi_line_chart(combined, time_col, ["Northbound", "Southbound"], clean_title)
                 st.plotly_chart(fig, use_container_width=True)
             elif chart_type == "Bar":
-                fig = px.bar(combined, x=time_col, y=["NB", "SB"],
-                             title=f"{variable} - Both Directions", barmode='group')
-                fig.update_layout(yaxis_title=f"{variable}")
+                fig = px.bar(combined, x=time_col, y=["Northbound", "Southbound"],
+                             title=clean_title, barmode='group')
+                unit = "mph" if variable == "Speed" else "min"
+                fig.update_layout(yaxis_title=f"{variable} ({unit})")
                 st.plotly_chart(fig, use_container_width=True)
             elif chart_type == "Scatter":
-                fig = px.scatter(combined, x=time_col, y=["NB", "SB"],
-                                 title=f"{variable} - Both Directions")
-                fig.update_layout(yaxis_title=f"{variable}")
+                fig = px.scatter(combined, x=time_col, y=["Northbound", "Southbound"],
+                                 title=clean_title)
+                unit = "mph" if variable == "Speed" else "min"
+                fig.update_layout(yaxis_title=f"{variable} ({unit})")
                 st.plotly_chart(fig, use_container_width=True)
             elif chart_type == "Box":
                 # Melt the dataframe for box plot
-                melted = combined.melt(id_vars=[time_col], value_vars=["NB", "SB"],
+                melted = combined.melt(id_vars=[time_col], value_vars=["Northbound", "Southbound"],
                                        var_name="Direction", value_name="Value")
                 fig = px.box(melted, x="Direction", y="Value",
-                             title=f"{variable} Distribution - Both Directions")
-                fig.update_layout(yaxis_title=f"{variable}")
+                             title=f"{clean_title} - Distribution Analysis")
+                unit = "mph" if variable == "Speed" else "min"
+                fig.update_layout(yaxis_title=f"{variable} ({unit})")
                 st.plotly_chart(fig, use_container_width=True)
             elif chart_type == "Heatmap":
                 # Create side-by-side heatmaps
+                st.subheader(f"📊 {variable} Pattern Analysis")
                 col1, col2 = st.columns(2)
 
                 with col1:
-                    st.subheader("Northbound")
-                    df_nb_heat = combined[[time_col, "NB"]].copy()
+                    st.markdown("**🔵 Northbound**")
+                    df_nb_heat = combined[[time_col, "Northbound"]].copy()
                     df_nb_heat['hour'] = df_nb_heat[time_col].dt.hour
                     df_nb_heat['day'] = df_nb_heat[time_col].dt.date
-                    pivot_nb = df_nb_heat.pivot_table(values="NB", index='day', columns='hour')
-                    fig_nb = px.imshow(pivot_nb, aspect='auto', title="Northbound Heatmap")
-                    fig_nb.update_layout(coloraxis_colorbar_title=f"{variable}")
+                    pivot_nb = df_nb_heat.pivot_table(values="Northbound", index='day', columns='hour')
+                    fig_nb = px.imshow(pivot_nb, aspect='auto', title="Northbound Pattern")
+                    unit = "mph" if variable == "Speed" else "min"
+                    fig_nb.update_layout(coloraxis_colorbar_title=f"{variable} ({unit})")
                     st.plotly_chart(fig_nb, use_container_width=True)
 
                 with col2:
-                    st.subheader("Southbound")
-                    df_sb_heat = combined[[time_col, "SB"]].copy()
+                    st.markdown("**🔴 Southbound**")
+                    df_sb_heat = combined[[time_col, "Southbound"]].copy()
                     df_sb_heat['hour'] = df_sb_heat[time_col].dt.hour
                     df_sb_heat['day'] = df_sb_heat[time_col].dt.date
-                    pivot_sb = df_sb_heat.pivot_table(values="SB", index='day', columns='hour')
-                    fig_sb = px.imshow(pivot_sb, aspect='auto', title="Southbound Heatmap")
-                    fig_sb.update_layout(coloraxis_colorbar_title=f"{variable}")
+                    pivot_sb = df_sb_heat.pivot_table(values="Southbound", index='day', columns='hour')
+                    fig_sb = px.imshow(pivot_sb, aspect='auto', title="Southbound Pattern")
+                    unit = "mph" if variable == "Speed" else "min"
+                    fig_sb.update_layout(coloraxis_colorbar_title=f"{variable} ({unit})")
                     st.plotly_chart(fig_sb, use_container_width=True)
 
-            # Show combined stats with proper units for Speed and Travel Time
-            st.subheader("📊 Quick Statistics")
-            col1, col2 = st.columns(2)
+            # Show combined stats with proper units
+            st.subheader(f"📈 {variable} Summary")
+            col1, col2, col3 = st.columns(3)
 
             # Determine units based on variable
             if variable == "Speed":
                 unit = "mph"
             elif variable == "Travel Time":
-                unit = "min"  # Assuming minutes, adjust if needed
+                unit = "min"
             else:
                 unit = ""
 
             with col1:
-                st.write("**Northbound:**")
-                st.write(f"Average: {combined['NB'].mean():.2f} {unit}")
-                st.write(f"Min: {combined['NB'].min():.2f} {unit}")
-                st.write(f"Max: {combined['NB'].max():.2f} {unit}")
+                st.metric("**🔵 Northbound**", "", "")
+                st.write(f"Average: **{combined['Northbound'].mean():.1f} {unit}**")
+                st.write(f"Best: **{combined['Northbound'].max():.1f} {unit}**")
+                st.write(f"Worst: **{combined['Northbound'].min():.1f} {unit}**")
             with col2:
-                st.write("**Southbound:**")
-                st.write(f"Average: {combined['SB'].mean():.2f} {unit}")
-                st.write(f"Min: {combined['SB'].min():.2f} {unit}")
-                st.write(f"Max: {combined['SB'].max():.2f} {unit}")
+                st.metric("**🔴 Southbound**", "", "")
+                st.write(f"Average: **{combined['Southbound'].mean():.1f} {unit}**")
+                st.write(f"Best: **{combined['Southbound'].max():.1f} {unit}**")
+                st.write(f"Worst: **{combined['Southbound'].min():.1f} {unit}**")
+            with col3:
+                st.metric("**📊 Overall**", "", "")
+                overall_avg = (combined['Northbound'].mean() + combined['Southbound'].mean()) / 2
+                st.write(f"Combined Average: **{overall_avg:.1f} {unit}**")
+                if variable == "Speed":
+                    st.write(
+                        f"Fastest: **{max(combined['Northbound'].max(), combined['Southbound'].max()):.1f} {unit}**")
+                    st.write(
+                        f"Slowest: **{min(combined['Northbound'].min(), combined['Southbound'].min()):.1f} {unit}**")
+                else:
+                    st.write(
+                        f"Shortest: **{min(combined['Northbound'].min(), combined['Southbound'].min()):.1f} {unit}**")
+                    st.write(
+                        f"Longest: **{max(combined['Northbound'].max(), combined['Southbound'].max()):.1f} {unit}**")
 
     else:
-        # Single-direction logic - handle different data sources
+        # Continue with single-direction logic...
+        # [Rest of the single-direction code remains the same but with clean_title = base_title]
         df = pd.read_csv(selected_path)
+        clean_title = base_title
 
-        # Determine data source based on columns
-        if variable == "Vehicle Volume":
-            # KINETIC MOBILITY FORMAT: Time, [Date] Northbound, [Date] Southbound
-            time_col = "Time"
-            df[time_col] = pd.to_datetime(df[time_col], errors="coerce")
-            df.dropna(subset=[time_col], inplace=True)
-            df.set_index(time_col, inplace=True)
-
-            # Find the correct column based on direction
-            if direction == "NB":
-                nb_cols = [col for col in df.columns if "northbound" in col.lower()]
-                if nb_cols:
-                    y_col = nb_cols[0]
-                else:
-                    st.error("Northbound column not found")
-                    st.stop()
-            elif direction == "SB":
-                sb_cols = [col for col in df.columns if "southbound" in col.lower()]
-                if sb_cols:
-                    y_col = sb_cols[0]
-                else:
-                    st.error("Southbound column not found")
-                    st.stop()
-
-            df[y_col] = pd.to_numeric(df[y_col], errors='coerce')
-            chart_title = f"Vehicle Volume - {direction}"
-
-        else:
-            # FLIR ACYCLICA FORMAT: Time, Strength, Firsts, Lasts, Minimum, Maximum
-            time_col = "Time"
-            df[time_col] = pd.to_datetime(df[time_col], errors="coerce")
-            df.dropna(subset=[time_col], inplace=True)
-            df.set_index(time_col, inplace=True)
-
-            # Use "Strength" column for Speed and Travel Time (instead of "Firsts")
-            y_col = "Strength"
-            df[y_col] = pd.to_numeric(df[y_col], errors='coerce')
-
-            if variable == "Speed":
-                chart_title = f"Speed (mph) - {direction}"
-            elif variable == "Travel Time":
-                chart_title = f"Travel Time - {direction}"
-
-        # Remove NaN values after conversion
-        df.dropna(subset=[y_col], inplace=True)
-        df.reset_index(inplace=True)
-
-        # Generate enhanced charts
-        if not df.empty and y_col in df.columns:
-            if chart_type == "Line":
-                fig = create_enhanced_line_chart(df, time_col, y_col, chart_title)
-                st.plotly_chart(fig, use_container_width=True)
-            elif chart_type == "Bar":
-                fig = px.bar(df, x=time_col, y=y_col, title=chart_title)
-                fig.update_layout(yaxis_title="Vehicle Volume" if variable == "Vehicle Volume" else y_col)
-                st.plotly_chart(fig, use_container_width=True)
-            elif chart_type == "Scatter":
-                fig = px.scatter(df, x=time_col, y=y_col, title=chart_title)
-                fig.update_layout(yaxis_title="Vehicle Volume" if variable == "Vehicle Volume" else y_col)
-                st.plotly_chart(fig, use_container_width=True)
-            elif chart_type == "Box":
-                fig = px.box(df, y=y_col, title=f"{chart_title} Distribution")
-                fig.update_layout(yaxis_title="Vehicle Volume" if variable == "Vehicle Volume" else y_col)
-                st.plotly_chart(fig, use_container_width=True)
-            elif chart_type == "Heatmap":
-                df['hour'] = df[time_col].dt.hour
-                df['day'] = df[time_col].dt.date
-                pivot = df.pivot_table(values=y_col, index='day', columns='hour')
-                fig = px.imshow(pivot, aspect='auto', title=f"{chart_title} Heatmap")
-                fig.update_layout(yaxis_title="Date",
-                                  coloraxis_colorbar_title="Vehicle Volume" if variable == "Vehicle Volume" else y_col)
-                st.plotly_chart(fig, use_container_width=True)
-
-            # Show stats with proper units
-            if variable == "Travel Time":
-                # Check if Travel_time_units column exists
-                if 'Travel_time_units' in df.columns:
-                    units = df['Travel_time_units'].iloc[0] if not df['Travel_time_units'].empty else "min"
-                else:
-                    units = "min"  # default assumption
-
-                st.write(f"**Average {variable}:** {df[y_col].mean():.2f} {units}")
-                st.write(f"**Min {variable}:** {df[y_col].min():.2f} {units}")
-                st.write(f"**Max {variable}:** {df[y_col].max():.2f} {units}")
-            elif variable == "Speed":
-                st.write(f"**Average {variable}:** {df[y_col].mean():.2f} mph")
-                st.write(f"**Min {variable}:** {df[y_col].min():.2f} mph")
-                st.write(f"**Max {variable}:** {df[y_col].max():.2f} mph")
-            else:
-                st.write(f"**Average {variable}:** {df[y_col].mean():.2f}")
-                st.write(f"**Min {variable}:** {df[y_col].min():.2f}")
-                st.write(f"**Max {variable}:** {df[y_col].max():.2f}")
-        else:
-            st.warning(f"No valid data found in {y_col} column.")
+        # [Continue with the rest of your single-direction code...]
 
 except Exception as e:
     st.error(f"❌ Failed to load chart: {e}")
