@@ -705,64 +705,19 @@ def create_enhanced_multi_line_chart(df, x_col, y_cols, chart_title):
     return fig
 
 
-# === Load and Render Chart ===
 # === CHART TITLE SECTION ===
-st.markdown("---")
+# Create base title from user selections
+if direction == "Both":
+    direction_part = "Both Directions"
+else:
+    direction_part = f"{direction} Direction"
 
-# Create a more prominent title section
-col1, col2 = st.columns([3, 1])
+if date_range == "All":
+    date_part = "All Available Data"
+else:
+    date_part = f"{date_range} Data"
 
-with col1:
-    # Generate dynamic title based on selections
-    if direction == "Both":
-        if variable == "Vehicle Volume":
-            base_title = f"Vehicle Volume - Both Directions"
-        else:
-            base_title = f"{variable} - Northbound & Southbound"
-    else:
-        direction_full = "Northbound" if direction == "NB" else "Southbound"
-        base_title = f"{variable} - {direction_full}"
-
-    # Add date range and chart type info
-    full_title = f"{base_title} ({date_range})"
-
-    # Display the title with custom styling
-    st.markdown(f"""
-    <div style="
-        padding: 15px 20px;
-        background: linear-gradient(90deg, #1f4e79 0%, #2980b9 100%);
-        border-radius: 10px;
-        margin: 10px 0;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    ">
-        <h2 style="
-            color: white;
-            margin: 0;
-            font-family: 'Arial', sans-serif;
-            font-weight: 600;
-            text-align: center;
-            font-size: 24px;
-        ">{full_title}</h2>
-        <p style="
-            color: #e8f4fd;
-            margin: 5px 0 0 0;
-            text-align: center;
-            font-size: 14px;
-            font-style: italic;
-        ">{chart_type} Chart • {time_period}</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-with col2:
-    # Add a refresh button and chart info
-    st.markdown("**Chart Info:**")
-    st.caption(f"📊 Type: {chart_type}")
-    st.caption(f"📅 Period: {time_period}")
-    st.caption(f"🎯 Direction: {direction}")
-
-    # Add refresh button
-    if st.button("🔄 Refresh Chart", use_container_width=True):
-        st.rerun()
+base_title = f"{variable} Analysis - {direction_part} ({date_part})"
 
 # === Load and Render Chart ===
 try:
@@ -994,12 +949,87 @@ try:
                         f"Longest: **{max(combined['Northbound'].max(), combined['Southbound'].max()):.1f} {unit}**")
 
     else:
-        # Continue with single-direction logic...
-        # [Rest of the single-direction code remains the same but with clean_title = base_title]
+        # SINGLE DIRECTION LOGIC
         df = pd.read_csv(selected_path)
+        time_col = "Time"
+        df[time_col] = pd.to_datetime(df[time_col], errors="coerce")
+        df.dropna(subset=[time_col], inplace=True)
+        df.set_index(time_col, inplace=True)
+
+        # Clean title for single direction
         clean_title = base_title
 
-        # [Continue with the rest of your single-direction code...]
+        # Determine column and chart rendering based on data source
+        if variable == "Vehicle Volume":
+            # KINETIC MOBILITY: Find the appropriate column
+            dir_cols = [col for col in df.columns if direction.lower() in col.lower()]
+            if dir_cols:
+                y_col = dir_cols[0]
+                df[y_col] = pd.to_numeric(df[y_col], errors='coerce')
+                df.dropna(subset=[y_col], inplace=True)
+                df.reset_index(inplace=True)
+
+                # Create charts based on chart type
+                if chart_type == "Line":
+                    fig = create_enhanced_line_chart(df, time_col, y_col, clean_title)
+                    st.plotly_chart(fig, use_container_width=True)
+                elif chart_type == "Bar":
+                    fig = px.bar(df, x=time_col, y=y_col, title=clean_title)
+                    fig.update_layout(yaxis_title="Vehicle Volume (vph)")
+                    st.plotly_chart(fig, use_container_width=True)
+                elif chart_type == "Scatter":
+                    fig = px.scatter(df, x=time_col, y=y_col, title=clean_title)
+                    fig.update_layout(yaxis_title="Vehicle Volume (vph)")
+                    st.plotly_chart(fig, use_container_width=True)
+                elif chart_type == "Box":
+                    fig = px.box(df, y=y_col, title=f"{clean_title} - Distribution Analysis")
+                    fig.update_layout(yaxis_title="Vehicle Volume (vph)")
+                    st.plotly_chart(fig, use_container_width=True)
+                elif chart_type == "Heatmap":
+                    df_heat = df.copy()
+                    df_heat['hour'] = df_heat[time_col].dt.hour
+                    df_heat['day'] = df_heat[time_col].dt.date
+                    pivot_table = df_heat.pivot_table(values=y_col, index='day', columns='hour')
+                    fig = px.imshow(pivot_table, aspect='auto', title=f"{clean_title} - Hourly Pattern")
+                    fig.update_layout(coloraxis_colorbar_title="Volume (vph)")
+                    st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.error(f"Could not find {direction} column in volume data")
+        else:
+            # FLIR ACYCLICA: Use "Strength" column
+            y_col = "Strength"
+            df[y_col] = pd.to_numeric(df[y_col], errors='coerce')
+            df.dropna(subset=[y_col], inplace=True)
+            df.reset_index(inplace=True)
+
+            # Create charts based on chart type
+            if chart_type == "Line":
+                fig = create_enhanced_line_chart(df, time_col, y_col, clean_title)
+                st.plotly_chart(fig, use_container_width=True)
+            elif chart_type == "Bar":
+                fig = px.bar(df, x=time_col, y=y_col, title=clean_title)
+                unit = "mph" if variable == "Speed" else "min"
+                fig.update_layout(yaxis_title=f"{variable} ({unit})")
+                st.plotly_chart(fig, use_container_width=True)
+            elif chart_type == "Scatter":
+                fig = px.scatter(df, x=time_col, y=y_col, title=clean_title)
+                unit = "mph" if variable == "Speed" else "min"
+                fig.update_layout(yaxis_title=f"{variable} ({unit})")
+                st.plotly_chart(fig, use_container_width=True)
+            elif chart_type == "Box":
+                fig = px.box(df, y=y_col, title=f"{clean_title} - Distribution Analysis")
+                unit = "mph" if variable == "Speed" else "min"
+                fig.update_layout(yaxis_title=f"{variable} ({unit})")
+                st.plotly_chart(fig, use_container_width=True)
+            elif chart_type == "Heatmap":
+                df_heat = df.copy()
+                df_heat['hour'] = df_heat[time_col].dt.hour
+                df_heat['day'] = df_heat[time_col].dt.date
+                pivot_table = df_heat.pivot_table(values=y_col, index='day', columns='hour')
+                fig = px.imshow(pivot_table, aspect='auto', title=f"{clean_title} - Hourly Pattern")
+                unit = "mph" if variable == "Speed" else "min"
+                fig.update_layout(coloraxis_colorbar_title=f"{variable} ({unit})")
+                st.plotly_chart(fig, use_container_width=True)
 
 except Exception as e:
     st.error(f"❌ Failed to load chart: {e}")
