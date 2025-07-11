@@ -1046,10 +1046,10 @@ if variable == "Vehicle Volume":
                 st.write("No data for selected period")
 
         # === KPI 2-4: Dynamic KPIs ===
-        kpi_options = ["Average Speed", "Total Volume", "Peak Congestion Time", "Suggested Cycle Length Table"]
+        kpi_options = ["Average Speed", "Total Volume", "Peak Congestion Time", "Suggested Cycle Length Table - Hourly"]
         if nb_speed_col and sb_speed_col:
             kpi_options = ["Average Speed", "Peak Speed", "Total Volume", "Peak Congestion Time",
-                           "Hourly Cycle Length Table"]
+                           "Suggested Cycle Length Table - Hourly"]
 
         for i, col in enumerate([col2, col3, col4]):
             with col:
