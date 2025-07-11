@@ -1054,9 +1054,14 @@ if variable == "Vehicle Volume":
         for i, col in enumerate([col2, col3, col4]):
             with col:
                 kpi_type = st.selectbox(f"KPI {i + 2}:", kpi_options, key=f"kpi_{i + 2}")
-                direction_choice = st.radio("Direction:", ["NB", "SB"], key=f"dir_{i + 2}")
 
-                st.markdown(f"### 📈 {kpi_type} - {direction_choice}")
+                # For Suggested Cycle Length Table, use sidebar direction; otherwise use local direction choice
+                if kpi_type == "Suggested Cycle Length Table - Hourly":
+                    direction_choice = direction  # Use sidebar direction
+                    st.markdown(f"### 📈 {kpi_type} - {direction_choice}")
+                else:
+                    direction_choice = st.radio("Direction:", ["NB", "SB"], key=f"dir_{i + 2}")
+                    st.markdown(f"### 📈 {kpi_type} - {direction_choice}")
 
                 if not period_df.empty:
                     # KPIs for Speed (if available)
@@ -1081,41 +1086,78 @@ if variable == "Vehicle Volume":
                         st.metric("Congestion (Min Speed)", f"{min_speed:.1f} mph")
                         st.caption(f"at {peak_cong_time}")
                     elif kpi_type == "Suggested Cycle Length Table - Hourly":
-                        vol_col = nb_vol_col if direction_choice == "NB" else sb_vol_col
-                        if vol_col in period_df:
-                            hourly_df = period_df.copy()
-                            hourly_df["Hour"] = hourly_df[time_col].dt.strftime("%H:%M")
-                            hourly_df["Volume"] = hourly_df[vol_col]
+                        # Functions for cycle length calculations
+                        def get_hourly_cycle_length(volume):
+                            if volume >= 2400:
+                                return "140 sec"
+                            elif volume >= 1500:
+                                return "130 sec"
+                            elif volume >= 600:
+                                return "120 sec"
+                            elif volume >= 300:
+                                return "110 sec"
+                            else:
+                                return "Free mode"
 
 
-                            # Function for each hour
-                            def get_hourly_cycle_length(volume):
-                                if volume >= 2400:
-                                    return "140 sec"
-                                elif volume >= 1500:
-                                    return "130 sec"
-                                elif volume >= 600:
-                                    return "120 sec"
-                                elif volume >= 300:
-                                    return "110 sec"
-                                else:
-                                    return "Free mode"
+                        def get_existing_cycle_length(volume):
+                            if volume >= 300:
+                                return "140 sec"
+                            else:
+                                return "Free mode"
 
 
-                            hourly_df["Cycle Length"] = hourly_df["Volume"].apply(get_hourly_cycle_length)
-                            table_df = hourly_df[["Hour", "Volume", "Cycle Length"]].reset_index(drop=True)
-                            st.dataframe(
-                                table_df,
-                                hide_index=True,
-                                use_container_width=True,
-                                height=min(300, 50 * len(table_df))
-                            )
+                        if direction_choice == "Both":
+                            # Show combined table for both directions
+                            if nb_vol_col in period_df and sb_vol_col in period_df:
+                                hourly_df = period_df.copy()
+                                hourly_df["Hour"] = hourly_df[time_col].dt.strftime("%H:%M")
+
+                                # Create the combined table
+                                table_df = pd.DataFrame({
+                                    "Hour": hourly_df["Hour"],
+                                    "NB Volume": hourly_df[nb_vol_col],
+                                    "NB Existing": hourly_df[nb_vol_col].apply(get_existing_cycle_length),
+                                    "NB Rec": hourly_df[nb_vol_col].apply(get_hourly_cycle_length),
+                                    "SB Volume": hourly_df[sb_vol_col],
+                                    "SB Existing": hourly_df[sb_vol_col].apply(get_existing_cycle_length),
+                                    "SB Rec": hourly_df[sb_vol_col].apply(get_hourly_cycle_length)
+                                }).reset_index(drop=True)
+
+                                st.dataframe(
+                                    table_df,
+                                    hide_index=True,
+                                    use_container_width=True,
+                                    height=min(400, 50 * len(table_df))
+                                )
+                            else:
+                                st.info("No data available for both directions.")
                         else:
-                            st.info("No data available for the selected direction and period.")
+                            # Show single direction table
+                            vol_col = nb_vol_col if direction_choice == "NB" else sb_vol_col
+                            if vol_col in period_df:
+                                hourly_df = period_df.copy()
+                                hourly_df["Hour"] = hourly_df[time_col].dt.strftime("%H:%M")
 
+                                # Create the single direction table with renamed columns
+                                table_df = pd.DataFrame({
+                                    "Hour": hourly_df["Hour"],
+                                    "Vehicle Volume": hourly_df[vol_col],
+                                    "Existing Cycle Length": hourly_df[vol_col].apply(get_existing_cycle_length),
+                                    "Recommended Cycle Length": hourly_df[vol_col].apply(get_hourly_cycle_length)
+                                }).reset_index(drop=True)
+
+                                st.dataframe(
+                                    table_df,
+                                    hide_index=True,
+                                    use_container_width=True,
+                                    height=min(300, 50 * len(table_df))
+                                )
+                            else:
+                                st.info("No data available for the selected direction and period.")
                     else:
                         st.write("KPI not available for this direction or period.")
                 else:
                     st.write("No data for selected period")
-    else:
-        st.warning("Could not find NB/SB columns in this dataset.")
+        else:
+            st.warning("Could not find NB/SB columns in this dataset.")
