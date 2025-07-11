@@ -884,7 +884,7 @@ try:
                     fig_sb.update_layout(coloraxis_colorbar_title=f"{variable}")
                     st.plotly_chart(fig_sb, use_container_width=True)
 
-            # Show combined stats with proper units
+            # Show combined stats with proper units for Speed and Travel Time
             st.subheader("📊 Quick Statistics")
             col1, col2 = st.columns(2)
 
@@ -1168,12 +1168,12 @@ if variable == "Vehicle Volume":
                     cycle_rec = get_cycle_length_recommendation(hourly_volumes)  # Pass the list!
 
                     st.metric("Busiest Direction (NB or SB)", peak_direction)
-                    st.metric("Recommended Cycle Length Activation Period (24-Hour)", hours_str)
+                    st.metric("Cycle Length Activation Period (24-Hour)", hours_str)
                     st.metric("Total Activation Period Vehicle Volume", f"{consecutive_volume:,.0f} Vehicles")
                     st.metric("Total (direction) Vehicle Volume", f"{total_peak_direction_volume:,.0f} Vehicles")
                 else:
                     st.metric("Busiest Direction (NB or SB)", peak_direction)
-                    st.metric("Recommended Cycle Length Activation Period (24-Hour)", "Free mode")
+                    st.metric("Cycle Length Activation Period (24-Hour)", "Free mode")
                     st.metric("Total Activation Period Vehicle Volume", "Free mode")
                     st.metric("Total (direction) Vehicle Volume", f"{total_peak_direction_volume:,.0f} Vehicles")
 
