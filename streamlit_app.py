@@ -946,8 +946,9 @@ if variable == "Vehicle Volume":
     time_col = "Time"
 
     # Ensure 'Time' is datetime
-    if not np.issubdtype(kpi_df[time_col].dtype, np.datetime64):
-        kpi_df[time_col] = pd.to_datetime(kpi_df[time_col], errors='coerce')
+    # Replace the problematic line with this safer version:
+    if time_col and time_col in kpi_df.columns and not np.issubdtype(kpi_df[time_col].dtype, np.datetime64):
+        kpi_df[time_col] = pd.to_datetime(kpi_df[time_col])
 
     # --- Robust column finding for your specific format ---
     nb_vol_col = None
