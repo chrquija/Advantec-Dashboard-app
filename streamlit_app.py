@@ -930,6 +930,7 @@ def filter_by_period(df, time_col, period):
     return df_copy
 
 
+
 # Only show KPI panels for Vehicle Volume data
 if variable == "Vehicle Volume":
     st.markdown("---")
@@ -941,13 +942,23 @@ if variable == "Vehicle Volume":
     # Period_key is needed for processing - it extracts "AM, MD, or PM" from full string like "AM (5:00-10:00) and this line belongs in main logic flow - not side bar setup
     period_key = time_period.split(" ")[0]  # Extract AM/MD/PM
 
-    # Prepare data for KPIs
-    kpi_df = df.copy()
-    time_col = "Time"
+    # Prepare data for KPIs - use the original CSV data, not the renamed one
+    if direction == "Both":
+        # For "Both" direction, reload the original data to avoid column renaming issues
+        kpi_df = pd.read_csv(selected_path)
+        time_col = "Time"
+    else:
+        # For single direction, use the existing df
+        kpi_df = df.copy()
+        time_col = "Time"
 
     # Ensure 'Time' is datetime
-    if not np.issubdtype(kpi_df[time_col].dtype, np.datetime64):
-        kpi_df[time_col] = pd.to_datetime(kpi_df[time_col], errors='coerce')
+    if time_col in kpi_df.columns:
+        if not np.issubdtype(kpi_df[time_col].dtype, np.datetime64):
+            kpi_df[time_col] = pd.to_datetime(kpi_df[time_col], errors='coerce')
+    else:
+        st.error("Time column not found in the dataset")
+        st.stop()
 
     # --- Robust column finding for your specific format ---
     nb_vol_col = None
@@ -996,7 +1007,6 @@ if variable == "Vehicle Volume":
                     peak_volume = sb_total
                     peak_vol_col = sb_vol_col
 
-
                 # Get the total sum of the selected column for "Total (direction) Vehicle Volume"
                 if peak_vol_col == sb_vol_col:
                     total_peak_direction_volume = kpi_df[sb_vol_col].sum()  # Full day SB total
@@ -1030,13 +1040,11 @@ if variable == "Vehicle Volume":
                     hourly_volumes = consecutive_df[peak_vol_col].tolist()
                     cycle_rec = get_cycle_length_recommendation(hourly_volumes)  # Pass the list!
 
-
                     st.metric("Busiest Direction (NB or SB)", peak_direction)
                     st.metric("Recommended Cycle Length Activation Period (24-Hour)", hours_str)
                     st.metric("Total Activation Period Vehicle Volume", f"{consecutive_volume:,.0f} Vehicles")
                     st.metric("Total (direction) Vehicle Volume", f"{total_peak_direction_volume:,.0f} Vehicles")
                 else:
-
                     st.metric("Busiest Direction (NB or SB)", peak_direction)
                     st.metric("Recommended Cycle Length Activation Period (24-Hour)", "Free mode")
                     st.metric("Total Activation Period Vehicle Volume", "Free mode")
@@ -1099,17 +1107,15 @@ if variable == "Vehicle Volume":
                             else:
                                 return "Free mode"
 
-
                         def get_existing_cycle_length(volume):
                             if volume >= 300:
                                 return "140 sec"
                             else:
                                 return "Free mode"
 
-
                         if direction_choice == "Both":
                             # Show combined table for both directions
-                            if nb_vol_col in period_df and sb_vol_col in period_df:
+                            if nb_vol_col in period_df.columns and sb_vol_col in period_df.columns:
                                 hourly_df = period_df.copy()
                                 hourly_df["Hour"] = hourly_df[time_col].dt.strftime("%H:%M")
 
@@ -1135,7 +1141,7 @@ if variable == "Vehicle Volume":
                         else:
                             # Show single direction table
                             vol_col = nb_vol_col if direction_choice == "NB" else sb_vol_col
-                            if vol_col in period_df:
+                            if vol_col and vol_col in period_df.columns:
                                 hourly_df = period_df.copy()
                                 hourly_df["Hour"] = hourly_df[time_col].dt.strftime("%H:%M")
 
@@ -1159,5 +1165,5 @@ if variable == "Vehicle Volume":
                         st.write("KPI not available for this direction or period.")
                 else:
                     st.write("No data for selected period")
-        else:
-            st.warning("Could not find NB/SB columns in this dataset.")
+    else:
+        st.warning("Could not find NB/SB columns in this dataset.")
