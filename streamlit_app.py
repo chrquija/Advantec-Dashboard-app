@@ -705,7 +705,6 @@ def create_enhanced_multi_line_chart(df, x_col, y_cols, chart_title):
     return fig
 
 
-# === Load and Render Chart ===
 # === CHART TITLE SECTION ===
 st.markdown("---")
 
@@ -994,12 +993,130 @@ try:
                         f"Longest: **{max(combined['Northbound'].max(), combined['Southbound'].max()):.1f} {unit}**")
 
     else:
-        # Continue with single-direction logic...
-        # [Rest of the single-direction code remains the same but with clean_title = base_title]
+        # SINGLE DIRECTION LOGIC
         df = pd.read_csv(selected_path)
+        time_col = "Time"
+        df[time_col] = pd.to_datetime(df[time_col], errors="coerce")
+        df.dropna(subset=[time_col], inplace=True)
+        df.set_index(time_col, inplace=True)
+
+        # Clean title for single direction
         clean_title = base_title
 
-        # [Continue with the rest of your single-direction code...]
+        # Determine column and chart rendering based on data source
+        if variable == "Vehicle Volume":
+            # KINETIC MOBILITY: Find the appropriate column
+            dir_cols = [col for col in df.columns if direction.lower() in col.lower()]
+            if dir_cols:
+                y_col = dir_cols[0]
+                df[y_col] = pd.to_numeric(df[y_col], errors='coerce')
+                df.dropna(subset=[y_col], inplace=True)
+                df.reset_index(inplace=True)
+
+                # Create charts based on chart type
+                if chart_type == "Line":
+                    fig = create_enhanced_line_chart(df, time_col, y_col, clean_title)
+                    st.plotly_chart(fig, use_container_width=True)
+                elif chart_type == "Bar":
+                    fig = px.bar(df, x=time_col, y=y_col, title=clean_title)
+                    fig.update_layout(yaxis_title="Vehicle Volume (vph)")
+                    st.plotly_chart(fig, use_container_width=True)
+                elif chart_type == "Scatter":
+                    fig = px.scatter(df, x=time_col, y=y_col, title=clean_title)
+                    fig.update_layout(yaxis_title="Vehicle Volume (vph)")
+                    st.plotly_chart(fig, use_container_width=True)
+                elif chart_type == "Box":
+                    fig = px.box(df, y=y_col, title=f"{clean_title} - Distribution Analysis")
+                    fig.update_layout(yaxis_title="Vehicle Volume (vph)")
+                    st.plotly_chart(fig, use_container_width=True)
+                elif chart_type == "Heatmap":
+                    df_heat = df.copy()
+                    df_heat['hour'] = df_heat[time_col].dt.hour
+                    df_heat['day'] = df_heat[time_col].dt.date
+                    pivot_table = df_heat.pivot_table(values=y_col, index='day', columns='hour')
+                    fig = px.imshow(pivot_table, aspect='auto', title=f"{clean_title} - Hourly Pattern")
+                    fig.update_layout(coloraxis_colorbar_title="Volume (vph)")
+                    st.plotly_chart(fig, use_container_width=True)
+
+                # Show single direction stats
+                st.subheader("📈 Traffic Volume Summary")
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("**📊 Average Volume**", f"{df[y_col].mean():.0f} vph")
+                with col2:
+                    st.metric("**📈 Peak Volume**", f"{df[y_col].max():.0f} vph")
+                with col3:
+                    st.metric("**📉 Low Volume**", f"{df[y_col].min():.0f} vph")
+
+                # Additional stats
+                st.write(f"**Total Daily Vehicles:** {df[y_col].sum():.0f}")
+                st.write(f"**Standard Deviation:** {df[y_col].std():.1f} vph")
+            else:
+                st.error(f"Could not find {direction} column in volume data")
+        else:
+            # FLIR ACYCLICA: Use "Strength" column
+            y_col = "Strength"
+            df[y_col] = pd.to_numeric(df[y_col], errors='coerce')
+            df.dropna(subset=[y_col], inplace=True)
+            df.reset_index(inplace=True)
+
+            # Create charts based on chart type
+            if chart_type == "Line":
+                fig = create_enhanced_line_chart(df, time_col, y_col, clean_title)
+                st.plotly_chart(fig, use_container_width=True)
+            elif chart_type == "Bar":
+                fig = px.bar(df, x=time_col, y=y_col, title=clean_title)
+                unit = "mph" if variable == "Speed" else "min"
+                fig.update_layout(yaxis_title=f"{variable} ({unit})")
+                st.plotly_chart(fig, use_container_width=True)
+            elif chart_type == "Scatter":
+                fig = px.scatter(df, x=time_col, y=y_col, title=clean_title)
+                unit = "mph" if variable == "Speed" else "min"
+                fig.update_layout(yaxis_title=f"{variable} ({unit})")
+                st.plotly_chart(fig, use_container_width=True)
+            elif chart_type == "Box":
+                fig = px.box(df, y=y_col, title=f"{clean_title} - Distribution Analysis")
+                unit = "mph" if variable == "Speed" else "min"
+                fig.update_layout(yaxis_title=f"{variable} ({unit})")
+                st.plotly_chart(fig, use_container_width=True)
+            elif chart_type == "Heatmap":
+                df_heat = df.copy()
+                df_heat['hour'] = df_heat[time_col].dt.hour
+                df_heat['day'] = df_heat[time_col].dt.date
+                pivot_table = df_heat.pivot_table(values=y_col, index='day', columns='hour')
+                fig = px.imshow(pivot_table, aspect='auto', title=f"{clean_title} - Hourly Pattern")
+                unit = "mph" if variable == "Speed" else "min"
+                fig.update_layout(coloraxis_colorbar_title=f"{variable} ({unit})")
+                st.plotly_chart(fig, use_container_width=True)
+
+            # Show single direction stats with proper units
+            st.subheader(f"📈 {variable} Summary")
+
+            # Determine units based on variable
+            if variable == "Speed":
+                unit = "mph"
+                best_label = "Fastest"
+                worst_label = "Slowest"
+            elif variable == "Travel Time":
+                unit = "min"
+                best_label = "Shortest"
+                worst_label = "Longest"
+            else:
+                unit = ""
+                best_label = "Best"
+                worst_label = "Worst"
+
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric(f"**📊 Average {variable}**", f"{df[y_col].mean():.1f} {unit}")
+            with col2:
+                st.metric(f"**📈 {best_label}**", f"{df[y_col].max():.1f} {unit}")
+            with col3:
+                st.metric(f"**📉 {worst_label}**", f"{df[y_col].min():.1f} {unit}")
+
+            # Additional stats
+            st.write(f"**Standard Deviation:** {df[y_col].std():.2f} {unit}")
+            st.write(f"**Median:** {df[y_col].median():.1f} {unit}")
 
 except Exception as e:
     st.error(f"❌ Failed to load chart: {e}")
