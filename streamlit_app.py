@@ -944,28 +944,6 @@ if variable == "Vehicle Volume":
     # Prepare data for KPIs
     kpi_df = df.copy()
     time_col = "Time"
-    # Before the line that's causing the error, add this check:
-    if direction == "Both":
-        # For "Both" direction, we need to ensure kpi_df is the combined dataframe
-        # and time_col is properly identified
-        if 'kpi_df' not in locals() or kpi_df is None:
-            kpi_df = df.copy()  # Use the original dataframe
-        # Ensure time_col is properly set
-        if time_col and time_col in kpi_df.columns:
-            # Check if time column needs datetime conversion
-            if not np.issubdtype(kpi_df[time_col].dtype, np.datetime64):
-                kpi_df[time_col] = pd.to_datetime(kpi_df[time_col])
-        else:
-            # If time_col is not found, skip the datetime conversion
-            pass
-    else:
-        # For single direction, ensure kpi_df and time_col are properly set
-        if 'kpi_df' not in locals() or kpi_df is None:
-            kpi_df = period_df.copy()
-
-        if time_col and time_col in kpi_df.columns:
-            if not np.issubdtype(kpi_df[time_col].dtype, np.datetime64):
-                kpi_df[time_col] = pd.to_datetime(kpi_df[time_col])
 
     # Ensure 'Time' is datetime
     if not np.issubdtype(kpi_df[time_col].dtype, np.datetime64):
