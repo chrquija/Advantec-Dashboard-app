@@ -449,12 +449,6 @@ elif data_source == "API Connection":
     if df is None:
         st.stop()
 
-# === Display UI selections ===
-st.write("**Date Range:**", date_range)
-st.write("**Corridor Segment:**", corridor_segment)
-st.write("**Selected Variable:**", variable)
-st.write("**Direction:**", direction)
-st.write("**GitHub CSV File Path:**", selected_path)
 
 # === Chart Type Selector ===
 chart_type = st.selectbox("Choose chart type", ["Line", "Bar", "Scatter", "Box", "Heatmap"])
