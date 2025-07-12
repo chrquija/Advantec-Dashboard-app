@@ -708,6 +708,9 @@ def create_enhanced_multi_line_chart(df, x_col, y_cols, chart_title):
 # === CHART TITLE SECTION ===
 st.markdown("---")
 
+# === CHART TITLE SECTION ===
+st.markdown("---")
+
 
 # Define helper function for finding columns
 def find_column(df, patterns):
@@ -724,22 +727,26 @@ col1, col2 = st.columns([3, 1])
 
 with col1:
     # Generate dynamic title based on selections
+    corridor_info = "Washington St, La Quinta, California"
+    aggregation_info = "Hourly Aggregated"  # You can make this dynamic based on your data
+
     if direction == "Both":
         if variable == "Vehicle Volume":
-            base_title = f"Vehicle Volume - Both Directions"
+            base_title = f"{variable} - Both Directions"
         else:
             base_title = f"{variable} - Northbound & Southbound"
     else:
         direction_full = "Northbound" if direction == "NB" else "Southbound"
         base_title = f"{variable} - {direction_full}"
 
-    # Add date range and chart type info
-    full_title = f"{base_title} ({date_range})"
+    # Add corridor and aggregation info to title
+    full_title = f"{base_title} • {corridor_info}"
+    subtitle = f"{aggregation_info} Data • {date_range} • {chart_type} Chart"
 
     # Display the title with custom styling
     st.markdown(f"""
     <div style="
-        padding: 15px 20px;
+        padding: 20px;
         background: linear-gradient(90deg, #1f4e79 0%, #2980b9 100%);
         border-radius: 10px;
         margin: 10px 0;
@@ -751,24 +758,25 @@ with col1:
             font-family: 'Arial', sans-serif;
             font-weight: 600;
             text-align: center;
-            font-size: 24px;
+            font-size: 22px;
+            line-height: 1.2;
         ">{full_title}</h2>
         <p style="
             color: #e8f4fd;
-            margin: 5px 0 0 0;
+            margin: 8px 0 0 0;
             text-align: center;
             font-size: 14px;
             font-style: italic;
-        ">{chart_type} Chart • {time_period}</p>
+        ">{subtitle}</p>
     </div>
     """, unsafe_allow_html=True)
 
 with col2:
-    # Add a refresh button and chart info
-    st.markdown("**Chart Info:**")
-    st.caption(f"📊 Type: {chart_type}")
-    st.caption(f"📅 Period: {time_period}")
-    st.caption(f"🎯 Direction: {direction}")
+    # Add corridor and data info (removing redundant chart info)
+    st.markdown("**📍 Location Details:**")
+    st.caption("🛣️ Washington Street")
+    st.caption("🏙️ La Quinta, California")
+    st.caption("📊 Hourly Aggregated Data")
 
     # Add refresh button
     if st.button("🔄 Refresh Chart", use_container_width=True):
