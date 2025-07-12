@@ -705,8 +705,6 @@ def create_enhanced_multi_line_chart(df, x_col, y_cols, chart_title):
     return fig
 
 
-# === CHART TITLE SECTION ===
-st.markdown("---")
 
 # === CHART TITLE SECTION ===
 st.markdown("---")
@@ -721,6 +719,19 @@ def find_column(df, patterns):
                 return col
     return None
 
+# Function to determine aggregation type dynamically
+def determine_aggregation_type(variable, date_range):
+    """Determine if data is hourly or daily aggregated based on variable and date range"""
+    if variable == "Vehicle Volume":
+        # Volume data is typically daily (single day snapshots)
+        return "Daily Aggregated"
+    else:
+        # Speed and Travel Time data over multi-day periods are typically hourly
+        if "April 11–20" in date_range or "May 9–18" in date_range:
+            return "Hourly Aggregated"
+        else:
+            return "Daily Aggregated"
+
 
 # Create a more prominent title section
 col1, col2 = st.columns([3, 1])
@@ -728,7 +739,7 @@ col1, col2 = st.columns([3, 1])
 with col1:
     # Generate dynamic title based on selections
     corridor_info = "Washington St, La Quinta, California"
-    aggregation_info = "Hourly Aggregated"  # You can make this dynamic based on your data
+    aggregation_info = determine_aggregation_type(variable, date_range)
 
     if direction == "Both":
         if variable == "Vehicle Volume":
@@ -774,9 +785,9 @@ with col1:
 with col2:
     # Add corridor and data info (removing redundant chart info)
     st.markdown("**📍 Location Details:**")
-    st.caption("🛣️ Washington Street")
+    st.caption("🛣️ Washington St")
     st.caption("🏙️ La Quinta, California")
-    st.caption("📊 Hourly Aggregated Data")
+    st.caption(f"📊 {aggregation_info}")  # Dynamic aggregation info here too
 
     # Add refresh button
     if st.button("🔄 Refresh Chart", use_container_width=True):
