@@ -708,6 +708,17 @@ def create_enhanced_multi_line_chart(df, x_col, y_cols, chart_title):
 # === CHART TITLE SECTION ===
 st.markdown("---")
 
+
+# Define helper function for finding columns
+def find_column(df, patterns):
+    """Find column that matches any of the patterns (case-insensitive)"""
+    for pattern in patterns:
+        for col in df.columns:
+            if pattern.lower() in col.lower():
+                return col
+    return None
+
+
 # Create a more prominent title section
 col1, col2 = st.columns([3, 1])
 
@@ -770,7 +781,15 @@ try:
         if variable == "Vehicle Volume":
             # KINETIC MOBILITY: Single file contains both directions
             df = pd.read_csv(selected_path)
-            time_col = "Time"
+
+            # Check if Time column exists, if not find it
+            if "Time" not in df.columns:
+                time_col = find_column(df, ["time", "timestamp", "date"])
+                if not time_col:
+                    raise ValueError("No time column found in the dataset")
+            else:
+                time_col = "Time"
+
             df[time_col] = pd.to_datetime(df[time_col], errors="coerce")
             df.dropna(subset=[time_col], inplace=True)
             df.set_index(time_col, inplace=True)
@@ -993,7 +1012,15 @@ try:
     else:
         # SINGLE DIRECTION LOGIC
         df = pd.read_csv(selected_path)
-        time_col = "Time"
+
+        # Check if Time column exists, if not find it
+        if "Time" not in df.columns:
+            time_col = find_column(df, ["time", "timestamp", "date"])
+            if not time_col:
+                raise ValueError("No time column found in the dataset")
+        else:
+            time_col = "Time"
+
         df[time_col] = pd.to_datetime(df[time_col], errors="coerce")
         df.dropna(subset=[time_col], inplace=True)
         df.set_index(time_col, inplace=True)
