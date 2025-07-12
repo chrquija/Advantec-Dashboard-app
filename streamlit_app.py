@@ -722,15 +722,8 @@ def find_column(df, patterns):
 # Function to determine aggregation type dynamically
 def determine_aggregation_type(variable, date_range):
     """Determine if data is hourly or daily aggregated based on variable and date range"""
-    if variable == "Vehicle Volume":
-        # Volume data is typically daily (single day snapshots)
-        return "Daily Aggregated"
-    else:
-        # Speed and Travel Time data over multi-day periods are typically hourly
-        if "April 11–20" in date_range or "May 9–18" in date_range:
-            return "Hourly Aggregated"
-        else:
-            return "Daily Aggregated"
+    # All current data (Speed, Travel Time, and Vehicle Volume) is hourly aggregated
+    return "Hourly Aggregated"
 
 
 # Create a more prominent title section
