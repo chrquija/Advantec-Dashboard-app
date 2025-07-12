@@ -1211,6 +1211,185 @@ def filter_by_period(df, time_col, period):
     return df_copy
 
 
+# === 4. STYLED KPI SECTION ===
+st.markdown("---")
+
+# KPI Styling CSS
+st.markdown("""
+<style>
+.kpi-container {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 20px;
+    border-radius: 15px;
+    margin: 10px 0;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.kpi-card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    margin: 8px 0;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    border-left: 4px solid #4CAF50;
+    transition: transform 0.3s ease;
+}
+
+.kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+
+.kpi-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #555;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.kpi-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: #2E7D32;
+    margin-bottom: 5px;
+}
+
+.kpi-delta {
+    font-size: 14px;
+    color: #666;
+}
+
+.kpi-row {
+    display: flex;
+    gap: 15px;
+    margin: 15px 0;
+}
+
+.kpi-section-title {
+    color: white;
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    text-align: center;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.cycle-table {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    margin: 10px 0;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+</style>
+""", unsafe_allow_html=True)
+
+# Main KPI Container
+st.markdown('<div class="kpi-container">', unsafe_allow_html=True)
+st.markdown('<h2 class="kpi-section-title">📊 Key Performance Indicators</h2>', unsafe_allow_html=True)
+
+# Your existing KPI calculation logic (keep all your current logic)
+if volume_data is not None:
+    # Calculate all your existing KPIs here (keep your current calculation code)
+
+    # Get filtered data for selected time period
+    filtered_data = filter_data_by_time_period(volume_data, time_period)
+
+    # Calculate totals for each direction
+    nb_total = filtered_data['NB_total_volume'].sum()
+    sb_total = filtered_data['SB_total_volume'].sum()
+
+    # Determine busiest direction
+    peak_direction = "NB" if nb_total > sb_total else "SB"
+    total_busiest = max(nb_total, sb_total)
+
+    # Get hourly volumes for recommendations
+    hourly_volumes = filtered_data['NB_total_volume'] + filtered_data['SB_total_volume']
+
+    # Your existing cycle length functions
+    recommended_cycle = get_cycle_length_recommendation(hourly_volumes)
+    existing_cycle = get_existing_cycle_length(total_busiest)
+
+    # Calculate other KPIs (keep your existing logic)
+    aggregation_type = determine_aggregation_type(selected_variable, selected_date_range)
+
+    # KPI Row 1
+    col1, col2, col3, col4 = st.columns(4)
+
+    with col1:
+        st.markdown(f"""
+        <div class="kpi-card">
+            <div class="kpi-title">Total {peak_direction} Vehicle Volume</div>
+            <div class="kpi-value">{total_busiest:,.0f}</div>
+            <div class="kpi-delta">Vehicles - Busiest Direction</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col2:
+        st.markdown(f"""
+        <div class="kpi-card">
+            <div class="kpi-title">Busiest Direction</div>
+            <div class="kpi-value">{peak_direction}</div>
+            <div class="kpi-delta">NB or SB</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col3:
+        st.markdown(f"""
+        <div class="kpi-card">
+            <div class="kpi-title">Data Aggregation</div>
+            <div class="kpi-value">{aggregation_type}</div>
+            <div class="kpi-delta">Time Resolution</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col4:
+        st.markdown(f"""
+        <div class="kpi-card">
+            <div class="kpi-title">Existing Cycle Length</div>
+            <div class="kpi-value">{existing_cycle}</div>
+            <div class="kpi-delta">Current Setting</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # KPI Row 2 - Cycle Length Table with merged activation metrics
+    st.markdown('<div class="cycle-table">', unsafe_allow_html=True)
+    st.markdown("### 🔄 Suggested Cycle Length Table - Hourly")
+
+    # Your existing cycle length table code here
+    # Add the activation period metrics that you want to move from KPI1
+
+    # Calculate activation period metrics (keep your existing logic)
+    consecutive_volume = filtered_data['NB_total_volume'].sum() + filtered_data['SB_total_volume'].sum()
+
+    # Add activation period KPIs
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.markdown(f"""
+        <div class="kpi-card">
+            <div class="kpi-title">Cycle Length Activation Period</div>
+            <div class="kpi-value">24-Hour</div>
+            <div class="kpi-delta">Monitoring Period</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col2:
+        st.markdown(f"""
+        <div class="kpi-card">
+            <div class="kpi-title">Total Activation Period Volume</div>
+            <div class="kpi-value">{consecutive_volume:,.0f}</div>
+            <div class="kpi-delta">Vehicles</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
+st.markdown('</div>', unsafe_allow_html=True)
+
+
 
 # Only show KPI panels for Vehicle Volume data
 if variable == "Vehicle Volume":
