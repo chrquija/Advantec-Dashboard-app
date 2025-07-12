@@ -250,10 +250,11 @@ path_map = {
      "April 11–20, 2025"): base_url + "SPEED/Weeks_04112025_to_04202025/SB_Washington_Hwy_111_to_Avenue_52_SPEED_1hr_0411_04202025.csv",
     ("Speed", "Both", "April 11–20, 2025"): "BOTH",
 
+    # FIXED URLs for May 9-18, 2025
     ("Speed", "NB",
-     "May 9–18, 2025"): base_url + "SPEED/Weeks_05092025_to_05182025/NB_Washington_Avenue_52_to_Hwy_111_%20SPEED_1hr_0509_05182025.csv",
+     "May 9–18, 2025"): base_url + "SPEED/Weeks_05092025_to_05182025/NB_Washington_Avenue_52_to_Hwy_111_SPEED_1hr_0509_05182025.csv",
     ("Speed", "SB",
-     "May 9–18, 2025"): base_url + "SPEED/Weeks_05092025_to_05182025/SB_Washington_Hwy_111_to_Avenue_52_SPEED_1hr_0509_05182025.csv",
+     "May 9–18, 2025"): base_url + "SPEED/Weeks_05092025_to_05182025/SB_Washington_Hwy%20111_to_Avenue%2052_SPEED_1hr_0509_05182025.csv",
     ("Speed", "Both", "May 9–18, 2025"): "BOTH",
 
     # === TRAVEL TIME ===
