@@ -1,13 +1,11 @@
-
+import streamlit as st
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 from datetime import datetime, timedelta
 import numpy as np
 
-# Add the new imports for PDF functionality
-import urllib.parse
-import streamlit as st
-import plotly.graph_objects as go
+# PDF functionality imports
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.utils import ImageReader
@@ -17,7 +15,7 @@ import webbrowser
 import urllib.parse
 import tempfile
 import os
-from datetime import datetime
+
 
 
 def create_pdf_report(variable, date_range, chart_fig, data_source_info):
