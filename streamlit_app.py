@@ -723,25 +723,39 @@ def find_column(df, patterns):
 def determine_data_source(variable, date_range):
     """Determine data source based on variable type and date range"""
     # Convert date_range to string for checking
-    date_str = str(date_range)
+    date_str = str(date_range).lower()
+
+    # Debug: print what we're checking (you can remove this later)
+    print(f"Variable: {variable}")
+    print(f"Date range string: {date_str}")
 
     if variable == "Vehicle Volume":
         # Check if date range includes April 10, 2025 or Feb 13, 2025
-        target_dates = ['2025-04-10', '2025-02-13', 'April 10, 2025', 'Feb 13, 2025',
+        target_dates = ['2025-04-10', '2025-02-13', 'april 10, 2025', 'feb 13, 2025',
                         '04-10-2025', '02-13-2025', '10-04-2025', '13-02-2025']
         if any(date in date_str for date in target_dates):
             return "✅ Data Source: Kinetic Mobility"
 
     elif variable in ["Speed", "Travel Time"]:
-        # Check if date range includes April 11-20, 2025 or May 9-18, 2025
-        april_range = any(f'2025-04-{day:02d}' in date_str for day in range(11, 21))
-        may_range = any(f'2025-05-{day:02d}' in date_str for day in range(9, 19))
+        # More comprehensive date checking for April 11-20, 2025 and May 9-18, 2025
 
-        # Also check alternative date formats
-        april_range_alt = any(f'04-{day:02d}-2025' in date_str for day in range(11, 21))
-        may_range_alt = any(f'05-{day:02d}-2025' in date_str for day in range(9, 19))
+        # Check for April 2025 (any mention of April 2025)
+        april_2025 = 'april' in date_str and '2025' in date_str
+        may_2025 = 'may' in date_str and '2025' in date_str
 
-        if april_range or may_range or april_range_alt or may_range_alt:
+        # Check for specific date ranges
+        april_dates = [f'2025-04-{day:02d}' for day in range(11, 21)]
+        may_dates = [f'2025-05-{day:02d}' for day in range(9, 19)]
+
+        # Check alternative formats
+        april_dates_alt = [f'04-{day:02d}-2025' for day in range(11, 21)]
+        may_dates_alt = [f'05-{day:02d}-2025' for day in range(9, 19)]
+
+        # Check if any of these dates are in the string
+        april_match = any(date in date_str for date in april_dates + april_dates_alt)
+        may_match = any(date in date_str for date in may_dates + may_dates_alt)
+
+        if april_2025 or may_2025 or april_match or may_match:
             return "✅ Data Source: Acyclica"
 
     # Default fallback
