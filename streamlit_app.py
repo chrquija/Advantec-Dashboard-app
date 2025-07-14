@@ -800,8 +800,8 @@ data_source_info = determine_data_source(variable, date_range)
 with col2:
     # Add corridor and data info (with data source instead of aggregation)
     st.markdown("**🌐 Location Details:**")
-    st.caption("🛣️ Washington St")
-    st.caption("🏙️ La Quinta, California")
+    st.caption("🛣️ Corridor Segment:  Washington St & Ave 52")
+    st.caption("🏙️City and State: La Quinta, California")
     st.caption(f"{data_source_info}")  # Data source info instead of aggregation info
 
     # Add refresh button
