@@ -725,17 +725,17 @@ def determine_data_source(variable, date_range):
     if variable in ['Vehicle Volume NB', 'Vehicle Volume SB']:
         # Check if date range includes April 10, 2025 or Feb 13, 2025
         if any(date in str(date_range) for date in ['2025-04-10', '2025-02-13', 'April 10, 2025', 'Feb 13, 2025']):
-            return "📊 Data Source: Kinetic Mobility"
+            return "✅  Data Source: Kinetic Mobility"
     elif variable in ['Speed NB', 'Speed SB', 'Travel Time NB', 'Travel Time SB']:
         # Check if date range includes April 11-20, 2025 or May 9-18, 2025
         date_str = str(date_range)
         april_range = any(f'2025-04-{day:02d}' in date_str for day in range(11, 21))
         may_range = any(f'2025-05-{day:02d}' in date_str for day in range(9, 19))
         if april_range or may_range:
-            return "📊 Data Source: Acyclica"
+            return "✅  Data Source: Acyclica"
 
     # Default fallback
-    return "📊 Data Source: Unknown"
+    return "❗ Data Source: Unknown"
 
 
 def determine_aggregation_type(variable, date_range):
@@ -799,7 +799,7 @@ data_source_info = determine_data_source(variable, date_range)
 
 with col2:
     # Add corridor and data info (with data source instead of aggregation)
-    st.markdown("**📍 Location Details:**")
+    st.markdown("**🌐 Location Details:**")
     st.caption("🛣️ Washington St")
     st.caption("🏙️ La Quinta, California")
     st.caption(f"{data_source_info}")  # Data source info instead of aggregation info
