@@ -142,13 +142,6 @@ with col3:
 
             st.success("Email report generated! Check your email client.")
 
-            # Optionally, provide download link as backup
-            st.download_button(
-                label="📥 Download PDF (Backup)",
-                data=pdf_buffer.getvalue(),
-                file_name=f"traffic_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
-                mime="application/pdf"
-            )
 
         except Exception as e:
             st.error(f"Error creating email report: {str(e)}")
