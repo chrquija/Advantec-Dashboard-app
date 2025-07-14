@@ -138,10 +138,13 @@ with col3:
             )
 
             # Send email
-            pdf_path = send_email_with_pdf(pdf_buffer, st.session_state.variable, date_info)
+            send_email_with_pdf(pdf_buffer, st.session_state.variable, date_info)
 
             st.success("Email report generated! Check your email client.")
 
+            # Clear the email report from session state to hide it
+            if 'show_email_report' in st.session_state:
+                del st.session_state['show_email_report']
 
         except Exception as e:
             st.error(f"Error creating email report: {str(e)}")
