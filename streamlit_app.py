@@ -6,6 +6,154 @@ import plotly.graph_objects as go
 from datetime import datetime, timedelta
 import numpy as np
 
+# Add the new imports for PDF functionality
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.utils import ImageReader
+import io
+import base64
+import webbrowser
+import urllib.parse
+import tempfile
+import os
+from datetime import datetime
+
+import streamlit as st
+import plotly.graph_objects as go
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.utils import ImageReader
+import io
+import base64
+import webbrowser
+import urllib.parse
+import tempfile
+import os
+from datetime import datetime
+
+
+def create_pdf_report(variable, date_range, chart_fig, data_source_info):
+    """Create a PDF report with current screen info"""
+    buffer = io.BytesIO()
+
+    # Create PDF
+    p = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
+
+    # Add title
+    p.setFont("Helvetica-Bold", 16)
+    p.drawString(50, height - 50, "Traffic Data Report")
+
+    # Add timestamp
+    p.setFont("Helvetica", 10)
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    p.drawString(50, height - 80, f"Generated: {timestamp}")
+
+    # Add variable info
+    p.setFont("Helvetica", 12)
+    p.drawString(50, height - 120, f"Variable: {variable}")
+    p.drawString(50, height - 140, f"Date Range: {str(date_range)}")
+
+    # Add data source (remove markdown formatting for PDF)
+    data_source_clean = data_source_info.replace("✅ Data Source: [", "").replace("](", " - ").replace(")", "")
+    p.drawString(50, height - 160, f"Data Source: {data_source_clean}")
+
+    # Save chart as image and add to PDF
+    if chart_fig:
+        # Convert plotly figure to image
+        img_bytes = chart_fig.to_image(format="png", width=500, height=300)
+        img = ImageReader(io.BytesIO(img_bytes))
+        p.drawImage(img, 50, height - 500, width=500, height=300)
+
+    p.showPage()
+    p.save()
+
+    buffer.seek(0)
+    return buffer
+
+
+def send_email_with_pdf(pdf_buffer, variable, date_range):
+    """Open Outlook with PDF attachment"""
+    # Save PDF to temporary file
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf', prefix='traffic_report_') as tmp_file:
+        tmp_file.write(pdf_buffer.getvalue())
+        pdf_path = tmp_file.name
+
+    # Email details
+    to_emails = "cortiz@advantec-usa.com;belenes@advantec-usa.com"
+    subject = f"Traffic Data Report - {variable} - {datetime.now().strftime('%Y-%m-%d')}"
+    body = f"""Hello,
+
+Please find attached the traffic data report for:
+- Variable: {variable}
+- Date Range: {str(date_range)}
+- Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+
+Best regards,
+Traffic Data System
+"""
+
+    # Create mailto URL (this will open default email client)
+    mailto_url = f"mailto:{to_emails}?subject={urllib.parse.quote(subject)}&body={urllib.parse.quote(body)}"
+
+    try:
+        # Try to open with Outlook specifically (Windows)
+        import subprocess
+        subprocess.run([
+            'outlook',
+            '/m', f"{to_emails}",
+            '/s', subject,
+            '/a', pdf_path
+        ], check=False)
+    except:
+        # Fallback to default email client
+        webbrowser.open(mailto_url)
+        st.info(f"Email opened in default client. Please manually attach the PDF from: {pdf_path}")
+
+    return pdf_path
+
+
+# Add this to your Streamlit app layout (in the top right)
+col1, col2, col3 = st.columns([2, 1, 1])
+
+with col3:
+    if st.button("📧 Send Email Report", use_container_width=True):
+        try:
+            # Get current chart figure (you'll need to store this when creating your chart)
+            current_chart = st.session_state.get('current_chart', None)
+
+            # Create PDF
+            if st.session_state.data_source == "GitHub Repository":
+                date_info = st.session_state.date_range
+            elif st.session_state.data_source == "Uploaded CSV":
+                # Extract date range from your CSV data or use placeholder
+                date_info = "Data from uploaded CSV"
+            else:  # API Connection
+                date_info = "API Data Range"
+
+            pdf_buffer = create_pdf_report(
+                variable=st.session_state.variable,
+                date_range=date_info,
+                chart_fig=current_chart,
+                data_source_info=f"Data Source: {st.session_state.data_source}"
+            )
+
+            # Send email
+            pdf_path = send_email_with_pdf(pdf_buffer, st.session_state.variable, date_info)
+
+            st.success("Email report generated! Check your email client.")
+
+            # Optionally, provide download link as backup
+            st.download_button(
+                label="📥 Download PDF (Backup)",
+                data=pdf_buffer.getvalue(),
+                file_name=f"traffic_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
+                mime="application/pdf"
+            )
+
+        except Exception as e:
+            st.error(f"Error creating email report: {str(e)}")
+
 # === Set up the app ===
 st.set_page_config(
     page_title="Transportation Dashboard",
@@ -703,7 +851,9 @@ def create_enhanced_multi_line_chart(df, x_col, y_cols, chart_title):
     
     fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor="lightgray")
     fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor="lightgray")
-    
+
+    st.session_state['current_chart'] = fig  # store chart in session state so email function can access it later.
+
     return fig
 
 
