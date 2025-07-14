@@ -18,7 +18,7 @@ st.title("📊 Active Transportation & Operations Management Dashboard")
 
 # === SIDEBAR ===
 with st.sidebar:
-    st.image("Logos/ACE-logo-HiRes.jpg", width=200)
+    st.image("Logos/ACE-logo-HiRes.jpg", width=210)
     st.image("Logos/CV Sync__.jpg", width=200)
 
 
