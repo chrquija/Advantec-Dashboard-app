@@ -719,11 +719,29 @@ def find_column(df, patterns):
                 return col
     return None
 
-# Function to determine aggregation type dynamically
+
+def determine_data_source(variable, date_range):
+    """Determine data source based on variable type and date range"""
+    if variable in ['Vehicle Volume NB', 'Vehicle Volume SB']:
+        # Check if date range includes April 10, 2025 or Feb 13, 2025
+        if any(date in str(date_range) for date in ['2025-04-10', '2025-02-13', 'April 10, 2025', 'Feb 13, 2025']):
+            return "📊 Data Source: Kinetic Mobility"
+    elif variable in ['Speed NB', 'Speed SB', 'Travel Time NB', 'Travel Time SB']:
+        # Check if date range includes April 11-20, 2025 or May 9-18, 2025
+        date_str = str(date_range)
+        april_range = any(f'2025-04-{day:02d}' in date_str for day in range(11, 21))
+        may_range = any(f'2025-05-{day:02d}' in date_str for day in range(9, 19))
+        if april_range or may_range:
+            return "📊 Data Source: Acyclica"
+
+    # Default fallback
+    return "📊 Data Source: Unknown"
+
+
 def determine_aggregation_type(variable, date_range):
-    """Determine if data is hourly or daily aggregated based on variable and date range"""
-    # All current data (Speed, Travel Time, and Vehicle Volume) is hourly aggregated
-    return "Hourly Aggregated"
+    """Determine aggregation type based on variable and date range"""
+    # You can customize this logic based on your needs
+    return "Hourly Aggregated"  # or whatever logic you want for the title
 
 
 # Create a more prominent title section
@@ -732,7 +750,8 @@ col1, col2 = st.columns([3, 1])
 with col1:
     # Generate dynamic title based on selections
     corridor_info = "Washington St, La Quinta, California"
-    aggregation_info = determine_aggregation_type(variable, date_range)
+    aggregation_info = determine_aggregation_type(variable, date_range)  # For title
+    data_source_info = determine_data_source(variable, date_range)
 
     if direction == "Both":
         if variable == "Vehicle Volume":
@@ -775,12 +794,15 @@ with col1:
     </div>
     """, unsafe_allow_html=True)
 
+# Replace the determine_aggregation_type function call with determine_data_source
+data_source_info = determine_data_source(variable, date_range)
+
 with col2:
-    # Add corridor and data info (removing redundant chart info)
+    # Add corridor and data info (with data source instead of aggregation)
     st.markdown("**📍 Location Details:**")
     st.caption("🛣️ Washington St")
     st.caption("🏙️ La Quinta, California")
-    st.caption(f"📊 {aggregation_info}")  # Dynamic aggregation info here too
+    st.caption(f"{data_source_info}")  # Data source info instead of aggregation info
 
     # Add refresh button
     if st.button("🔄 Refresh Chart", use_container_width=True):
