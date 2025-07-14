@@ -16,6 +16,11 @@ import urllib.parse
 import tempfile
 import os
 
+st.set_page_config(
+    page_title="Transportation Dashboard",
+    page_icon="📊",
+    layout="wide"
+)
 
 
 def create_pdf_report(variable, date_range, chart_fig, data_source_info):
@@ -140,12 +145,6 @@ with col3:
         except Exception as e:
             st.error(f"Error creating email report: {str(e)}")
 
-# === Set up the app ===
-st.set_page_config(
-    page_title="Transportation Dashboard",
-    page_icon="📊",
-    layout="wide"
-)
 
 # App title
 st.title("📊 Active Transportation & Operations Management Dashboard")
