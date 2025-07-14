@@ -64,11 +64,9 @@ def create_pdf_report(variable, date_range, chart_fig, data_source_info):
 
 
 def send_email_with_pdf(pdf_buffer, variable, date_range):
-    """Open Outlook with PDF attachment"""
-    # Save PDF to temporary file
-    with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf', prefix='traffic_report_') as tmp_file:
-        tmp_file.write(pdf_buffer.getvalue())
-        pdf_path = tmp_file.name
+    """Download PDF and open email client"""
+    # Create download link for PDF
+    pdf_data = pdf_buffer.getvalue()
 
     # Email details
     to_emails = "cortiz@advantec-usa.com;belenes@advantec-usa.com"
@@ -84,42 +82,34 @@ Best regards,
 Traffic Data System
 """
 
-    # Create mailto URL (this will open default email client)
+    # Create mailto URL
     mailto_url = f"mailto:{to_emails}?subject={urllib.parse.quote(subject)}&body={urllib.parse.quote(body)}"
 
-    # Try multiple common Outlook paths
-    outlook_paths = [
-        r"C:\Program Files\Microsoft Office\root\Office16\OUTLOOK.EXE",
-        r"C:\Program Files (x86)\Microsoft Office\root\Office16\OUTLOOK.EXE",
-        r"C:\Program Files\Microsoft Office\Office16\OUTLOOK.EXE",
-        r"C:\Program Files (x86)\Microsoft Office\Office16\OUTLOOK.EXE",
-        r"C:\Program Files\Microsoft Office\root\Office15\OUTLOOK.EXE",
-        r"C:\Program Files (x86)\Microsoft Office\Office15\OUTLOOK.EXE",
-        "outlook"  # If it's in system PATH
-    ]
+    # Create two buttons
+    col1, col2 = st.columns(2)
 
-    outlook_opened = False
-    for outlook_path in outlook_paths:
-        try:
-            import subprocess
-            subprocess.run([
-                outlook_path,
-                '/m', f"{to_emails}",
-                '/s', subject,
-                '/a', pdf_path
-            ], check=True)
-            outlook_opened = True
-            st.success("Outlook opened with email draft and PDF attachment!")
-            break
-        except:
-            continue
+    with col1:
+        # Download PDF button
+        st.download_button(
+            label="📥 Download PDF Report",
+            data=pdf_data,
+            file_name=f"traffic_report_{variable}_{datetime.now().strftime('%Y%m%d')}.pdf",
+            mime="application/pdf",
+            use_container_width=True
+        )
 
-    if not outlook_opened:
-        # Fallback to default email client
-        webbrowser.open(mailto_url)
-        st.info(f"Email opened in default client. Please manually attach the PDF from: {pdf_path}")
+    with col2:
+        # Open email button
+        st.link_button(
+            label="📧 Open Email Client",
+            url=mailto_url,
+            use_container_width=True
+        )
 
-    return pdf_path
+    st.info(
+        "💡 **Instructions:** Click 'Download PDF' first, then click 'Open Email' and attach the downloaded PDF file.")
+
+    return None
 
 
 # Add this to your Streamlit app layout (in the top right)
