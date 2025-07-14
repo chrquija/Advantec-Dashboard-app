@@ -117,15 +117,22 @@ col1, col2, col3 = st.columns([2, 1, 1])
 
 with col3:
     if st.button("📧 Send Email Report", use_container_width=True):
+        # Toggle the email report visibility
+        if 'show_email_report' not in st.session_state:
+            st.session_state.show_email_report = True
+        else:
+            st.session_state.show_email_report = not st.session_state.show_email_report
+
+    # Only show email report if toggled on
+    if st.session_state.get('show_email_report', False):
         try:
-            # Get current chart figure (you'll need to store this when creating your chart)
+            # Get current chart figure
             current_chart = st.session_state.get('current_chart', None)
 
             # Create PDF
             if st.session_state.data_source == "GitHub Repository":
                 date_info = st.session_state.date_range
             elif st.session_state.data_source == "Uploaded CSV":
-                # Extract date range from your CSV data or use placeholder
                 date_info = "Data from uploaded CSV"
             else:  # API Connection
                 date_info = "API Data Range"
@@ -139,12 +146,6 @@ with col3:
 
             # Send email
             send_email_with_pdf(pdf_buffer, st.session_state.variable, date_info)
-
-            st.success("Email report generated! Check your email client.")
-
-            # Clear the email report from session state to hide it
-            if 'show_email_report' in st.session_state:
-                del st.session_state['show_email_report']
 
         except Exception as e:
             st.error(f"Error creating email report: {str(e)}")
