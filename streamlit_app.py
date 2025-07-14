@@ -722,21 +722,30 @@ def find_column(df, patterns):
 
 def determine_data_source(variable, date_range):
     """Determine data source based on variable type and date range"""
-    if variable in ['Vehicle Volume NB', 'Vehicle Volume SB']:
+    # Convert date_range to string for checking
+    date_str = str(date_range)
+
+    if variable == "Vehicle Volume":
         # Check if date range includes April 10, 2025 or Feb 13, 2025
-        if any(date in str(date_range) for date in ['2025-04-10', '2025-02-13', 'April 10, 2025', 'Feb 13, 2025']):
-            return "✅  Data Source: Kinetic Mobility"
-    elif variable in ['Speed NB', 'Speed SB', 'Travel Time NB', 'Travel Time SB']:
+        target_dates = ['2025-04-10', '2025-02-13', 'April 10, 2025', 'Feb 13, 2025',
+                        '04-10-2025', '02-13-2025', '10-04-2025', '13-02-2025']
+        if any(date in date_str for date in target_dates):
+            return "✅ Data Source: Kinetic Mobility"
+
+    elif variable in ["Speed", "Travel Time"]:
         # Check if date range includes April 11-20, 2025 or May 9-18, 2025
-        date_str = str(date_range)
         april_range = any(f'2025-04-{day:02d}' in date_str for day in range(11, 21))
         may_range = any(f'2025-05-{day:02d}' in date_str for day in range(9, 19))
-        if april_range or may_range:
-            return "✅  Data Source: Acyclica"
+
+        # Also check alternative date formats
+        april_range_alt = any(f'04-{day:02d}-2025' in date_str for day in range(11, 21))
+        may_range_alt = any(f'05-{day:02d}-2025' in date_str for day in range(9, 19))
+
+        if april_range or may_range or april_range_alt or may_range_alt:
+            return "✅ Data Source: Acyclica"
 
     # Default fallback
     return "❗ Data Source: Unknown"
-
 
 def determine_aggregation_type(variable, date_range):
     """Determine aggregation type based on variable and date range"""
