@@ -87,16 +87,34 @@ Traffic Data System
     # Create mailto URL (this will open default email client)
     mailto_url = f"mailto:{to_emails}?subject={urllib.parse.quote(subject)}&body={urllib.parse.quote(body)}"
 
-    try:
-        # Try to open with Outlook specifically (Windows)
-        import subprocess
-        subprocess.run([
-            'outlook',
-            '/m', f"{to_emails}",
-            '/s', subject,
-            '/a', pdf_path
-        ], check=False)
-    except:
+    # Try multiple common Outlook paths
+    outlook_paths = [
+        r"C:\Program Files\Microsoft Office\root\Office16\OUTLOOK.EXE",
+        r"C:\Program Files (x86)\Microsoft Office\root\Office16\OUTLOOK.EXE",
+        r"C:\Program Files\Microsoft Office\Office16\OUTLOOK.EXE",
+        r"C:\Program Files (x86)\Microsoft Office\Office16\OUTLOOK.EXE",
+        r"C:\Program Files\Microsoft Office\root\Office15\OUTLOOK.EXE",
+        r"C:\Program Files (x86)\Microsoft Office\Office15\OUTLOOK.EXE",
+        "outlook"  # If it's in system PATH
+    ]
+
+    outlook_opened = False
+    for outlook_path in outlook_paths:
+        try:
+            import subprocess
+            subprocess.run([
+                outlook_path,
+                '/m', f"{to_emails}",
+                '/s', subject,
+                '/a', pdf_path
+            ], check=True)
+            outlook_opened = True
+            st.success("Outlook opened with email draft and PDF attachment!")
+            break
+        except:
+            continue
+
+    if not outlook_opened:
         # Fallback to default email client
         webbrowser.open(mailto_url)
         st.info(f"Email opened in default client. Please manually attach the PDF from: {pdf_path}")
