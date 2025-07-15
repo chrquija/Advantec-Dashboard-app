@@ -143,7 +143,7 @@ with col3:
                 variable=st.session_state.variable,
                 date_range=date_info,
                 chart_fig=current_chart,
-                data_source_info=f"Data Origin: {st.session_state.data_source}"
+                data_source_info=f"Data Source: {st.session_state.data_source}"
             )
 
             # Send email
