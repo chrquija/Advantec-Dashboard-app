@@ -1131,10 +1131,12 @@ with col1:
 
     # Add corridor and aggregation info to title
     full_title = f"{base_title} • {corridor_info}"
-    # To this:
-    if 'chart_type' in locals():
+
+    # Handle subtitle creation safely
+    try:
         subtitle = f"{aggregation_info} Data • {date_range} • {chart_type} Chart"
-    else:
+    except NameError:
+        # chart_type not defined yet, use default
         subtitle = f"{aggregation_info} Data • {date_range}"
 
     # Display the title with custom styling
