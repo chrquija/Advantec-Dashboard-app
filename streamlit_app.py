@@ -22,6 +22,8 @@ st.set_page_config(
     layout="wide"
 )
 
+# Initialize chart_type with default value
+chart_type = "Line"
 
 def create_pdf_report(variable, date_range, chart_fig, data_source_info):
     """Create a PDF report with current screen info"""
@@ -1129,7 +1131,11 @@ with col1:
 
     # Add corridor and aggregation info to title
     full_title = f"{base_title} • {corridor_info}"
-    subtitle = f"{aggregation_info} Data • {date_range} • {chart_type} Chart"
+    # To this:
+    if 'chart_type' in locals():
+        subtitle = f"{aggregation_info} Data • {date_range} • {chart_type} Chart"
+    else:
+        subtitle = f"{aggregation_info} Data • {date_range}"
 
     # Display the title with custom styling
     st.markdown(f"""
@@ -1171,14 +1177,14 @@ with col2:
 
     # removing refresh button on static data sources
     if data_source in ["GitHub Repository", "Uploaded CSV"]:
-        # Show chart type selector here for static data
         chart_type = st.selectbox(
             "📊 Choose Chart Type",
-            ["Line Chart", "Bar Chart", "Area Chart", "Scatter Plot"],
+            ["Line", "Bar", "Scatter", "Box", "Heatmap"],
             key="chart_type_static"
         )
     else:
-        # Keep refresh button for API connections
+        # For API connections, set a default or show selector elsewhere
+        chart_type = "Line"  # or keep the original selector here
         if st.button("🔄 Refresh Chart", use_container_width=True):
             # Refresh logic here
             pass
