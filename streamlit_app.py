@@ -241,15 +241,35 @@ if data_source == "Uploaded CSV":
         if selected_file != "Select uploaded file...":
             st.markdown("## 🧩 Map Your Columns")
 
+            # Check if selected file exists in uploaded files
+            if selected_file not in st.session_state.uploaded_files:
+                st.error("Selected file not found in uploaded files")
+                st.stop()
+
             try:
                 # Load the selected file with better error handling
-                df = pd.read_csv(st.session_state.uploaded_files[selected_file], encoding='utf-8')
+                file_obj = st.session_state.uploaded_files[selected_file]
+                file_obj.seek(0)  # Reset file pointer to beginning
+                df = pd.read_csv(file_obj, encoding='utf-8')
+
+                # Check if dataframe is empty
+                if df.empty:
+                    st.error("The selected file contains no data")
+                    st.stop()
+
             except UnicodeDecodeError:
                 try:
-                    df = pd.read_csv(st.session_state.uploaded_files[selected_file], encoding='latin-1')
+                    file_obj.seek(0)  # Reset file pointer again
+                    df = pd.read_csv(file_obj, encoding='latin-1')
+                    if df.empty:
+                        st.error("The selected file contains no data")
+                        st.stop()
                 except Exception as e:
                     st.error(f"Error reading file: {str(e)}")
                     st.stop()
+            except pd.errors.EmptyDataError:
+                st.error("The file appears to be empty or contains no parseable data")
+                st.stop()
             except Exception as e:
                 st.error(f"Error processing uploaded file: {str(e)}")
                 st.stop()
