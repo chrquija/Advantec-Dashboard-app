@@ -1173,9 +1173,19 @@ with col2:
     st.caption("🏙️City and State: La Quinta, California")
     st.caption(f"{data_source_info}")  # Data source info instead of aggregation info
 
-    # Add refresh button
-    if st.button("🔄 Refresh Chart", use_container_width=True):
-        st.rerun()
+    # removing refresh button on static data sources
+    if data_source in ["GitHub Repository", "Uploaded CSV"]:
+        # Show chart type selector here for static data
+        chart_type = st.selectbox(
+            "📊 Choose Chart Type",
+            ["Line Chart", "Bar Chart", "Area Chart", "Scatter Plot"],
+            key="chart_type_static"
+        )
+    else:
+        # Keep refresh button for API connections
+        if st.button("🔄 Refresh Chart", use_container_width=True):
+            # Refresh logic here
+            pass
 
 # === Load and Render Chart ===
 try:
