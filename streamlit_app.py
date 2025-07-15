@@ -251,22 +251,85 @@ if data_source == "Uploaded CSV":
                 key="date_column"
             )
 
-            direction_column = st.selectbox(
-                "Select column for direction:",
-                ["Select column..."] + list(df.columns),
-                key="direction_column"
-            )
+            # Auto-detect data format
+            nb_cols = [col for col in df.columns if 'NB' in col.upper()]
+            sb_cols = [col for col in df.columns if 'SB' in col.upper()]
+            has_directional_cols = len(nb_cols) > 0 and len(sb_cols) > 0
 
-            variable_column = st.selectbox(
-                "Select column for variable:",
-                ["Select column..."] + list(df.columns),
-                key="variable_column"
-            )
+            if has_directional_cols:
+                st.info("📊 Detected directional columns (NB/SB format)")
+                data_format = st.radio(
+                    "Select data format:",
+                    ["Wide format (NB/SB columns)", "Long format (separate direction column)"],
+                    key="data_format"
+                )
+            else:
+                data_format = "Long format (separate direction column)"
 
-            # Validation
-            if date_column == "Select column..." or direction_column == "Select column..." or variable_column == "Select column...":
-                st.warning("⚠️ Please map all columns to continue")
-                st.stop()
+            if data_format == "Wide format (NB/SB columns)":
+                # For wide format data
+                st.subheader("Select directional columns:")
+                nb_column = st.selectbox(
+                    "Northbound (NB) column:",
+                    ["Select column..."] + [col for col in df.columns if col != date_column],
+                    key="nb_column"
+                )
+                sb_column = st.selectbox(
+                    "Southbound (SB) column:",
+                    ["Select column..."] + [col for col in df.columns if col != date_column and col != nb_column],
+                    key="sb_column"
+                )
+
+                # Validation for wide format
+                if date_column == "Select column..." or nb_column == "Select column..." or sb_column == "Select column...":
+                    st.warning("⚠️ Please map all columns to continue")
+                    st.stop()
+
+                # Transform data internally
+                if nb_column and sb_column:
+                    # Create long format data
+                    df_long = pd.melt(df,
+                                      id_vars=[date_column],
+                                      value_vars=[nb_column, sb_column],
+                                      var_name='direction',
+                                      value_name='variable')
+
+                    # Clean up direction names
+                    df_long['direction'] = df_long['direction'].apply(
+                        lambda x: 'NB' if 'NB' in x.upper() else 'SB'
+                    )
+
+                    # Use the transformed data
+                    df = df_long
+                    direction_column = 'direction'
+                    variable_column = 'variable'
+
+                    # Determine variable type from column names
+                    if any(word in nb_column.lower() for word in ['speed', 'mph', 'velocity']):
+                        variable = "Speed"
+                    elif any(word in nb_column.lower() for word in ['volume', 'count', 'traffic']):
+                        variable = "Volume"
+                    else:
+                        variable = "Speed"  # Default
+            else:
+                # For long format data
+                direction_column = st.selectbox(
+                    "Select column for direction:",
+                    ["Select column..."] + [col for col in df.columns if col != date_column],
+                    key="direction_column"
+                )
+
+                variable_column = st.selectbox(
+                    "Select column for variable:",
+                    ["Select column..."] + [col for col in df.columns if
+                                            col != date_column and col != direction_column],
+                    key="variable_column"
+                )
+
+                # Validation for long format
+                if date_column == "Select column..." or direction_column == "Select column..." or variable_column == "Select column...":
+                    st.warning("⚠️ Please map all columns to continue")
+                    st.stop()
     else:
         st.info("📁 No files uploaded yet. Upload a CSV file to get started.")
         st.stop()
@@ -425,6 +488,10 @@ path_map = {
     ("Vehicle Volume", "Both",
      "Feb 13, 2025"): base_url + "VOLUME/Thursday_Feb_13/Washington_and_Ave_52_NB_and_SB_VolumeDATA_Thursday_Feb_13.csv",
 }
+
+# Define date_range if not already defined
+if 'date_range' not in locals():
+    date_range = "uploaded_file"
 
 selected_path = path_map.get((variable, direction, date_range), "No path available for selection.")
 
