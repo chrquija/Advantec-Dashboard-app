@@ -252,8 +252,10 @@ if data_source == "Uploaded CSV":
             )
 
             # Auto-detect data format
-            nb_cols = [col for col in df.columns if 'NB' in col.upper()]
-            sb_cols = [col for col in df.columns if 'SB' in col.upper()]
+            nb_cols = [col for col in df.columns if
+                       'NB' in col.upper() and any(word in col.lower() for word in ['speed', 'volume', 'count'])]
+            sb_cols = [col for col in df.columns if
+                       'SB' in col.upper() and any(word in col.lower() for word in ['speed', 'volume', 'count'])]
             has_directional_cols = len(nb_cols) > 0 and len(sb_cols) > 0
 
             if has_directional_cols:
@@ -287,9 +289,24 @@ if data_source == "Uploaded CSV":
 
                 # Transform data internally
                 if nb_column and sb_column:
+                    # Preserve additional columns for melting
+                    id_vars = [date_column]
+
+                    # Include timezone if it exists
+                    if 'timezone' in df.columns:
+                        id_vars.append('timezone')
+
+                    # Include unit column if it exists
+                    unit_col = None
+                    for col in df.columns:
+                        if 'unit' in col.lower():
+                            id_vars.append(col)
+                            unit_col = col
+                            break
+
                     # Create long format data
                     df_long = pd.melt(df,
-                                      id_vars=[date_column],
+                                      id_vars=id_vars,
                                       value_vars=[nb_column, sb_column],
                                       var_name='direction',
                                       value_name='variable')
@@ -311,6 +328,11 @@ if data_source == "Uploaded CSV":
                         variable = "Volume"
                     else:
                         variable = "Speed"  # Default
+
+                    # Show preview of transformed data
+                    st.success(f"✅ Data transformed successfully! Variable type: {variable}")
+                    with st.expander("Preview transformed data"):
+                        st.dataframe(df.head())
             else:
                 # For long format data
                 direction_column = st.selectbox(
