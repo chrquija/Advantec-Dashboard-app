@@ -1134,7 +1134,7 @@ with col1:
 
     # Handle subtitle creation safely
     if "chart_type_static" in st.session_state:
-        subtitle = f"{aggregation_info} Data • {date_range} • {st.session_state.chart_type_static} Chart"
+        subtitle = f"{aggregation_info} Data • {date_range}"
     else:
         subtitle = f"{aggregation_info} Data • {date_range}"
     # Display the title with custom styling
