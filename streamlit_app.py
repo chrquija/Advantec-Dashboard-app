@@ -686,6 +686,11 @@ if data_source == "GitHub Repository":
             st.stop()
 
 elif data_source == "Uploaded CSV":
+    # Validate file selection before accessing
+    if selected_file == "Select uploaded file..." or selected_file not in st.session_state.uploaded_files:
+        st.error("Please select a valid uploaded file")
+        st.stop()
+
     df = load_data_by_source(
         "Uploaded CSV",
         file_obj=st.session_state.uploaded_files[selected_file],
