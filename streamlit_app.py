@@ -241,8 +241,18 @@ if data_source == "Uploaded CSV":
         if selected_file != "Select uploaded file...":
             st.markdown("## 🧩 Map Your Columns")
 
-            # Load the selected file
-            df = pd.read_csv(st.session_state.uploaded_files[selected_file])
+            try:
+                # Load the selected file with better error handling
+                df = pd.read_csv(st.session_state.uploaded_files[selected_file], encoding='utf-8')
+            except UnicodeDecodeError:
+                try:
+                    df = pd.read_csv(st.session_state.uploaded_files[selected_file], encoding='latin-1')
+                except Exception as e:
+                    st.error(f"Error reading file: {str(e)}")
+                    st.stop()
+            except Exception as e:
+                st.error(f"Error processing uploaded file: {str(e)}")
+                st.stop()
 
             # Column mapping dropdowns
             date_column = st.selectbox(
@@ -287,41 +297,47 @@ if data_source == "Uploaded CSV":
                     st.warning("⚠️ Please map all columns to continue")
                     st.stop()
 
-                # Transform data internally
+                # Transform data to your preferred format
                 if nb_column and sb_column:
-                    # Preserve additional columns for melting
-                    id_vars = [date_column]
-
-                    # Include timezone if it exists
-                    if 'timezone' in df.columns:
-                        id_vars.append('timezone')
-
-                    # Include unit column if it exists
+                    # Get the unit (mph, km/h, etc.)
+                    unit = "mph"  # default
                     unit_col = None
                     for col in df.columns:
                         if 'unit' in col.lower():
-                            id_vars.append(col)
                             unit_col = col
+                            if not df[col].empty:
+                                unit = df[col].iloc[0]  # Get the first unit value
                             break
 
-                    # Create long format data
+                    # Create the new clean format
+                    df_clean = pd.DataFrame()
+                    df_clean[date_column] = df[date_column]
+                    df_clean[f'Daily Avg Speed: NB ({unit})'] = df[nb_column]
+                    df_clean[f'Daily Avg Speed: SB ({unit})'] = df[sb_column]
+
+                    # Use the cleaned data
+                    df = df_clean
+
+                    # For internal processing, we still need to create the long format
+                    # but we'll use the clean column names
                     df_long = pd.melt(df,
-                                      id_vars=id_vars,
-                                      value_vars=[nb_column, sb_column],
+                                      id_vars=[date_column],
+                                      value_vars=[f'Daily Avg Speed: NB ({unit})', f'Daily Avg Speed: SB ({unit})'],
                                       var_name='direction',
                                       value_name='variable')
 
-                    # Clean up direction names
+                    # Clean up direction names for internal processing
                     df_long['direction'] = df_long['direction'].apply(
-                        lambda x: 'NB' if 'NB' in x.upper() else 'SB'
+                        lambda x: 'NB' if 'NB' in x else 'SB'
                     )
 
-                    # Use the transformed data
-                    df = df_long
+                    # Keep both formats - clean for display, long for processing
+                    df_display = df  # Clean format for user
+                    df = df_long  # Long format for internal processing
                     direction_column = 'direction'
                     variable_column = 'variable'
 
-                    # Determine variable type from column names
+                    # Determine variable type
                     if any(word in nb_column.lower() for word in ['speed', 'mph', 'velocity']):
                         variable = "Speed"
                     elif any(word in nb_column.lower() for word in ['volume', 'count', 'traffic']):
@@ -329,10 +345,10 @@ if data_source == "Uploaded CSV":
                     else:
                         variable = "Speed"  # Default
 
-                    # Show preview of transformed data
+                    # Show preview of the CLEAN data format
                     st.success(f"✅ Data transformed successfully! Variable type: {variable}")
                     with st.expander("Preview transformed data"):
-                        st.dataframe(df.head())
+                        st.dataframe(df_display.head())
             else:
                 # For long format data
                 direction_column = st.selectbox(
