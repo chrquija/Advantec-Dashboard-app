@@ -570,17 +570,46 @@ class DataLoader:
             return None
 
     @staticmethod
-    def load_uploaded_data(file_obj, date_col, direction_col, variable_col):
+    def load_uploaded_data(file_obj, date_col, direction_col, variable_col, data_format="Long format", nb_col=None,
+                           sb_col=None):
         """Load and process uploaded CSV data"""
         try:
             df = pd.read_csv(file_obj)
 
-            # Rename columns to match expected format
-            df = df.rename(columns={
-                date_col: 'Date',
-                direction_col: 'Direction',
-                variable_col: 'Value'
-            })
+            if data_format == "Wide format (NB/SB columns)":
+                # Handle wide format data
+                if nb_col is None or sb_col is None:
+                    st.error("NB and SB columns must be specified for wide format")
+                    return None
+
+                # Keep only the required columns
+                required_cols = [date_col, nb_col, sb_col]
+                df = df[required_cols]
+
+                # Rename date column
+                df = df.rename(columns={date_col: 'Date'})
+
+                # Convert to long format
+                df_melted = df.melt(
+                    id_vars=['Date'],
+                    value_vars=[nb_col, sb_col],
+                    var_name='Direction',
+                    value_name='Value'
+                )
+
+                # Map column names to direction labels
+                direction_map = {nb_col: 'NB', sb_col: 'SB'}
+                df_melted['Direction'] = df_melted['Direction'].map(direction_map)
+
+                df = df_melted
+
+            else:
+                # Handle long format data (existing logic)
+                df = df.rename(columns={
+                    date_col: 'Date',
+                    direction_col: 'Direction',
+                    variable_col: 'Value'
+                })
 
             # Convert date column to datetime
             df['Date'] = pd.to_datetime(df['Date'])
@@ -634,21 +663,25 @@ class DataLoader:
 
 # === MAIN DATA LOADING WITH ROUTER ===
 def load_data_by_source(data_source, **kwargs):
-    """Route data loading based on selected source"""
+    """Load data based on selected source"""
+    loader = DataLoader()
 
     if data_source == "GitHub Repository":
-        return DataLoader.load_github_data(kwargs.get('url'))
+        return loader.load_github_data(kwargs.get('url'))
 
     elif data_source == "Uploaded CSV":
-        return DataLoader.load_uploaded_data(
+        return loader.load_uploaded_data(
             kwargs.get('file_obj'),
             kwargs.get('date_col'),
             kwargs.get('direction_col'),
-            kwargs.get('variable_col')
+            kwargs.get('variable_col'),
+            kwargs.get('data_format', 'Long format'),
+            kwargs.get('nb_col'),
+            kwargs.get('sb_col')
         )
 
     elif data_source == "API Connection":
-        return DataLoader.load_api_data(kwargs.get('api_config'))
+        return loader.load_api_data(kwargs.get('api_config'))
 
     else:
         st.error(f"Unknown data source: {data_source}")
@@ -696,7 +729,10 @@ elif data_source == "Uploaded CSV":
         file_obj=st.session_state.uploaded_files[selected_file],
         date_col=date_column,
         direction_col=direction_column,
-        variable_col=variable_column
+        variable_col=variable_column,
+        data_format=data_format,
+        nb_col=nb_column if data_format == "Wide format (NB/SB columns)" else None,
+        sb_col=sb_column if data_format == "Wide format (NB/SB columns)" else None
     )
 
     if df is None:
