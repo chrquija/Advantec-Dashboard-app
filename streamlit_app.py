@@ -1330,6 +1330,12 @@ try:
                         fig_sb.update_layout(coloraxis_colorbar_title="Volume (vph)")
                         st.plotly_chart(fig_sb, use_container_width=True)
 
+                        # Debug: Check the date range
+                        date_range = (combined.index.max() - combined.index.min()).days
+                        st.write(f"Debug: Date range is {date_range} days")
+                        st.write(f"Debug: Start date: {combined.index.min()}")
+                        st.write(f"Debug: End date: {combined.index.max()}")
+
                 # Check if date range is one day for cycle length recommendations
                 if (combined.index.max() - combined.index.min()).days == 0:  # Single day selected
                     st.subheader("🚦 ADVANTEC Cycle Length Suggestions by Hour")
