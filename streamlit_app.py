@@ -1199,7 +1199,7 @@ with col2:
         with st.container():
             st.markdown('<div class="chart-type-selector">', unsafe_allow_html=True)
             chart_type = st.selectbox(
-                "📊 Choose Chart Type",
+                "Choose Chart Type",
                 ["Line", "Bar", "Scatter", "Box", "Heatmap"],
                 key="chart_type_static"
             )
