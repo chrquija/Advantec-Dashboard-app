@@ -1055,7 +1055,6 @@ def create_enhanced_multi_line_chart(df, x_col, y_cols, chart_title):
     return fig
 
 
-
 # === CHART TITLE SECTION ===
 st.markdown("---")
 
@@ -1068,6 +1067,28 @@ def find_column(df, patterns):
             if pattern.lower() in col.lower():
                 return col
     return None
+
+
+def determine_location_type_and_info():
+    """Determine if viewing intersection or corridor data"""
+    # You can customize this logic based on your data structure
+    # For now, I'll assume intersection data - you can modify this
+    is_intersection = True  # Change this logic based on your data
+
+    if is_intersection:
+        return {
+            'type': 'intersection',
+            'location': 'Washington St & Ave 52, La Quinta, California',
+            'segment_label': 'Intersection:',
+            'segment_info': 'Washington St & Ave 52'
+        }
+    else:
+        return {
+            'type': 'corridor',
+            'location': 'Washington St, La Quinta, California',
+            'segment_label': 'Corridor Segment:',
+            'segment_info': 'Washington St: Highway 111 to Avenue 52'
+        }
 
 
 def determine_data_source(variable, date_range):
@@ -1105,6 +1126,7 @@ def determine_data_source(variable, date_range):
     # Default fallback
     return "❗ Data Source: Unknown"
 
+
 def determine_aggregation_type(variable, date_range):
     """Determine aggregation type based on variable and date range"""
     # You can customize this logic based on your needs
@@ -1115,9 +1137,12 @@ def determine_aggregation_type(variable, date_range):
 col1, col2 = st.columns([3, 1])
 
 with col1:
+    # Get location information
+    location_info = determine_location_type_and_info()
+
     # Generate dynamic title based on selections
-    corridor_info = "Washington St, La Quinta, California"
-    aggregation_info = determine_aggregation_type(variable, date_range)  # For title
+    corridor_info = location_info['location']
+    aggregation_info = determine_aggregation_type(variable, date_range)
     data_source_info = determine_data_source(variable, date_range)
 
     if direction == "Both":
@@ -1133,10 +1158,8 @@ with col1:
     full_title = f"{base_title} • {corridor_info}"
 
     # Handle subtitle creation safely
-    if "chart_type_static" in st.session_state:
-        subtitle = f"{aggregation_info} Data • {date_range}"
-    else:
-        subtitle = f"{aggregation_info} Data • {date_range}"
+    subtitle = f"{aggregation_info} Data • {date_range}"
+
     # Display the title with custom styling
     st.markdown(f"""
     <div style="
@@ -1167,6 +1190,9 @@ with col1:
 
 # Replace the determine_aggregation_type function call with determine_data_source
 data_source_info = determine_data_source(variable, date_range)
+
+# Store location info for use in location details section
+st.session_state.location_info = location_info
 
 with col2:
     # Add corridor and data info (with data source instead of aggregation)
