@@ -1193,7 +1193,7 @@ with col2:
         """, unsafe_allow_html=True)
 
         chart_type = st.selectbox(
-            "📊 Choose Chart Type",
+            "Choose Chart Type",
             ["Line", "Bar", "Scatter", "Box", "Heatmap"],
             key="chart_type_static"
         )
