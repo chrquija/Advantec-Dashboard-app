@@ -1369,30 +1369,21 @@ try:
                         fig_sb.update_layout(coloraxis_colorbar_title="Volume (vph)")
                         st.plotly_chart(fig_sb, use_container_width=True)
 
-                # Add this toggle before your Traffic Volume Summary section
-                show_cycle_length = st.toggle("Show Cycle Length Recommendations", value=False)
 
-                if show_cycle_length:
-                    # === CYCLE LENGTH RECOMMENDATIONS SECTION ===
-                    st.subheader("🚦 Cycle Length Recommendations")
-                    # Your cycle length recommendation code here
 
+
+                    # Add this toggle before your Traffic Volume Summary section
+                    show_cycle_length = st.toggle("Show Cycle Length Recommendations", value=False)
                 else:
                     # === TRAFFIC VOLUME SUMMARY (your existing code) ===
                     st.subheader("📊 Traffic Volume Summary")
                     # Your existing traffic volume summary code here
                 # === TRAFFIC VOLUME SUMMARY WITH CYCLE LENGTH TOGGLE ===
-                # Toggle button for Cycle Length Recommendations
-                if st.button("🚦 Get Cycle Length Recommendations", key="cycle_toggle"):
-                    st.session_state.show_cycle_recommendations = not st.session_state.get('show_cycle_recommendations',
-                                                                                           False)
+                # Toggle for Cycle Length Recommendations
+                show_cycle_length = st.toggle("🚦 Show Cycle Length Recommendations", value=False)
 
-                # Initialize session state if it doesn't exist
-                if 'show_cycle_recommendations' not in st.session_state:
-                    st.session_state.show_cycle_recommendations = False
+                if show_cycle_length:
 
-                # Show either Traffic Volume Summary OR Cycle Length Recommendations
-                if st.session_state.show_cycle_recommendations:
                     # === CYCLE LENGTH RECOMMENDATIONS TABLE ===
                     st.markdown("### 🚦 Cycle Length Recommendations - Hourly Analysis")
                     st.markdown(f"**Time Period:** {time_period} | **Direction:** {direction}")
@@ -1568,20 +1559,12 @@ try:
                         st.info(
                             f"📅 **Analysis Period:** {period_info.get(period_key, 'Full Day')} | **Direction:** {direction}")
 
-                        # Add a button to go back to Traffic Volume Summary
-                        if st.button("📊 Back to Traffic Volume Summary", key="back_to_summary"):
-                            st.session_state.show_cycle_recommendations = False
-                            st.rerun()
 
                     else:
                         # Multi-day data - show warning
                         st.warning(
                             "⚠️ Cycle Length Recommendations are only available for single-day analysis. Please select a single date to view hourly cycle length recommendations.")
 
-                        # Button to go back
-                        if st.button("📊 Back to Traffic Volume Summary", key="back_to_summary_multiday"):
-                            st.session_state.show_cycle_recommendations = False
-                            st.rerun()
 
                 else:
                     # === TRAFFIC VOLUME SUMMARY (Your existing code) ===
