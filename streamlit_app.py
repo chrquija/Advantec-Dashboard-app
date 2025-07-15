@@ -1129,32 +1129,7 @@ with col1:
         direction_full = "Northbound" if direction == "NB" else "Southbound"
         base_title = f"{variable} - {direction_full}"
 
-
-# Replace the determine_aggregation_type function call with determine_data_source
-data_source_info = determine_data_source(variable, date_range)
-
-with col2:
-    # Add corridor and data info (with data source instead of aggregation)
-    st.markdown("**🌐 Location Details:**")
-    st.caption("🛣️ Corridor Segment:  Washington St & Ave 52")
-    st.caption("🏙️City and State: La Quinta, California")
-    st.caption(f"{data_source_info}")  # Data source info instead of aggregation info
-
-    # removing refresh button on static data sources
-    if data_source in ["GitHub Repository", "Uploaded CSV"]:
-        chart_type = st.selectbox(
-            "Choose Chart Type",
-            ["Line", "Bar", "Scatter", "Box", "Heatmap"],
-            key="chart_type_static"
-        )
-    else:
-        # For API connections, set a default or show selector elsewhere
-        chart_type = "Line"  # or keep the original selector here
-        if st.button("🔄 Refresh Chart", use_container_width=True):
-            # Refresh logic here
-            pass
-
-# Add corridor and aggregation info to title
+    # Add corridor and aggregation info to title
     full_title = f"{base_title} • {corridor_info}"
     # To this:
     if 'chart_type' in locals():
@@ -1162,7 +1137,7 @@ with col2:
     else:
         subtitle = f"{aggregation_info} Data • {date_range}"
 
-# Display the title with custom styling
+    # Display the title with custom styling
     st.markdown(f"""
     <div style="
         padding: 20px;
@@ -1189,6 +1164,31 @@ with col2:
         ">{subtitle}</p>
     </div>
     """, unsafe_allow_html=True)
+
+# Replace the determine_aggregation_type function call with determine_data_source
+data_source_info = determine_data_source(variable, date_range)
+
+with col2:
+    # Add corridor and data info (with data source instead of aggregation)
+    st.markdown("**🌐 Location Details:**")
+    st.caption("🛣️ Corridor Segment:  Washington St & Ave 52")
+    st.caption("🏙️City and State: La Quinta, California")
+    st.caption(f"{data_source_info}")  # Data source info instead of aggregation info
+
+    # removing refresh button on static data sources
+    if data_source in ["GitHub Repository", "Uploaded CSV"]:
+        chart_type = st.selectbox(
+            "Choose Chart Type",
+            ["Line", "Bar", "Scatter", "Box", "Heatmap"],
+            key="chart_type_static"
+        )
+    else:
+        # For API connections, set a default or show selector elsewhere
+        chart_type = "Line"  # or keep the original selector here
+        if st.button("🔄 Refresh Chart", use_container_width=True):
+            # Refresh logic here
+            pass
+
 # === Load and Render Chart ===
 try:
     # If "Both", load two files or one with two columns
