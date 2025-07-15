@@ -1178,7 +1178,7 @@ with col2:
     # removing refresh button on static data sources
     if data_source in ["GitHub Repository", "Uploaded CSV"]:
         chart_type = st.selectbox(
-            "📊 Choose Chart Type",
+            "Choose Chart Type",
             ["Line", "Bar", "Scatter", "Box", "Heatmap"],
             key="chart_type_static"
         )
