@@ -1177,32 +1177,37 @@ with col2:
 
     # CHART TYPE SELECTOR
     if data_source in ["GitHub Repository", "Uploaded CSV"]:
-        # Simple custom styling for the selectbox
+        # Theme-responsive styling for just this selectbox
         st.markdown("""
         <style>
-        .stSelectbox > div > div {
-            background: linear-gradient(90deg, #f8f9fa 0%, #e9ecef 100%);
+        .chart-type-selector .stSelectbox > div > div {
+            background: var(--background-color);
             border-radius: 8px;
-            border: 1px solid #dee2e6;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
-        .stSelectbox label {
+        .chart-type-selector .stSelectbox label {
             font-weight: 600;
-            color: #2c3e50;
+            color: var(--text-color);
         }
         </style>
         """, unsafe_allow_html=True)
 
-        chart_type = st.selectbox(
-            "Choose Chart Type",
-            ["Line", "Bar", "Scatter", "Box", "Heatmap"],
-            key="chart_type_static"
-        )
+        # Wrap in a container with the specific class
+        with st.container():
+            st.markdown('<div class="chart-type-selector">', unsafe_allow_html=True)
+            chart_type = st.selectbox(
+                "Choose Chart Type",
+                ["Line", "Bar", "Scatter", "Box", "Heatmap"],
+                key="chart_type_static"
+            )
+            st.markdown('</div>', unsafe_allow_html=True)
+
         # Save Session State to help title tell what chart is being displayed
         st.session_state.chart_type = chart_type
     else:
         # For API connections, set a default or show selector elsewhere
-        chart_type = "Line"  # or keep the original selector here
-        # Add this line too:
+        chart_type = "Line"
         st.session_state.chart_type = chart_type
         if st.button("🔄 Refresh Chart", use_container_width=True):
             # Refresh logic here
