@@ -1177,58 +1177,18 @@ with col2:
 
     # CHART TYPE SELECTOR
     if data_source in ["GitHub Repository", "Uploaded CSV"]:
-        # Custom CSS for chart type selector
-        st.markdown("""
-        <style>
-        .chart-selector {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 15px;
-            border-radius: 10px;
-            margin: 10px 0;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-        .chart-selector h4 {
-            color: white;
-            margin-bottom: 10px;
-            text-align: center;
-            font-weight: 600;
-        }
-        .chart-buttons {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-        </style>
-        """, unsafe_allow_html=True)
-
-        # Initialize chart type in session state
-        if 'chart_type_static' not in st.session_state:
-            st.session_state.chart_type_static = "Line"
-
-        # Custom chart type selector
-        st.markdown('<div class="chart-selector">', unsafe_allow_html=True)
-        st.markdown('<h4>📊 Choose Chart Type</h4>', unsafe_allow_html=True)
-
-        # Create buttons
-        chart_options = ["Line", "Bar", "Scatter", "Box", "Heatmap"]
-        chart_icons = ["📈", "📊", "🔵", "📦", "🔥"]
-
-        for option, icon in zip(chart_options, chart_icons):
-            if st.button(f"{icon} {option}", key=f"chart_{option.lower()}", use_container_width=True):
-                st.session_state.chart_type_static = option
-                st.rerun()
-
-        st.markdown('</div>', unsafe_allow_html=True)
-
-        # Show current selection
-        st.info(f"Selected: {st.session_state.chart_type_static} Chart")
-
-        chart_type = st.session_state.chart_type_static
-
+        chart_type = st.selectbox(
+            "Choose Chart Type",
+            ["Line", "Bar", "Scatter", "Box", "Heatmap"],
+            key="chart_type_static"
+        )
+        # Save Session State to help title tell what chart is being displayed
+        st.session_state.chart_type = chart_type
     else:
-        # For API connections, set a default
-        chart_type = "Line"
+        # For API connections, set a default or show selector elsewhere
+        chart_type = "Line"  # or keep the original selector here
+        # Add this line too:
+        st.session_state.chart_type = chart_type
         if st.button("🔄 Refresh Chart", use_container_width=True):
             # Refresh logic here
             pass
