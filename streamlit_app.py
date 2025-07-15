@@ -1133,11 +1133,10 @@ with col1:
     full_title = f"{base_title} • {corridor_info}"
 
     # Handle subtitle creation safely
-    if hasattr(st.session_state, 'chart_type'):
-        subtitle = f"{aggregation_info} Data • {date_range} • {st.session_state.chart_type} Chart"
+    if "chart_type_static" in st.session_state:
+        subtitle = f"{aggregation_info} Data • {date_range} • {st.session_state.chart_type_static} Chart"
     else:
         subtitle = f"{aggregation_info} Data • {date_range}"
-
     # Display the title with custom styling
     st.markdown(f"""
     <div style="
