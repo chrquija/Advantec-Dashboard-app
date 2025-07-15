@@ -25,6 +25,45 @@ st.set_page_config(
 # Initialize chart_type with default value
 chart_type = "Line"
 
+
+# Add these functions after your imports, before the PDF creation code
+
+def get_hourly_cycle_length(volume):
+    """Get CVAG recommended cycle length based on volume"""
+    if volume >= 2400:
+        return "140 sec"
+    elif volume >= 1500:
+        return "130 sec"
+    elif volume >= 600:
+        return "120 sec"
+    elif volume >= 300:
+        return "110 sec"
+    else:
+        return "Free mode"
+
+def get_existing_cycle_length(volume):
+    """Get current system cycle length based on volume"""
+    if volume >= 300:
+        return "140 sec"
+    else:
+        return "Free mode"
+
+def filter_by_period(df, time_col, period):
+    """Filter dataframe by time period"""
+    if period == "AM":
+        return df[(df[time_col].dt.hour >= 5) & (df[time_col].dt.hour <= 10)]
+    elif period == "MD":
+        return df[(df[time_col].dt.hour >= 11) & (df[time_col].dt.hour <= 15)]
+    elif period == "PM":
+        return df[(df[time_col].dt.hour >= 16) & (df[time_col].dt.hour <= 20)]
+    else:
+        return df
+
+def create_pdf_report(variable, date_range, chart_fig, data_source_info):
+    """Create a PDF report with current screen info"""
+    buffer = io.BytesIO()
+    # ... rest of your PDF creation code
+
 def create_pdf_report(variable, date_range, chart_fig, data_source_info):
     """Create a PDF report with current screen info"""
     buffer = io.BytesIO()
@@ -1346,14 +1385,25 @@ try:
                     st.markdown("### 🚦 Cycle Length Recommendations - Hourly Analysis")
                     st.markdown(f"**Time Period:** {time_period} | **Direction:** {direction}")
 
-                    # Check if we have single day data
-                    if len(period_df['Date'].unique()) == 1:
-                        # Filter data by selected time period using your existing function
-                        filtered_df = filter_by_period(period_df, time_col,
-                                                       time_period.split()[0])  # Extract "AM", "MD", or "PM"
+                    # Check if we have single day data (use df instead of period_df)
+                    if len(df['Date'].unique()) == 1:
+                        # Determine which column to use based on direction
+                        if direction == "Northbound":
+                            vol_col = 'Northbound'
+                        elif direction == "Southbound":
+                            vol_col = 'Southbound'
+                        else:  # Combined
+                            vol_col = 'Combined'
+
+                        # Create combined column if it doesn't exist
+                        if vol_col == 'Combined' and 'Combined' not in df.columns:
+                            df['Combined'] = df['Northbound'] + df['Southbound']
+
+                        # Filter data by selected time period
+                        period_key = time_period.split()[0]  # Extract "AM", "MD", or "PM"
+                        filtered_df = filter_by_period(df, time_col, period_key)
 
                         # Get hourly data for the selected time period and direction
-                        # vol_col is already set based on direction selection from sidebar
                         hourly_df = filtered_df.groupby(filtered_df[time_col].dt.hour).agg({
                             vol_col: 'sum'
                         }).reset_index()
@@ -1544,7 +1594,7 @@ try:
                         st.write(f"Daily Total: **{combined[['Northbound', 'Southbound']].sum().sum():.0f} vehicles**")
 
                     # Add note about cycle recommendations
-                    if len(period_df['Date'].unique()) == 1:
+                    if len(df['Date'].unique()) == 1:
                         st.info(
                             "💡 **Tip:** Click 'Get Cycle Length Recommendations' above to see hourly cycle length analysis for this day.")
 
