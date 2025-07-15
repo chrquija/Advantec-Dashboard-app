@@ -1194,6 +1194,10 @@ data_source_info = determine_data_source(variable, date_range)
 # Store location info for use in location details section
 st.session_state.location_info = location_info
 
+# Get location info from session state
+segment_label = st.session_state.location_info['segment_label']
+segment_info = st.session_state.location_info['segment_info']
+
 with col2:
     # Add corridor and data info (with data source instead of aggregation)
     st.markdown("**🌐 Location Details:**")
