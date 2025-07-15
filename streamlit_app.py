@@ -1197,7 +1197,7 @@ st.session_state.location_info = location_info
 with col2:
     # Add corridor and data info (with data source instead of aggregation)
     st.markdown("**🌐 Location Details:**")
-    st.caption("🛣️ Corridor Segment:  Washington St & Ave 52")
+    st.caption(f"🛣️ {segment_label} {segment_info}")
     st.caption("🏙️City and State: La Quinta, California")
     st.caption(f"{data_source_info}")  # Data source info instead of aggregation info
 
