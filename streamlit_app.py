@@ -1122,7 +1122,7 @@ with col1:
 
     if direction == "Both":
         if variable == "Vehicle Volume":
-            base_title = f"{variable} - Both Directions"
+            base_title = f"{variable} - Northbound & Southbound"
         else:
             base_title = f"{variable} - Northbound & Southbound"
     else:
