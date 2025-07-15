@@ -1177,8 +1177,23 @@ with col2:
 
     # CHART TYPE SELECTOR
     if data_source in ["GitHub Repository", "Uploaded CSV"]:
+        # Simple custom styling for the selectbox
+        st.markdown("""
+        <style>
+        .stSelectbox > div > div {
+            background: linear-gradient(90deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+        .stSelectbox label {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+
         chart_type = st.selectbox(
-            "Choose Chart Type",
+            "📊 Choose Chart Type",
             ["Line", "Bar", "Scatter", "Box", "Heatmap"],
             key="chart_type_static"
         )
