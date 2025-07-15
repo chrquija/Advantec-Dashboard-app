@@ -1337,10 +1337,26 @@ try:
                             end_datetime = pd.to_datetime(combined.index.max())
                             date_range = (end_datetime - start_datetime).days
 
-                            st.write(f"Debug: Date range is {date_range} days")
-                            st.write(f"Debug: Start date: {start_datetime}")
-                            st.write(f"Debug: End date: {end_datetime}")
-                            st.write(f"Debug: Index type: {type(combined.index[0])}")
+                            st.write(f"🔍 Debug: Date range is {date_range} days")
+                            st.write(f"🔍 Debug: Start date: {start_datetime}")
+                            st.write(f"🔍 Debug: End date: {end_datetime}")
+                            st.write(f"🔍 Debug: Direction selected: {direction}")
+                            st.write(f"🔍 Debug: Available columns: {list(combined.columns)}")
+
+                            # Check if date range is one day for cycle length recommendations
+                            if date_range == 0:  # Single day selected
+                                st.success("✅ Single day detected - showing cycle length table")
+                                st.subheader("🚦 ADVANTEC Cycle Length Suggestions by Hour")
+
+                                # Rest of your existing code...
+                            else:
+                                st.warning(f"⚠️ Table only shows for single day data. Current range: {date_range} days")
+                                st.info(
+                                    "💡 Try selecting data from just one day to see the cycle length recommendations.")
+
+                        except Exception as e:
+                            st.error(f"❌ Error processing date range: {str(e)}")
+                            st.write(f"🔍 Debug: Combined index sample: {combined.index[:5]}")
 
                             # Check if date range is one day for cycle length recommendations
                             if date_range == 0:  # Single day selected
