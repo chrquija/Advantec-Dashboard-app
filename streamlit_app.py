@@ -1330,118 +1330,6 @@ try:
                         fig_sb.update_layout(coloraxis_colorbar_title="Volume (vph)")
                         st.plotly_chart(fig_sb, use_container_width=True)
 
-                        # Debug: Check the date range
-                        try:
-                            # Convert to datetime if not already
-                            start_datetime = pd.to_datetime(combined.index.min())
-                            end_datetime = pd.to_datetime(combined.index.max())
-                            date_range = (end_datetime - start_datetime).days
-
-                            st.write(f"🔍 Debug: Date range is {date_range} days")
-                            st.write(f"🔍 Debug: Start date: {start_datetime}")
-                            st.write(f"🔍 Debug: End date: {end_datetime}")
-                            st.write(f"🔍 Debug: Direction selected: {direction}")
-                            st.write(f"🔍 Debug: Available columns: {list(combined.columns)}")
-
-                            # Check if date range is one day for cycle length recommendations
-                            if date_range == 0:  # Single day selected
-                                st.success("✅ Single day detected - showing cycle length table")
-                                st.subheader("🚦 ADVANTEC Cycle Length Suggestions by Hour")
-
-                                # Rest of your existing code...
-                            else:
-                                st.warning(f"⚠️ Table only shows for single day data. Current range: {date_range} days")
-                                st.info(
-                                    "💡 Try selecting data from just one day to see the cycle length recommendations.")
-
-                        except Exception as e:
-                            st.error(f"❌ Error processing date range: {str(e)}")
-                            st.write(f"🔍 Debug: Combined index sample: {combined.index[:5]}")
-
-                            # Check if date range is one day for cycle length recommendations
-                            if date_range == 0:  # Single day selected
-                                st.subheader("🚦 ADVANTEC Cycle Length Suggestions by Hour")
-
-
-                                # Functions for cycle length calculations
-                                def get_hourly_cycle_length(volume):
-                                    if volume >= 2400:
-                                        return "140 sec"
-                                    elif volume >= 1500:
-                                        return "130 sec"
-                                    elif volume >= 600:
-                                        return "120 sec"
-                                    elif volume >= 300:
-                                        return "110 sec"
-                                    else:
-                                        return "Free mode"
-
-
-                                def get_existing_cycle_length(volume):
-                                    if volume >= 300:
-                                        return "140 sec"
-                                    else:
-                                        return "Free mode"
-
-
-                                if direction == "Both":
-                                    # Show combined table for both directions
-                                    if "Northbound" in combined.columns and "Southbound" in combined.columns:
-                                        hourly_df = combined.copy()
-                                        hourly_df["Hour"] = pd.to_datetime(hourly_df.index).strftime("%H:%M")
-
-                                        # Create the combined table
-                                        table_df = pd.DataFrame({
-                                            "Hour": hourly_df["Hour"],
-                                            "NB Volume": hourly_df["Northbound"],
-                                            "NB Existing": hourly_df["Northbound"].apply(get_existing_cycle_length),
-                                            "NB Rec": hourly_df["Northbound"].apply(get_hourly_cycle_length),
-                                            "SB Volume": hourly_df["Southbound"],
-                                            "SB Existing": hourly_df["Southbound"].apply(get_existing_cycle_length),
-                                            "SB Rec": hourly_df["Southbound"].apply(get_hourly_cycle_length)
-                                        }).reset_index(drop=True)
-
-                                        st.dataframe(
-                                            table_df,
-                                            hide_index=True,
-                                            use_container_width=True,
-                                            height=min(400, 50 * len(table_df))
-                                        )
-                                    else:
-                                        st.info("No data available for both directions.")
-                                else:
-                                    # Show single direction table
-                                    vol_col = "Northbound" if direction == "NB" else "Southbound"
-                                    if vol_col and vol_col in combined.columns:
-                                        hourly_df = combined.copy()
-                                        hourly_df["Hour"] = pd.to_datetime(hourly_df.index).strftime("%H:%M")
-
-                                        # Create the single direction table with renamed columns
-                                        table_df = pd.DataFrame({
-                                            "Hour": hourly_df["Hour"],
-                                            "Vehicle Volume": hourly_df[vol_col],
-                                            "Existing Cycle Length": hourly_df[vol_col].apply(
-                                                get_existing_cycle_length),
-                                            "Recommended Cycle Length": hourly_df[vol_col].apply(
-                                                get_hourly_cycle_length)
-                                        }).reset_index(drop=True)
-
-                                        st.dataframe(
-                                            table_df,
-                                            hide_index=True,
-                                            use_container_width=True,
-                                            height=min(300, 50 * len(table_df))
-                                        )
-                                    else:
-                                        st.info("No data available for the selected direction and period.")
-                            else:
-                                st.info(
-                                    f"Cycle length recommendations only available for single day data. Current range: {date_range} days")
-
-                        except Exception as e:
-                            st.error(f"Error processing date range: {str(e)}")
-                            st.write(f"Debug: Combined index sample: {combined.index[:5]}")
-
                 # Show combined stats
                 st.subheader("📈 Traffic Volume Summary")
                 col1, col2, col3 = st.columns(3)
@@ -1905,9 +1793,10 @@ if variable == "Vehicle Volume":
                 st.write("No data for selected period")
 
         # === KPI 2-4: Dynamic KPIs ===
-        kpi_options = ["Average Speed", "Total Volume", "Peak Congestion Time"]
+        kpi_options = ["Average Speed", "Total Volume", "Peak Congestion Time", "Suggested Cycle Length Table - Hourly"]
         if nb_speed_col and sb_speed_col:
-            kpi_options = ["Average Speed", "Peak Speed", "Total Volume", "Peak Congestion Time"]
+            kpi_options = ["Average Speed", "Peak Speed", "Total Volume", "Peak Congestion Time",
+                           "Suggested Cycle Length Table - Hourly"]
 
         for i, col in enumerate([col2, col3, col4]):
             with col:
@@ -1943,7 +1832,74 @@ if variable == "Vehicle Volume":
                         peak_cong_time = period_df.loc[period_df[speed_col].idxmin(), time_col].strftime("%H:%M")
                         st.metric("Congestion (Min Speed)", f"{min_speed:.1f} mph")
                         st.caption(f"at {peak_cong_time}")
+                    elif kpi_type == "Suggested Cycle Length Table - Hourly":
+                        # Functions for cycle length calculations
+                        def get_hourly_cycle_length(volume):
+                            if volume >= 2400:
+                                return "140 sec"
+                            elif volume >= 1500:
+                                return "130 sec"
+                            elif volume >= 600:
+                                return "120 sec"
+                            elif volume >= 300:
+                                return "110 sec"
+                            else:
+                                return "Free mode"
 
+                        def get_existing_cycle_length(volume):
+                            if volume >= 300:
+                                return "140 sec"
+                            else:
+                                return "Free mode"
+
+                        if direction_choice == "Both":
+                            # Show combined table for both directions
+                            if nb_vol_col in period_df.columns and sb_vol_col in period_df.columns:
+                                hourly_df = period_df.copy()
+                                hourly_df["Hour"] = hourly_df[time_col].dt.strftime("%H:%M")
+
+                                # Create the combined table
+                                table_df = pd.DataFrame({
+                                    "Hour": hourly_df["Hour"],
+                                    "NB Volume": hourly_df[nb_vol_col],
+                                    "NB Existing": hourly_df[nb_vol_col].apply(get_existing_cycle_length),
+                                    "NB Rec": hourly_df[nb_vol_col].apply(get_hourly_cycle_length),
+                                    "SB Volume": hourly_df[sb_vol_col],
+                                    "SB Existing": hourly_df[sb_vol_col].apply(get_existing_cycle_length),
+                                    "SB Rec": hourly_df[sb_vol_col].apply(get_hourly_cycle_length)
+                                }).reset_index(drop=True)
+
+                                st.dataframe(
+                                    table_df,
+                                    hide_index=True,
+                                    use_container_width=True,
+                                    height=min(400, 50 * len(table_df))
+                                )
+                            else:
+                                st.info("No data available for both directions.")
+                        else:
+                            # Show single direction table
+                            vol_col = nb_vol_col if direction_choice == "NB" else sb_vol_col
+                            if vol_col and vol_col in period_df.columns:
+                                hourly_df = period_df.copy()
+                                hourly_df["Hour"] = hourly_df[time_col].dt.strftime("%H:%M")
+
+                                # Create the single direction table with renamed columns
+                                table_df = pd.DataFrame({
+                                    "Hour": hourly_df["Hour"],
+                                    "Vehicle Volume": hourly_df[vol_col],
+                                    "Existing Cycle Length": hourly_df[vol_col].apply(get_existing_cycle_length),
+                                    "Recommended Cycle Length": hourly_df[vol_col].apply(get_hourly_cycle_length)
+                                }).reset_index(drop=True)
+
+                                st.dataframe(
+                                    table_df,
+                                    hide_index=True,
+                                    use_container_width=True,
+                                    height=min(300, 50 * len(table_df))
+                                )
+                            else:
+                                st.info("No data available for the selected direction and period.")
                     else:
                         st.write("KPI not available for this direction or period.")
                 else:
