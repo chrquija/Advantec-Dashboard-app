@@ -574,17 +574,46 @@ class DataLoader:
                            sb_col=None):
         """Load and process uploaded CSV data"""
         try:
-            df = pd.read_csv(file_obj)
+            # Reset file pointer to beginning
+            file_obj.seek(0)
 
+            # Try to read the CSV with error handling
+            try:
+                df = pd.read_csv(file_obj)
+            except pd.errors.EmptyDataError:
+                st.error("The uploaded file is empty or contains no data")
+                return None
+            except pd.errors.ParserError as e:
+                st.error(f"Error parsing CSV file: {e}")
+                return None
+
+            # Check if dataframe is empty
+            if df.empty:
+                st.error("The uploaded file contains no data rows")
+                return None
+
+            # Display first few rows for debugging
+            st.write("**First few rows of uploaded data:**")
+            st.dataframe(df.head())
+
+            # Check if required columns exist
             if data_format == "Wide format (NB/SB columns)":
-                # Handle wide format data
                 if nb_col is None or sb_col is None:
                     st.error("NB and SB columns must be specified for wide format")
                     return None
 
+                missing_cols = []
+                for col in [date_col, nb_col, sb_col]:
+                    if col not in df.columns:
+                        missing_cols.append(col)
+
+                if missing_cols:
+                    st.error(f"Missing columns in uploaded file: {missing_cols}")
+                    st.write(f"Available columns: {list(df.columns)}")
+                    return None
+
                 # Keep only the required columns
-                required_cols = [date_col, nb_col, sb_col]
-                df = df[required_cols]
+                df = df[[date_col, nb_col, sb_col]]
 
                 # Rename date column
                 df = df.rename(columns={date_col: 'Date'})
@@ -604,7 +633,17 @@ class DataLoader:
                 df = df_melted
 
             else:
-                # Handle long format data (existing logic)
+                # Handle long format data
+                missing_cols = []
+                for col in [date_col, direction_col, variable_col]:
+                    if col not in df.columns:
+                        missing_cols.append(col)
+
+                if missing_cols:
+                    st.error(f"Missing columns in uploaded file: {missing_cols}")
+                    st.write(f"Available columns: {list(df.columns)}")
+                    return None
+
                 df = df.rename(columns={
                     date_col: 'Date',
                     direction_col: 'Direction',
@@ -612,11 +651,16 @@ class DataLoader:
                 })
 
             # Convert date column to datetime
-            df['Date'] = pd.to_datetime(df['Date'])
+            try:
+                df['Date'] = pd.to_datetime(df['Date'])
+            except Exception as e:
+                st.error(f"Error converting date column: {e}")
+                return None
 
             return df
+
         except Exception as e:
-            st.error(f"Error processing uploaded file: {e}")
+            st.error(f"Error processing uploaded file: {str(e)}")
             return None
 
     @staticmethod
