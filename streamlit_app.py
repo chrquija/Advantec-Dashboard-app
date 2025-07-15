@@ -1133,10 +1133,9 @@ with col1:
     full_title = f"{base_title} • {corridor_info}"
 
     # Handle subtitle creation safely
-    try:
-        subtitle = f"{aggregation_info} Data • {date_range} • {chart_type} Chart"
-    except NameError:
-        # chart_type not defined yet, use default
+    if hasattr(st.session_state, 'chart_type'):
+        subtitle = f"{aggregation_info} Data • {date_range} • {st.session_state.chart_type} Chart"
+    else:
         subtitle = f"{aggregation_info} Data • {date_range}"
 
     # Display the title with custom styling
@@ -1177,16 +1176,20 @@ with col2:
     st.caption("🏙️City and State: La Quinta, California")
     st.caption(f"{data_source_info}")  # Data source info instead of aggregation info
 
-    # removing refresh button on static data sources
+    # CHART TYPE SELECTOR
     if data_source in ["GitHub Repository", "Uploaded CSV"]:
         chart_type = st.selectbox(
             "Choose Chart Type",
             ["Line", "Bar", "Scatter", "Box", "Heatmap"],
             key="chart_type_static"
         )
+        # Add this line:
+        st.session_state.chart_type = chart_type
     else:
         # For API connections, set a default or show selector elsewhere
         chart_type = "Line"  # or keep the original selector here
+        # Add this line too:
+        st.session_state.chart_type = chart_type
         if st.button("🔄 Refresh Chart", use_container_width=True):
             # Refresh logic here
             pass
