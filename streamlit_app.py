@@ -799,10 +799,6 @@ elif data_source == "API Connection":
     if df is None:
         st.stop()
 
-
-# === Chart Type Selector ===
-chart_type = st.selectbox("Choose chart type", ["Line", "Bar", "Scatter", "Box", "Heatmap"])
-
 #Create Unit Helper Functions for appropriate Units for each Variable Type
 def get_units(variable):
     """Get the appropriate units for each variable type"""
