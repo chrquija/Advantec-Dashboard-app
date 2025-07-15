@@ -1177,13 +1177,15 @@ with col2:
 
     # CHART TYPE SELECTOR
     if data_source in ["GitHub Repository", "Uploaded CSV"]:
-        # Theme-responsive styling for just this selectbox
+        # Theme-responsive gradient styling for just this selectbox
         st.markdown("""
         <style>
         .chart-type-selector .stSelectbox > div > div {
-            background: var(--background-color);
+            background: linear-gradient(90deg, 
+                color-mix(in srgb, var(--background-color) 95%, var(--text-color) 5%) 0%, 
+                color-mix(in srgb, var(--background-color) 90%, var(--text-color) 10%) 100%);
             border-radius: 8px;
-            border: 1px solid var(--border-color);
+            border: 1px solid color-mix(in srgb, var(--background-color) 80%, var(--text-color) 20%);
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
         .chart-type-selector .stSelectbox label {
@@ -1197,7 +1199,7 @@ with col2:
         with st.container():
             st.markdown('<div class="chart-type-selector">', unsafe_allow_html=True)
             chart_type = st.selectbox(
-                "Choose Chart Type",
+                "📊 Choose Chart Type",
                 ["Line", "Bar", "Scatter", "Box", "Heatmap"],
                 key="chart_type_static"
             )
@@ -1212,7 +1214,6 @@ with col2:
         if st.button("🔄 Refresh Chart", use_container_width=True):
             # Refresh logic here
             pass
-
 # === Load and Render Chart ===
 try:
     # If "Both", load two files or one with two columns
