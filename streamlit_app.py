@@ -859,7 +859,7 @@ def format_value_with_units(value, variable):
 # === Enhanced Chart Creation Function ===
 def create_enhanced_line_chart(df, x_col, y_col, chart_title, color_name="blue"):
     """Create an enhanced line chart with day shading and peak/low annotations"""
-    
+
     # Create the base figure using Graph Objects for more control
     fig = go.Figure()
 
@@ -878,11 +878,11 @@ def create_enhanced_line_chart(df, x_col, y_col, chart_title, color_name="blue")
         # Get date range
         start_date = df[x_col].min().date()
         end_date = df[x_col].max().date()
-        
+
         # Create alternating day bands
         current_date = start_date
         shade_toggle = True
-        
+
         while current_date <= end_date:
             if shade_toggle:
                 fig.add_vrect(
@@ -895,7 +895,7 @@ def create_enhanced_line_chart(df, x_col, y_col, chart_title, color_name="blue")
                 )
             shade_toggle = not shade_toggle
             current_date += timedelta(days=1)
-    
+
     # Find top 5 highest and lowest points
     if len(df) >= 5:
         # Get indices of top 5 highest and lowest values
@@ -960,7 +960,7 @@ def create_enhanced_line_chart(df, x_col, y_col, chart_title, color_name="blue")
         margin=dict(t=80, b=50, l=50, r=50),
         height=500
     )
-    
+
     # Update axes
     fig.update_xaxes(
         showgrid=True,
@@ -970,7 +970,7 @@ def create_enhanced_line_chart(df, x_col, y_col, chart_title, color_name="blue")
         linewidth=1,
         linecolor="black"
     )
-    
+
     fig.update_yaxes(
         showgrid=True,
         gridwidth=1,
@@ -979,16 +979,16 @@ def create_enhanced_line_chart(df, x_col, y_col, chart_title, color_name="blue")
         linewidth=1,
         linecolor="black"
     )
-    
+
     return fig
 
 def create_enhanced_multi_line_chart(df, x_col, y_cols, chart_title):
     """Create an enhanced multi-line chart for 'Both' direction data"""
-    
+
     fig = go.Figure()
-    
+
     colors = ["blue", "red"]
-    
+
     # Add traces for each direction
     for i, col in enumerate(y_cols):
         fig.add_trace(go.Scatter(
@@ -999,15 +999,15 @@ def create_enhanced_multi_line_chart(df, x_col, y_cols, chart_title):
             line=dict(color=colors[i], width=2),
             marker=dict(size=4)
         ))
-    
+
     # Add alternating day shading
     if not df.empty:
         start_date = df[x_col].min().date()
         end_date = df[x_col].max().date()
-        
+
         current_date = start_date
         shade_toggle = True
-        
+
         while current_date <= end_date:
             if shade_toggle:
                 fig.add_vrect(
@@ -1020,7 +1020,7 @@ def create_enhanced_multi_line_chart(df, x_col, y_cols, chart_title):
                 )
             shade_toggle = not shade_toggle
             current_date += timedelta(days=1)
-    
+
     # Add annotations for each line's peaks and lows
     for i, col in enumerate(y_cols):
         if len(df) >= 3:  # Reduced to top 3 for multi-line to avoid clutter
@@ -1085,7 +1085,7 @@ def create_enhanced_multi_line_chart(df, x_col, y_cols, chart_title):
         margin=dict(t=80, b=50, l=50, r=50),
         height=500
     )
-    
+
     fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor="lightgray")
     fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor="lightgray")
 
@@ -1311,6 +1311,25 @@ try:
                 df[nb_col] = pd.to_numeric(df[nb_col], errors='coerce')
                 df[sb_col] = pd.to_numeric(df[sb_col], errors='coerce')
 
+                # Extract date from column names if present and create Date column if it doesn't exist
+                if 'Date' not in df.columns:
+                    # Try to extract date from column names (format: "MM/DD/YYYY Direction")
+                    date_pattern = r'(\d{1,2}/\d{1,2}/\d{4})'
+                    dates_in_cols = []
+                    for col in df.columns:
+                        import re
+                        match = re.search(date_pattern, col)
+                        if match:
+                            dates_in_cols.append(match.group(1))
+
+                    if dates_in_cols:
+                        # Use the first date found in column names
+                        df['Date'] = dates_in_cols[0]
+                    else:
+                        # If no date in column names, use current date as fallback
+                        from datetime import datetime
+                        df['Date'] = datetime.now().strftime('%m/%d/%Y')
+
                 # Rename for cleaner display
                 df = df.rename(columns={nb_col: "Northbound", sb_col: "Southbound"})
 
@@ -1389,18 +1408,18 @@ try:
                     st.markdown(f"**Time Period:** {time_period} | **Direction:** {direction}")
 
                     # Check if we have single day data (use df instead of period_df)
-                    if len(df['Date'].unique()) == 1:
-                        # Determine which column to use based on direction
-                        if direction == "Northbound":
-                            vol_col = 'Northbound'
-                        elif direction == "Southbound":
-                            vol_col = 'Southbound'
-                        else:  # Combined
-                            vol_col = 'Combined'
+                    # Always proceed with cycle length recommendations, even if Date column doesn't exist
+                    # Determine which column to use based on direction
+                    if direction == "Northbound":
+                        vol_col = 'Northbound'
+                    elif direction == "Southbound":
+                        vol_col = 'Southbound'
+                    else:  # Combined
+                        vol_col = 'Combined'
 
-                        # Create combined column if it doesn't exist
-                        if vol_col == 'Combined' and 'Combined' not in df.columns:
-                            df['Combined'] = df['Northbound'] + df['Southbound']
+                    # Create combined column if it doesn't exist
+                    if vol_col == 'Combined' and 'Combined' not in df.columns:
+                        df['Combined'] = df['Northbound'] + df['Southbound']
 
                         # Filter data by selected time period
                         period_key = time_period.split()[0]  # Extract "AM", "MD", or "PM"
@@ -1589,7 +1608,7 @@ try:
                         st.write(f"Daily Total: **{combined[['Northbound', 'Southbound']].sum().sum():.0f} vehicles**")
 
                     # Add note about cycle recommendations
-                    if len(df['Date'].unique()) == 1:
+                    if 'Date' in df.columns and len(df['Date'].unique()) == 1:
                         st.info(
                             "💡 **Tip:** Click 'Get Cycle Length Recommendations' above to see hourly cycle length analysis for this day.")
 
@@ -1898,7 +1917,7 @@ def filter_by_period(df, time_col, period):
     """Filter dataframe by time period"""
     df_copy = df.copy()
     df_copy['hour'] = df_copy[time_col].dt.hour
-    
+
     if period == "AM":
         return df_copy[(df_copy['hour'] >= 5) & (df_copy['hour'] <= 10)]  # 5:00 - 10:00
     elif period == "MD":
