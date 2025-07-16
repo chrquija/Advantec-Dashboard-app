@@ -747,15 +747,10 @@ elif data_source == "API Connection":
 
     #START DELETING CHART CODE HERE
     #STOP Deleting Chart Code Here
-
-
-
 from chart_components.title_section import render_chart_title_section
 
 # Render chart title section
 chart_type = render_chart_title_section(variable, date_range, direction, data_source)
-
-
 
 # === Load and Render Chart ===
 try:
