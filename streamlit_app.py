@@ -8,6 +8,9 @@ import numpy as np
 # At the top of your file, add this import: PDF Function
 from helpers.reporting import create_pdf_report, generate_email_details
 
+#Title_section Imports
+from helpers.reporting import get_hourly_cycle_length, get_existing_cycle_length, filter_by_period
+from chart_components.title_section import find_column, get_base_title
 
 st.set_page_config(
     page_title="Transportation Dashboard",
@@ -1056,7 +1059,7 @@ try:
                 combined.reset_index(inplace=True)
 
                 # Use clean titles for charts (without the extra info)
-                clean_title = base_title
+                clean_title = get_base_title(variable, direction)
 
                 # Create charts based on chart type
                 if chart_type == "Line":
@@ -1382,7 +1385,7 @@ try:
             combined.reset_index(inplace=True)
 
             # Use clean titles for charts
-            clean_title = base_title
+            clean_title = get_base_title(variable, direction)
 
             # Create charts based on chart type
             if chart_type == "Line":
@@ -1490,7 +1493,7 @@ try:
         df.set_index(time_col, inplace=True)
 
         # Clean title for single direction
-        clean_title = base_title
+        clean_title = get_base_title(variable, direction)
 
         # Determine column and chart rendering based on data source
         if variable == "Vehicle Volume":

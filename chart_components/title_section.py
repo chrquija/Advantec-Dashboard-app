@@ -10,6 +10,20 @@ def find_column(df, patterns):
     return None
 
 
+def get_base_title(variable, direction):
+    """Get the base title for charts"""
+    if direction == "Both":
+        if variable == "Vehicle Volume":
+            base_title = f"{variable} - Northbound & Southbound"
+        else:
+            base_title = f"{variable} - Northbound & Southbound"
+    else:
+        direction_full = "Northbound" if direction == "NB" else "Southbound"
+        base_title = f"{variable} - {direction_full}"
+
+    return base_title
+
+
 def determine_location_type_and_info():
     """Determine if viewing intersection or corridor data"""
     # You can customize this logic based on your data structure
