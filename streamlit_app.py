@@ -13,6 +13,7 @@ from chart_components.title_section import find_column, get_base_title
 from helpers.reporting import create_pdf_report, generate_email_details #for pdf function
 from chart_components.charts import create_enhanced_line_chart, create_enhanced_multi_line_chart
 
+
 st.set_page_config(
     page_title="Transportation Dashboard",
     page_icon="📊",
@@ -1399,21 +1400,6 @@ def get_cycle_length_recommendation(hourly_volumes):
     return cycle
 
 
-# Helper function to filter data by time period, Recommended Cycle Length Activation Period (RCLAP)
-def filter_by_period(df, time_col, period):
-    """Filter dataframe by time period"""
-    df_copy = df.copy()
-    df_copy['hour'] = df_copy[time_col].dt.hour
-
-    if period == "AM":
-        return df_copy[(df_copy['hour'] >= 5) & (df_copy['hour'] <= 10)]  # 5:00 - 10:00
-    elif period == "MD":
-        return df_copy[(df_copy['hour'] >= 11) & (df_copy['hour'] <= 15)]  # 11:00 - 15:00
-    elif period == "PM":
-        return df_copy[(df_copy['hour'] >= 16) & (df_copy['hour'] <= 20)]  # 16:00 - 20:00
-    return df_copy
-
-
 
 # Only show KPI panels for Vehicle Volume data
 if variable == "Vehicle Volume":
@@ -1579,23 +1565,6 @@ if variable == "Vehicle Volume":
                         st.caption(f"at {peak_cong_time}")
                     elif kpi_type == "Suggested Cycle Length Table - Hourly":
                         # Functions for cycle length calculations
-                        def get_hourly_cycle_length(volume):
-                            if volume >= 2400:
-                                return "140 sec"
-                            elif volume >= 1500:
-                                return "130 sec"
-                            elif volume >= 600:
-                                return "120 sec"
-                            elif volume >= 300:
-                                return "110 sec"
-                            else:
-                                return "Free mode"
-
-                        def get_existing_cycle_length(volume):
-                            if volume >= 300:
-                                return "140 sec"
-                            else:
-                                return "Free mode"
 
                         if direction_choice == "Both":
                             # Show combined table for both directions
