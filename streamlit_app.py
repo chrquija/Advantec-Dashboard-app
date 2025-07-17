@@ -1286,15 +1286,12 @@ try:
                 st.subheader("📈 Traffic Volume Summary")
                 col1, col2, col3 = st.columns(3)
                 with col1:
-                    st.metric("**📊 Average Volume**", f"{df[y_col].mean():.0f} vph")
+                    st.metric("**📊 Average Vehicles Per Hour (VPH)**", f"{df[y_col].mean():.0f} VPH")
                 with col2:
-                    st.metric("**📈 Peak Volume**", f"{df[y_col].max():.0f} vph")
+                    st.metric("**📈 Peak Volume**", f"{df[y_col].max():.0f} Vehicles")
                 with col3:
-                    st.metric("**📉 Low Volume**", f"{df[y_col].min():.0f} vph")
+                    st.metric("**📉 Low Volume**", f"{df[y_col].min():.0f} Vehicles")
 
-                # Additional stats
-                st.write(f"**Total Daily Vehicles:** {df[y_col].sum():.0f}")
-                st.write(f"**Standard Deviation:** {df[y_col].std():.1f} vph")
             else:
                 st.error(f"Could not find {direction} column in volume data")
                 st.write("Available columns:", list(df.columns))
@@ -1344,8 +1341,8 @@ try:
                 worst_label = "Slowest"
             elif variable == "Travel Time":
                 unit = "min"
-                best_label = "Shortest"
-                worst_label = "Longest"
+                best_label = "Longest"
+                worst_label = "Shortest"
             else:
                 unit = ""
                 best_label = "Best"
@@ -1355,13 +1352,10 @@ try:
             with col1:
                 st.metric(f"**📊 Average {variable}**", f"{df[y_col].mean():.1f} {unit}")
             with col2:
-                st.metric(f"**📈 {best_label}**", f"{df[y_col].max():.1f} {unit}")
+                st.metric(f"**📈 {best_label}**", f"{df[y_col].max():.1f} {unit}")  # This should be max for "Longest"
             with col3:
-                st.metric(f"**📉 {worst_label}**", f"{df[y_col].min():.1f} {unit}")
+                st.metric(f"**📉 {worst_label}**", f"{df[y_col].min():.1f} {unit}")  # This should be min for "Shortest"
 
-            # Additional stats
-            st.write(f"**Standard Deviation:** {df[y_col].std():.2f} {unit}")
-            st.write(f"**Median:** {df[y_col].median():.1f} {unit}")
 
 except Exception as e:
     st.error(f"❌ Failed to load chart: {e}")
