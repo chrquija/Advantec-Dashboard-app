@@ -1291,18 +1291,12 @@ else:
     # === DYNAMIC TRAFFIC VOLUME SUMMARY ===
     st.subheader("📈 Traffic Volume Summary")
 
-    # Find the correct volume columns
-    nb_vol_col = None
-    sb_vol_col = None
+    # Import the helper function
+    from chart_components.title_section import find_column
 
-    # Look for volume columns
-    for col in df.columns:
-        if any(word in col.lower() for word in ['north', 'nb']) and any(
-                word in col.lower() for word in ['volume', 'vol', 'count', 'vehicle']):
-            nb_vol_col = col
-        elif any(word in col.lower() for word in ['south', 'sb']) and any(
-                word in col.lower() for word in ['volume', 'vol', 'count', 'vehicle']):
-            sb_vol_col = col
+    # Find the correct volume columns using the existing helper function
+    nb_vol_col = find_column(df, ['north', 'nb'])
+    sb_vol_col = find_column(df, ['south', 'sb'])
 
     if nb_vol_col and sb_vol_col:
         col1, col2, col3 = st.columns(3)
