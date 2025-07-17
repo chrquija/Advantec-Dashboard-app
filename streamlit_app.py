@@ -772,9 +772,9 @@ elif data_source == "API Connection":
     df = load_data_by_source("API Connection", api_config=api_config)
     if df is None:
         st.stop()
+        # == End of Data Source Code==
 
-    #START DELETING CHART CODE HERE
-    #STOP Deleting Chart Code Here
+# ==IMPORTING chart title code inot Streamlit_app.py==
 from chart_components.title_section import render_chart_title_section
 
 # Render chart title section
@@ -971,42 +971,6 @@ try:
                     fig_sb.update_layout(coloraxis_colorbar_title=f"{variable} ({unit})")
                     st.plotly_chart(fig_sb, use_container_width=True)
 
-            # Show combined stats with proper units
-            st.subheader(f"📈 {variable} Summary")
-            col1, col2, col3 = st.columns(3)
-
-            # Determine units based on variable
-            if variable == "Speed":
-                unit = "mph"
-            elif variable == "Travel Time":
-                unit = "min"
-            else:
-                unit = ""
-
-            with col1:
-                st.metric("**🔵 Northbound**", "", "")
-                st.write(f"Average: **{combined['Northbound'].mean():.1f} {unit}**")
-                st.write(f"Best: **{combined['Northbound'].max():.1f} {unit}**")
-                st.write(f"Worst: **{combined['Northbound'].min():.1f} {unit}**")
-            with col2:
-                st.metric("**🔴 Southbound**", "", "")
-                st.write(f"Average: **{combined['Southbound'].mean():.1f} {unit}**")
-                st.write(f"Best: **{combined['Southbound'].max():.1f} {unit}**")
-                st.write(f"Worst: **{combined['Southbound'].min():.1f} {unit}**")
-            with col3:
-                st.metric("**📊 Overall**", "", "")
-                overall_avg = (combined['Northbound'].mean() + combined['Southbound'].mean()) / 2
-                st.write(f"Combined Average: **{overall_avg:.1f} {unit}**")
-                if variable == "Speed":
-                    st.write(
-                        f"Fastest: **{max(combined['Northbound'].max(), combined['Southbound'].max()):.1f} {unit}**")
-                    st.write(
-                        f"Slowest: **{min(combined['Northbound'].min(), combined['Southbound'].min()):.1f} {unit}**")
-                else:
-                    st.write(
-                        f"Shortest: **{min(combined['Northbound'].min(), combined['Southbound'].min()):.1f} {unit}**")
-                    st.write(
-                        f"Longest: **{max(combined['Northbound'].max(), combined['Southbound'].max()):.1f} {unit}**")
 
     else:
         # SINGLE DIRECTION LOGIC
@@ -1064,17 +1028,6 @@ try:
                     fig = px.imshow(pivot_table, aspect='auto', title=f"{clean_title} - Hourly Pattern")
                     fig.update_layout(coloraxis_colorbar_title="Volume (vph)")
                     st.plotly_chart(fig, use_container_width=True)
-
-                # Show single direction stats
-                st.subheader("📈 Traffic Volume Summary")
-                col1, col2, col3 = st.columns(3)
-                with col1:
-                    st.metric("**📊 Average Vehicles Per Hour (VPH)**", f"{df[y_col].mean():.0f} VPH")
-                with col2:
-                    st.metric("**📈 Peak Volume**", f"{df[y_col].max():.0f} Vehicles")
-                with col3:
-                    st.metric("**📉 Low Volume**", f"{df[y_col].min():.0f} Vehicles")
-
             else:
                 st.error(f"Could not find {direction} column in volume data")
                 st.write("Available columns:", list(df.columns))
@@ -1113,31 +1066,6 @@ try:
                 unit = "mph" if variable == "Speed" else "min"
                 fig.update_layout(coloraxis_colorbar_title=f"{variable} ({unit})")
                 st.plotly_chart(fig, use_container_width=True)
-
-            # Show single direction stats with proper units
-            st.subheader(f"📈 {variable} Summary")
-
-            # Determine units based on variable
-            if variable == "Speed":
-                unit = "mph"
-                best_label = "Fastest"
-                worst_label = "Slowest"
-            elif variable == "Travel Time":
-                unit = "min"
-                best_label = "Longest"
-                worst_label = "Shortest"
-            else:
-                unit = ""
-                best_label = "Best"
-                worst_label = "Worst"
-
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                st.metric(f"**📊 Average {variable}**", f"{df[y_col].mean():.1f} {unit}")
-            with col2:
-                st.metric(f"**📈 {best_label}**", f"{df[y_col].max():.1f} {unit}")  # This should be max for "Longest"
-            with col3:
-                st.metric(f"**📉 {worst_label}**", f"{df[y_col].min():.1f} {unit}")  # This should be min for "Shortest"
 
 
 except Exception as e:
@@ -1360,31 +1288,44 @@ if show_cycle_length:
             f"📅 **Analysis Period:** {period_info.get(period_key, 'Full Day')} | **Direction:** {direction}")
 
 else:
-    # === TRAFFIC VOLUME SUMMARY ===
+    # === DYNAMIC TRAFFIC VOLUME SUMMARY ===
     st.subheader("📈 Traffic Volume Summary")
 
-    # Use the main dataframe and check for required columns
-    if 'Northbound' in df.columns and 'Southbound' in df.columns:
+    # Find the correct volume columns
+    nb_vol_col = None
+    sb_vol_col = None
+
+    # Look for volume columns
+    for col in df.columns:
+        if any(word in col.lower() for word in ['north', 'nb']) and any(
+                word in col.lower() for word in ['volume', 'vol', 'count', 'vehicle']):
+            nb_vol_col = col
+        elif any(word in col.lower() for word in ['south', 'sb']) and any(
+                word in col.lower() for word in ['volume', 'vol', 'count', 'vehicle']):
+            sb_vol_col = col
+
+    if nb_vol_col and sb_vol_col:
         col1, col2, col3 = st.columns(3)
         with col1:
             st.metric("**🔵 Northbound**", "", "")
-            st.write(f"Average: **{df['Northbound'].mean():.0f} vph**")
-            st.write(f"Peak: **{df['Northbound'].max():.0f} vph**")
-            st.write(f"Low: **{df['Northbound'].min():.0f} vph**")
+            st.write(f"Average: **{df[nb_vol_col].mean():.0f} vph**")
+            st.write(f"Peak: **{df[nb_vol_col].max():.0f} vph**")
+            st.write(f"Low: **{df[nb_vol_col].min():.0f} vph**")
         with col2:
             st.metric("**🔴 Southbound**", "", "")
-            st.write(f"Average: **{df['Southbound'].mean():.0f} vph**")
-            st.write(f"Peak: **{df['Southbound'].max():.0f} vph**")
-            st.write(f"Low: **{df['Southbound'].min():.0f} vph**")
+            st.write(f"Average: **{df[sb_vol_col].mean():.0f} vph**")
+            st.write(f"Peak: **{df[sb_vol_col].max():.0f} vph**")
+            st.write(f"Low: **{df[sb_vol_col].min():.0f} vph**")
         with col3:
             st.metric("**📊 Combined**", "", "")
-            total_avg = (df['Northbound'].mean() + df['Southbound'].mean())
-            total_peak = (df['Northbound'].max() + df['Southbound'].max())
+            total_avg = (df[nb_vol_col].mean() + df[sb_vol_col].mean())
+            total_peak = (df[nb_vol_col].max() + df[sb_vol_col].max())
             st.write(f"Total Average: **{total_avg:.0f} vph**")
             st.write(f"Total Peak: **{total_peak:.0f} vph**")
-            st.write(f"Daily Total: **{df[['Northbound', 'Southbound']].sum().sum():.0f} vehicles**")
+            st.write(f"Daily Total: **{df[[nb_vol_col, sb_vol_col]].sum().sum():.0f} vehicles**")
     else:
-        st.warning("⚠️ Traffic volume columns not found in the data.")
+        st.warning("⚠️ Could not find Northbound and Southbound volume columns in the data.")
+        st.info("Available columns: " + ", ".join(df.columns))
 
     # Add note about cycle recommendations
     if 'Date' in df.columns and len(df['Date'].unique()) == 1:
