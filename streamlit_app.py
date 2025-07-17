@@ -1143,6 +1143,8 @@ try:
 except Exception as e:
     st.error(f"❌ Failed to load chart: {e}")
     st.write("Debug info - Available columns:", list(df.columns) if 'df' in locals() else "DataFrame not loaded")
+
+
 # === TRAFFIC VOLUME SUMMARY WITH CYCLE LENGTH TOGGLE ===
 # Toggle for Cycle Length Recommendations
 show_cycle_length = st.toggle("🚦 Show Cycle Length Recommendations", value=False)
@@ -1358,32 +1360,38 @@ if show_cycle_length:
             f"📅 **Analysis Period:** {period_info.get(period_key, 'Full Day')} | **Direction:** {direction}")
 
 else:
-    # === TRAFFIC VOLUME SUMMARY (Your existing code) ===
+    # === TRAFFIC VOLUME SUMMARY ===
     st.subheader("📈 Traffic Volume Summary")
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.metric("**🔵 Northbound**", "", "")
-        st.write(f"Average: **{combined['Northbound'].mean():.0f} vph**")
-        st.write(f"Peak: **{combined['Northbound'].max():.0f} vph**")
-        st.write(f"Low: **{combined['Northbound'].min():.0f} vph**")
-    with col2:
-        st.metric("**🔴 Southbound**", "", "")
-        st.write(f"Average: **{combined['Southbound'].mean():.0f} vph**")
-        st.write(f"Peak: **{combined['Southbound'].max():.0f} vph**")
-        st.write(f"Low: **{combined['Southbound'].min():.0f} vph**")
-    with col3:
-        st.metric("**📊 Combined**", "", "")
-        total_avg = (combined['Northbound'].mean() + combined['Southbound'].mean())
-        total_peak = (combined['Northbound'].max() + combined['Southbound'].max())
-        st.write(f"Total Average: **{total_avg:.0f} vph**")
-        st.write(f"Total Peak: **{total_peak:.0f} vph**")
-        st.write(
-            f"Daily Total: **{combined[['Northbound', 'Southbound']].sum().sum():.0f} vehicles**")
+
+    # Use the main dataframe and check for required columns
+    if 'Northbound' in df.columns and 'Southbound' in df.columns:
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("**🔵 Northbound**", "", "")
+            st.write(f"Average: **{df['Northbound'].mean():.0f} vph**")
+            st.write(f"Peak: **{df['Northbound'].max():.0f} vph**")
+            st.write(f"Low: **{df['Northbound'].min():.0f} vph**")
+        with col2:
+            st.metric("**🔴 Southbound**", "", "")
+            st.write(f"Average: **{df['Southbound'].mean():.0f} vph**")
+            st.write(f"Peak: **{df['Southbound'].max():.0f} vph**")
+            st.write(f"Low: **{df['Southbound'].min():.0f} vph**")
+        with col3:
+            st.metric("**📊 Combined**", "", "")
+            total_avg = (df['Northbound'].mean() + df['Southbound'].mean())
+            total_peak = (df['Northbound'].max() + df['Southbound'].max())
+            st.write(f"Total Average: **{total_avg:.0f} vph**")
+            st.write(f"Total Peak: **{total_peak:.0f} vph**")
+            st.write(f"Daily Total: **{df[['Northbound', 'Southbound']].sum().sum():.0f} vehicles**")
+    else:
+        st.warning("⚠️ Traffic volume columns not found in the data.")
 
     # Add note about cycle recommendations
     if 'Date' in df.columns and len(df['Date'].unique()) == 1:
         st.info(
             "💡 **Tip:** Click 'Show Cycle Length Recommendations' above to see hourly cycle length analysis for this day.")
+
+
 # === KPI PANELS SECTION ===
 # Add this after DataFrame load and before chart creation
 
