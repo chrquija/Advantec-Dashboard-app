@@ -1083,7 +1083,7 @@ if show_cycle_length:
     st.markdown(f"**Time Period:** {time_period} | **Direction:** {direction}")
 
     # Import the required functions
-    from reporting import get_hourly_cycle_length, get_existing_cycle_length, filter_by_period
+    from helpers.reporting import get_hourly_cycle_length, get_existing_cycle_length, filter_by_period
 
     # First, identify the correct time column
     time_col = find_column(df, ['Time', 'time', 'hour', 'Hour'])
