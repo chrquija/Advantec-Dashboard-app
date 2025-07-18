@@ -1228,6 +1228,11 @@ if show_cycle_length:
             return table_df
 
 
+        # Add this after filtering
+        st.write("Debug - Filtered data columns:", filtered_df.columns.tolist())
+        st.write("Debug - Filtered data sample:")
+        st.dataframe(filtered_df.head())
+
         # Debug: Show what columns were found
         st.write(f"Debug: Found columns - NB: {nb_col}, SB: {sb_col}")
         st.write(f"Debug: Filtered data shape: {filtered_df.shape}")
