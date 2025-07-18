@@ -1118,6 +1118,33 @@ if show_cycle_length:
             st.error(f"❌ Cannot find Northbound ({nb_col}) or Southbound ({sb_col}) columns.")
             st.stop()
 
+        # Add this right before calling create_cycle_table
+        try:
+            st.write(f"Debug - About to create table for {direction}")
+            st.write(f"Debug - Volume column: {nb_col if direction == 'Northbound' else sb_col}")
+            st.write(f"Debug - Sample data:")
+            st.write(filtered_df.head())
+
+            # Then your existing create_cycle_table calls
+            if direction == "Both":
+                # Create two separate tables
+                st.markdown("---")
+                nb_table = create_cycle_table(nb_col, "Northbound", filtered_df)
+
+                st.markdown("---")
+                sb_table = create_cycle_table(sb_col, "Southbound", filtered_df)
+
+            else:
+                # Create single table for selected direction
+                if direction == "Northbound":
+                    create_cycle_table(nb_col, "Northbound", filtered_df)
+                elif direction == "Southbound":
+                    create_cycle_table(sb_col, "Southbound", filtered_df)
+
+        except Exception as e:
+            st.error(f"Error creating cycle table: {str(e)}")
+            st.write("Full error details:")
+            st.exception(e)
 
         def create_cycle_table(vol_col_name, direction_name, data_df):
             """Create cycle length table for a specific direction"""
