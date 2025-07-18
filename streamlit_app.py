@@ -1126,10 +1126,17 @@ if show_cycle_length:
                 vol_col_name: 'sum'
             }).reset_index()
 
+            # Rename the hour column for clarity
+            hourly_df = hourly_df.rename(columns={hourly_df.columns[0]: 'hour'})
+
+            # Debug: Show what we're working with
+            st.write(f"Debug - Hourly data for {direction_name}:")
+            st.dataframe(hourly_df)
+
             # Create the recommendations table
             table_df = []
             for _, row in hourly_df.iterrows():
-                hour = int(row[time_col])
+                hour = int(row['hour'])  # Now using the renamed 'hour' column
                 volume = row[vol_col_name]
 
                 # Get CVAG recommendation
@@ -1177,7 +1184,7 @@ if show_cycle_length:
                 return []
 
             # Display the table with HTML rendering
-            st.markdown(f"####  {direction_name} Analysis")
+            st.markdown(f"#### 🚗 {direction_name} Analysis")
             df_display = pd.DataFrame(
                 [{k: v for k, v in row.items() if k != "Status_Text"} for row in table_df])
             st.markdown(df_display.to_html(escape=False, index=False), unsafe_allow_html=True)
@@ -1210,11 +1217,11 @@ if show_cycle_length:
                 adjust_count = len([x for x in table_df if "ADJUST" in x["Status_Text"]])
 
                 if reduce_count > 0:
-                    st.metric(" Hours to Reduce", reduce_count)
+                    st.metric("⬇️ Hours to Reduce", reduce_count)
                 elif increase_count > 0:
-                    st.metric(" Hours to Increase", increase_count)
+                    st.metric("⬆️ Hours to Increase", increase_count)
                 elif adjust_count > 0:
-                    st.metric(" Hours to Adjust", adjust_count)
+                    st.metric("⚠️ Hours to Adjust", adjust_count)
                 else:
                     st.metric("✅ Optimal Hours", total_hours - changes_needed)
 
