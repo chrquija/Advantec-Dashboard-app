@@ -1082,38 +1082,61 @@ if show_cycle_length:
     st.markdown("### 🚦 Cycle Length Recommendations - Hourly Analysis")
     st.markdown(f"**Time Period:** {time_period} | **Direction:** {direction}")
 
-    # Check if we have single day data (use df instead of period_df)
-    # Always proceed with cycle length recommendations, even if Date column doesn't exist
+    # First, identify the correct time column - be more flexible
+    time_col = None
+    possible_time_cols = ['Time', 'time', 'hour', 'Hour', 'TIME', 'DateTime', 'datetime']
 
-    # First, identify the correct time column
-    time_col = find_column(df, ['Time', 'time', 'hour', 'Hour'])
+    # Try direct column name matches first
+    for col_name in possible_time_cols:
+        if col_name in df.columns:
+            time_col = col_name
+            break
+
+    # If not found, try pattern matching
     if not time_col:
-        st.error("❌ No time column found. Please ensure your data has a 'Time' column.")
+        time_col = find_column(df, ['time', 'hour', 'datetime'])
+
+    # If still not found, check for any column that might contain time data
+    if not time_col:
+        for col in df.columns:
+            if 'time' in col.lower() or 'hour' in col.lower() or 'date' in col.lower():
+                # Check if it has time-like data
+                try:
+                    pd.to_datetime(df[col].iloc[0])
+                    time_col = col
+                    break
+                except:
+                    continue
+
+    if not time_col:
+        st.error("❌ No time column found. Please ensure your data has a time/hour column.")
+        st.error(f"Available columns: {list(df.columns)}")
         st.stop()
 
     # Determine which column to use based on direction
     if direction == "Northbound":
-        vol_col = find_column(df, ['Northbound', 'northbound', 'NB']) or 'Northbound'
+        vol_col = find_column(df, ['Northbound', 'northbound', 'NB'])
+        if not vol_col:
+            st.error("❌ Cannot find Northbound volume column.")
+            st.stop()
     elif direction == "Southbound":
-        vol_col = find_column(df, ['Southbound', 'southbound', 'SB']) or 'Southbound'
-    else:  # Combined
-        vol_col = 'Combined'
+        vol_col = find_column(df, ['Southbound', 'southbound', 'SB'])
+        if not vol_col:
+            st.error("❌ Cannot find Southbound volume column.")
+            st.stop()
+    else:  # Both directions
+        # Find both columns first
+        nb_col = find_column(df, ['Northbound', 'northbound', 'NB'])
+        sb_col = find_column(df, ['Southbound', 'southbound', 'SB'])
 
-    # Create combined column if it doesn't exist
-    if vol_col == 'Combined' and 'Combined' not in df.columns:
-        nb_col = find_column(df, ['Northbound', 'northbound', 'NB']) or 'Northbound'
-        sb_col = find_column(df, ['Southbound', 'southbound', 'SB']) or 'Southbound'
-
-        if nb_col in df.columns and sb_col in df.columns:
-            df['Combined'] = df[nb_col] + df[sb_col]
-        else:
-            st.error(f"❌ Cannot find Northbound ({nb_col}) or Southbound ({sb_col}) columns.")
+        if not nb_col or not sb_col:
+            st.error(f"❌ Cannot find required columns. Found NB: {nb_col}, SB: {sb_col}")
             st.stop()
 
-    # Check if the selected volume column exists
-    if vol_col not in df.columns:
-        st.error(f"❌ Volume column '{vol_col}' not found in data.")
-        st.stop()
+        # Create combined column if it doesn't exist
+        if 'Combined' not in df.columns:
+            df['Combined'] = df[nb_col] + df[sb_col]
+        vol_col = 'Combined'
 
     # Ensure time column is datetime
     if not pd.api.types.is_datetime64_any_dtype(df[time_col]):
