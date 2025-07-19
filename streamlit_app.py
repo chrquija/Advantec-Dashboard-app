@@ -1190,10 +1190,22 @@ if show_cycle_length:
         period_key = time_period.split()[0]
         filtered_df = filter_by_period(df, time_col, period_key)
 
-        # Hourly aggregation using ONLY vol_col
-        hourly_df = filtered_df.groupby(filtered_df[time_col].dt.hour).agg({
-            vol_col: 'sum'
-        }).reset_index()
+        # Make sure vol_col is defined before using it in aggregation
+        if vol_col is None:
+            st.error("❌ Volume column not found. Cannot proceed with analysis.")
+            st.stop()
+
+        # Hourly aggregation using the correct vol_col
+        try:
+            hourly_df = filtered_df.groupby(filtered_df[time_col].dt.hour).agg({
+                vol_col: 'sum'
+            }).reset_index()
+        except KeyError as e:
+            st.error(f"❌ Column '{vol_col}' not found in data. Available columns: {list(filtered_df.columns)}")
+            st.stop()
+        except Exception as e:
+            st.error(f"❌ Error during aggregation: {str(e)}")
+            st.stop()
 
         # Build recommendations table
         table_df = []
