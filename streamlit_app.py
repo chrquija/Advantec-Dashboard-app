@@ -1135,6 +1135,7 @@ if show_cycle_length:
             st.info(f"Columns: {list(df.columns)}")
             st.stop()
         st.info(f"Using Northbound column: {vol_col}")
+
     elif direction == "Southbound":
         vol_col = find_column(df, ['southbound', 'SB', 'south'])
         if not vol_col:
@@ -1147,7 +1148,8 @@ if show_cycle_length:
             st.info(f"Columns: {list(df.columns)}")
             st.stop()
         st.info(f"Using Southbound column: {vol_col}")
-    else:  # Both
+
+    elif direction == "Both":  # Only sum when "Both" is selected
         nb_col = find_column(df, ['northbound', 'NB', 'north'])
         sb_col = find_column(df, ['southbound', 'SB', 'south'])
         # Fuzzy for NB
