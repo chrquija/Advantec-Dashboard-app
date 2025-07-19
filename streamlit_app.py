@@ -1074,71 +1074,84 @@ except Exception as e:
 
 
 # === TRAFFIC VOLUME SUMMARY WITH CYCLE LENGTH TOGGLE ===
-# Creates Toggle switch to get Cycle Length Recommendations
 show_cycle_length = st.toggle("🚦 Get Cycle Length Recommendations", value=False)
 
 if show_cycle_length:
-    # === CYCLE LENGTH RECOMMENDATIONS TABLE ===
     st.markdown("### 🚦 Cycle Length Recommendations - Hourly Analysis")
     st.markdown(f"**Time Period:** {time_period} | **Direction:** {direction}")
 
-    # First, identify the correct time column - be more flexible
+    # --- 1. Find the time column flexibly ---
     time_col = None
     possible_time_cols = ['Time', 'time', 'hour', 'Hour', 'TIME', 'DateTime', 'datetime']
 
-    # Try direct column name matches first
+    # Direct match first
     for col_name in possible_time_cols:
         if col_name in df.columns:
             time_col = col_name
             break
-
-    # If not found, try pattern matching
+    # Try fuzzy search if not found
     if not time_col:
         time_col = find_column(df, ['time', 'hour', 'datetime'])
-
-    # If still not found, check for any column that might contain time data
+    # Last-ditch: any column containing time/hour/date in name and is datetime-convertible
     if not time_col:
         for col in df.columns:
             if 'time' in col.lower() or 'hour' in col.lower() or 'date' in col.lower():
-                # Check if it has time-like data
                 try:
                     pd.to_datetime(df[col].iloc[0])
                     time_col = col
                     break
                 except:
                     continue
-
     if not time_col:
         st.error("❌ No time column found. Please ensure your data has a time/hour column.")
         st.error(f"Available columns: {list(df.columns)}")
         st.stop()
 
-    # Determine which column to use based on direction
+    # --- 2. Find volume column(s) based on direction ---
     if direction == "Northbound":
-        vol_col = find_column(df, ['Northbound', 'northbound', 'NB'])
+        vol_col = find_column(df, ['northbound', 'Northbound', 'NB', 'nb'])
+        if not vol_col:
+            # Try fuzzy match: search for any column containing 'north'
+            for col in df.columns:
+                if 'north' in col.lower():
+                    vol_col = col
+                    break
         if not vol_col:
             st.error("❌ Cannot find Northbound volume column.")
             st.stop()
     elif direction == "Southbound":
-        vol_col = find_column(df, ['Southbound', 'southbound', 'SB'])
+        vol_col = find_column(df, ['southbound', 'Southbound', 'SB', 'sb'])
+        if not vol_col:
+            for col in df.columns:
+                if 'south' in col.lower():
+                    vol_col = col
+                    break
         if not vol_col:
             st.error("❌ Cannot find Southbound volume column.")
             st.stop()
-    else:  # Both directions
-        # Find both columns first
-        nb_col = find_column(df, ['Northbound', 'northbound', 'NB'])
-        sb_col = find_column(df, ['Southbound', 'southbound', 'SB'])
-
+    else:  # Both
+        nb_col = find_column(df, ['northbound', 'Northbound', 'NB', 'nb'])
+        sb_col = find_column(df, ['southbound', 'Southbound', 'SB', 'sb'])
+        # Fuzzy for NB
+        if not nb_col:
+            for col in df.columns:
+                if 'north' in col.lower():
+                    nb_col = col
+                    break
+        # Fuzzy for SB
+        if not sb_col:
+            for col in df.columns:
+                if 'south' in col.lower():
+                    sb_col = col
+                    break
         if not nb_col or not sb_col:
             st.error(f"❌ Cannot find required columns. Found NB: {nb_col}, SB: {sb_col}")
             st.stop()
-
-        # Create combined column if it doesn't exist
         if 'Combined' not in df.columns:
             df['Combined'] = df[nb_col] + df[sb_col]
         vol_col = 'Combined'
 
-    # Ensure time column is datetime
+    # --- 3. Make sure time is datetime ---
     if not pd.api.types.is_datetime64_any_dtype(df[time_col]):
         try:
             df[time_col] = pd.to_datetime(df[time_col])
@@ -1146,42 +1159,32 @@ if show_cycle_length:
             st.error(f"❌ Cannot convert '{time_col}' to datetime format.")
             st.stop()
 
-    # Check if we have single day data
+    # --- 4. Only single day allowed for recommendations ---
     if 'Date' in df.columns and len(df['Date'].unique()) > 1:
-        # Multi-day data - show warning
         st.warning(
             "⚠️ Cycle Length Recommendations are only available for single-day analysis. Please select a single date to view hourly cycle length recommendations.")
     else:
-        # Single day data - proceed with analysis
-        # Filter data by selected time period
-        period_key = time_period.split()[0]  # Extract "AM", "MD", or "PM"
+        # Filter data by period
+        period_key = time_period.split()[0]
         filtered_df = filter_by_period(df, time_col, period_key)
 
-        # Get hourly data for the selected time period and direction
+        # Hourly aggregation using ONLY vol_col
         hourly_df = filtered_df.groupby(filtered_df[time_col].dt.hour).agg({
             vol_col: 'sum'
         }).reset_index()
 
-        # Create the recommendations table
+        # Build recommendations table
         table_df = []
         for _, row in hourly_df.iterrows():
             hour = int(row[time_col])
             volume = row[vol_col]
 
-            # Get CVAG recommendation
             cvag_recommendation = get_hourly_cycle_length(volume)
-
-            # Get current system recommendation
             current_system = get_existing_cycle_length(volume)
-
-            # Format hour display
             hour_display = f"{hour:02d}:00"
-
-            # Determine if change is needed and create visual status
             needs_change = cvag_recommendation != current_system
 
             if needs_change:
-                # Different recommendations - show change needed
                 if cvag_recommendation == "Free mode" and current_system == "140 sec":
                     status_html = '<span style="color: #FF6B6B; font-weight: bold;">⬇️ REDUCE</span>'
                     status_text = "⬇️ REDUCE"
@@ -1192,7 +1195,6 @@ if show_cycle_length:
                     status_html = '<span style="color: #FFE66D; font-weight: bold;">⚠️ ADJUST</span>'
                     status_text = "⚠️ ADJUST"
             else:
-                # Same recommendations - optimal
                 status_html = '<span style="color: #51CF66; font-weight: bold;">✅ OPTIMAL</span>'
                 status_text = "✅ OPTIMAL"
 
@@ -1202,18 +1204,17 @@ if show_cycle_length:
                 "Current System": current_system,
                 "CVAG Recommendation": cvag_recommendation,
                 "Status": status_html,
-                "Status_Text": status_text  # For metrics calculation
+                "Status_Text": status_text
             })
 
-        # Sort by hour to ensure proper order
+        # Sort by hour
         table_df = sorted(table_df, key=lambda x: int(x["Hour"].split(":")[0]))
 
-        # Display the table with HTML rendering
-        df_display = pd.DataFrame(
-            [{k: v for k, v in row.items() if k != "Status_Text"} for row in table_df])
+        # Show table with HTML styling
+        df_display = pd.DataFrame([{k: v for k, v in row.items() if k != "Status_Text"} for row in table_df])
         st.markdown(df_display.to_html(escape=False, index=False), unsafe_allow_html=True)
 
-        # Add CSS for better table styling
+        # --- Table CSS ---
         st.markdown("""
             <style>
             table {
@@ -1239,19 +1240,16 @@ if show_cycle_length:
             </style>
             """, unsafe_allow_html=True)
 
-        # Summary statistics with enhanced visuals
+        # --- Metrics summary section ---
         col1, col2, col3, col4 = st.columns(4)
-
         with col1:
             total_hours = len(df_display)
             period_name = time_period.split()[0]
             st.metric(f"{period_name} Hours Analyzed", total_hours)
-
         with col2:
             changes_needed = len([x for x in table_df if "OPTIMAL" not in x["Status_Text"]])
             st.metric("Hours Needing Changes", changes_needed,
                       delta=f"{changes_needed}/{total_hours}" if total_hours > 0 else "0/0")
-
         with col3:
             if total_hours > 0:
                 efficiency = ((total_hours - changes_needed) / total_hours) * 100
@@ -1259,13 +1257,10 @@ if show_cycle_length:
                           delta=f"{'Good' if efficiency >= 80 else 'Needs Improvement'}")
             else:
                 st.metric("Current System Efficiency", "N/A")
-
         with col4:
-            # Count different types of changes
             reduce_count = len([x for x in table_df if "REDUCE" in x["Status_Text"]])
             increase_count = len([x for x in table_df if "INCREASE" in x["Status_Text"]])
             adjust_count = len([x for x in table_df if "ADJUST" in x["Status_Text"]])
-
             if reduce_count > 0:
                 st.metric("🔽 Hours to Reduce", reduce_count)
             elif increase_count > 0:
@@ -1275,40 +1270,36 @@ if show_cycle_length:
             else:
                 st.metric("✅ Optimal Hours", total_hours - changes_needed)
 
-        # Enhanced status legend
+        # --- Status Legend ---
         st.markdown("---")
         st.markdown("**Status Legend:**")
         col1, col2, col3, col4 = st.columns(4)
-
         with col1:
             st.markdown(
                 '<span style="color: #51CF66; font-weight: bold;">✅ OPTIMAL</span> - No changes needed',
                 unsafe_allow_html=True)
-
         with col2:
             st.markdown(
                 '<span style="color: #FF6B6B; font-weight: bold;">⬇️ REDUCE</span> - Lower cycle length',
                 unsafe_allow_html=True)
-
         with col3:
             st.markdown(
                 '<span style="color: #4ECDC4; font-weight: bold;">⬆️ INCREASE</span> - Higher cycle length',
                 unsafe_allow_html=True)
-
         with col4:
             st.markdown(
                 '<span style="color: #FFE66D; font-weight: bold;">⚠️ ADJUST</span> - Fine-tune cycle length',
                 unsafe_allow_html=True)
 
-        # Show time period and direction specific info
+        # --- Analysis period info ---
         period_info = {
             "AM": "5:00 - 10:00 (6 hours)",
             "MD": "11:00 - 15:00 (5 hours)",
             "PM": "16:00 - 20:00 (5 hours)"
         }
-        period_key = time_period.split()[0]
         st.info(
             f"📅 **Analysis Period:** {period_info.get(period_key, 'Full Day')} | **Direction:** {direction}")
+
 
 else:
     # === DYNAMIC TRAFFIC VOLUME SUMMARY ===
