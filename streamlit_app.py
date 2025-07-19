@@ -1073,6 +1073,20 @@ except Exception as e:
     st.write("Debug info - Available columns:", list(df.columns) if 'df' in locals() else "DataFrame not loaded")
 
 
+# --- Robust find_column function ---
+def find_column(df, search_terms):
+    # Try exact matches (case-insensitive)
+    for term in search_terms:
+        for col in df.columns:
+            if col.strip().lower() == term.strip().lower():
+                return col
+    # Then, try substring matches (case-insensitive)
+    for term in search_terms:
+        for col in df.columns:
+            if term.strip().lower() in col.strip().lower():
+                return col
+    return None
+
 # === TRAFFIC VOLUME SUMMARY WITH CYCLE LENGTH TOGGLE ===
 show_cycle_length = st.toggle("🚦 Get Cycle Length Recommendations", value=False)
 
@@ -1109,7 +1123,7 @@ if show_cycle_length:
 
     # --- 2. Find volume column(s) based on direction ---
     if direction == "Northbound":
-        vol_col = find_column(df, ['northbound', 'Northbound', 'NB', 'nb'])
+        vol_col = find_column(df, ['northbound', 'NB', 'north'])
         if not vol_col:
             # Try fuzzy match: search for any column containing 'north'
             for col in df.columns:
@@ -1118,9 +1132,11 @@ if show_cycle_length:
                     break
         if not vol_col:
             st.error("❌ Cannot find Northbound volume column.")
+            st.info(f"Columns: {list(df.columns)}")
             st.stop()
+        st.info(f"Using Northbound column: {vol_col}")
     elif direction == "Southbound":
-        vol_col = find_column(df, ['southbound', 'Southbound', 'SB', 'sb'])
+        vol_col = find_column(df, ['southbound', 'SB', 'south'])
         if not vol_col:
             for col in df.columns:
                 if 'south' in col.lower():
@@ -1128,10 +1144,12 @@ if show_cycle_length:
                     break
         if not vol_col:
             st.error("❌ Cannot find Southbound volume column.")
+            st.info(f"Columns: {list(df.columns)}")
             st.stop()
+        st.info(f"Using Southbound column: {vol_col}")
     else:  # Both
-        nb_col = find_column(df, ['northbound', 'Northbound', 'NB', 'nb'])
-        sb_col = find_column(df, ['southbound', 'Southbound', 'SB', 'sb'])
+        nb_col = find_column(df, ['northbound', 'NB', 'north'])
+        sb_col = find_column(df, ['southbound', 'SB', 'south'])
         # Fuzzy for NB
         if not nb_col:
             for col in df.columns:
@@ -1146,10 +1164,12 @@ if show_cycle_length:
                     break
         if not nb_col or not sb_col:
             st.error(f"❌ Cannot find required columns. Found NB: {nb_col}, SB: {sb_col}")
+            st.info(f"Columns: {list(df.columns)}")
             st.stop()
         if 'Combined' not in df.columns:
             df['Combined'] = df[nb_col] + df[sb_col]
         vol_col = 'Combined'
+        st.info(f"Using columns: NB={nb_col}, SB={sb_col} (summed as Combined)")
 
     # --- 3. Make sure time is datetime ---
     if not pd.api.types.is_datetime64_any_dtype(df[time_col]):
@@ -1299,6 +1319,7 @@ if show_cycle_length:
         }
         st.info(
             f"📅 **Analysis Period:** {period_info.get(period_key, 'Full Day')} | **Direction:** {direction}")
+
 
 
 else:
