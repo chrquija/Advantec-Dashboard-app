@@ -1172,6 +1172,9 @@ if show_cycle_length:
             df['Combined'] = df[nb_col] + df[sb_col]
         vol_col = 'Combined'
         st.info(f"Using columns: NB={nb_col}, SB={sb_col} (summed as Combined)")
+    else:
+        st.error("❌ Invalid direction selection.")
+        st.stop()
 
     # --- 3. Make sure time is datetime ---
     if not pd.api.types.is_datetime64_any_dtype(df[time_col]):
