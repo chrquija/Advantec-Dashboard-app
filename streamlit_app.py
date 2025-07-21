@@ -799,21 +799,40 @@ try:
                 # Check if the time column contains only time (no date)
                 sample_time = str(df[time_col].iloc[0]) if not df.empty else ""
                 if len(sample_time.split()) == 1 and ":" in sample_time:
-                    # Only time found, need to add date based on date_range
-                    if "april" in str(date_range).lower() or "04" in str(date_range) or "2025-04-10" in str(date_range):
-                        base_date = "2025-04-10"
-                    elif "feb" in str(date_range).lower() or "02" in str(date_range) or "2025-02-13" in str(date_range):
-                        base_date = "2025-02-13"
+                    # Only time found, need to extract date from date_range
+                    date_range_str = str(date_range).lower()
+
+                    # Try to extract date from various formats
+                    import re
+
+                    # Look for YYYY-MM-DD format
+                    date_match = re.search(r'(\d{4}-\d{2}-\d{2})', str(date_range))
+                    if date_match:
+                        base_date = date_match.group(1)
                     else:
-                        base_date = "2025-04-10"  # default to April data
+                        # Try other formats like MM/DD/YYYY or DD/MM/YYYY
+                        date_match = re.search(r'(\d{1,2})[/-](\d{1,2})[/-](\d{4})', str(date_range))
+                        if date_match:
+                            month, day, year = date_match.groups()
+                            base_date = f"{year}-{month.zfill(2)}-{day.zfill(2)}"
+                        else:
+                            # Fallback - try to parse the entire date_range
+                            try:
+                                parsed_date = pd.to_datetime(str(date_range)).strftime('%Y-%m-%d')
+                                base_date = parsed_date
+                            except:
+                                base_date = "2025-04-10"  # ultimate fallback
+
                     df[time_col] = pd.to_datetime(base_date + " " + df[time_col].astype(str), errors="coerce")
                 else:
                     # Full datetime already present
                     df[time_col] = pd.to_datetime(df[time_col], errors="coerce")
             else:
                 df[time_col] = pd.to_datetime(df[time_col], errors="coerce")
+
             df.dropna(subset=[time_col], inplace=True)
             df.set_index(time_col, inplace=True)
+
 
             # Find both direction columns - UPDATED LOGIC
             nb_col = find_column(df, ["northbound", "nb"])
@@ -1015,13 +1034,30 @@ try:
             # Check if the time column contains only time (no date)
             sample_time = str(df[time_col].iloc[0]) if not df.empty else ""
             if len(sample_time.split()) == 1 and ":" in sample_time:
-                # Only time found, need to add date based on date_range
-                if "april" in str(date_range).lower() or "04" in str(date_range) or "2025-04-10" in str(date_range):
-                    base_date = "2025-04-10"
-                elif "feb" in str(date_range).lower() or "02" in str(date_range) or "2025-02-13" in str(date_range):
-                    base_date = "2025-02-13"
+                # Only time found, need to extract date from date_range
+                date_range_str = str(date_range).lower()
+
+                # Try to extract date from various formats
+                import re
+
+                # Look for YYYY-MM-DD format
+                date_match = re.search(r'(\d{4}-\d{2}-\d{2})', str(date_range))
+                if date_match:
+                    base_date = date_match.group(1)
                 else:
-                    base_date = "2025-04-10"  # default to April data
+                    # Try other formats like MM/DD/YYYY or DD/MM/YYYY
+                    date_match = re.search(r'(\d{1,2})[/-](\d{1,2})[/-](\d{4})', str(date_range))
+                    if date_match:
+                        month, day, year = date_match.groups()
+                        base_date = f"{year}-{month.zfill(2)}-{day.zfill(2)}"
+                    else:
+                        # Fallback - try to parse the entire date_range
+                        try:
+                            parsed_date = pd.to_datetime(str(date_range)).strftime('%Y-%m-%d')
+                            base_date = parsed_date
+                        except:
+                            base_date = "2025-04-10"  # ultimate fallback
+
                 df[time_col] = pd.to_datetime(base_date + " " + df[time_col].astype(str), errors="coerce")
             else:
                 # Full datetime already present
