@@ -1177,9 +1177,19 @@ if show_cycle_length:
         # ADD THIS NEW CODE HERE - RIGHT AFTER THE st.info LINE
         # Create and display table for "Both" direction
         if time_col:
-            # Show table with NB, SB, and Combined columns
+            # Create a copy and extract hour from time column
             table_df = df[[time_col, nb_col, sb_col, 'Combined']].copy()
-            table_df.columns = ['Time', 'NB', 'SB', 'Combined']
+
+            # Convert time column to hour format (e.g., "14:00" for 2 PM)
+            if pd.api.types.is_datetime64_any_dtype(df[time_col]):
+                table_df['Hour'] = df[time_col].dt.strftime('%H:%00')
+            else:
+                # If it's not datetime, try to extract hour
+                table_df['Hour'] = df[time_col].astype(str)
+
+            # Reorder columns and rename
+            table_df = table_df[['Hour', nb_col, sb_col, 'Combined']]
+            table_df.columns = ['Hour', 'NB', 'SB', 'Combined']
 
             # Format the table nicely
             st.subheader("📊 Volume Data Table")
