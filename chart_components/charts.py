@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from datetime import timedelta
+from datetime import timedelta, time  # Add 'time' import
 import numpy as np
 
 
@@ -80,8 +80,8 @@ def create_enhanced_line_chart(df, x_col, y_col, chart_title, color_name="blue")
 
         while current_date <= end_date:
             for period in time_periods:
-                period_start = pd.Timestamp.combine(current_date, pd.Timestamp(f"{period['start']:02d}:00:00").time())
-                period_end = pd.Timestamp.combine(current_date, pd.Time(period["end"], 0))
+                period_start = pd.Timestamp.combine(current_date, time(period["start"], 0))
+                period_end = pd.Timestamp.combine(current_date, time(period["end"], 0))
 
                 # Only add shading if the period overlaps with our data range
                 if period_start <= end_datetime and period_end >= start_datetime:
@@ -246,8 +246,8 @@ def create_enhanced_multi_line_chart(df, x_col, y_cols, chart_title):
 
         while current_date <= end_date:
             for period in time_periods:
-                period_start = pd.Timestamp.combine(current_date, pd.Time(period["start"], 0))
-                period_end = pd.Timestamp.combine(current_date, pd.Time(period["end"], 0))
+                period_start = pd.Timestamp.combine(current_date, time(period["start"], 0))
+                period_end = pd.Timestamp.combine(current_date, time(period["end"], 0))
 
                 # Only add shading if the period overlaps with our data range
                 if period_start <= end_datetime and period_end >= start_datetime:
