@@ -332,6 +332,11 @@ def create_box_plot(df, x_col, y_col, chart_title):
 
 def create_heatmap(df, x_col, y_col, values_col, chart_title):
     """Create a heatmap with customizations"""
+    # If y_col is 'day' and there's a date column, format it better
+    if y_col == 'day' and 'date' in df.columns:
+        df = df.copy()
+        df[y_col] = pd.to_datetime(df['date']).dt.strftime('%a %m/%d')
+
     pivot_table = df.pivot_table(values=values_col, index=y_col, columns=x_col, aggfunc='mean')
 
     fig = px.imshow(pivot_table,
