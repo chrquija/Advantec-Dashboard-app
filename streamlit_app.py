@@ -911,6 +911,11 @@ try:
                         pivot_nb = df_nb.pivot_table(values="Northbound", index='day', columns='hour')
                         fig_nb = px.imshow(pivot_nb, aspect='auto', title="Northbound Pattern")
                         fig_nb.update_layout(coloraxis_colorbar_title="Vehicle Volume")
+
+                        # EDIT X-AXIS AND Y-AXIS TITLES - BEFORE displaying chart
+                        fig_nb.update_xaxes(title="Time (24-Hour)")
+                        fig_nb.update_yaxes(title="Date")
+
                         st.plotly_chart(fig_nb, use_container_width=True)
 
                     with col2:
@@ -922,6 +927,11 @@ try:
                         pivot_sb = df_sb.pivot_table(values="Southbound", index='day', columns='hour')
                         fig_sb = px.imshow(pivot_sb, aspect='auto', title="Southbound Pattern")
                         fig_sb.update_layout(coloraxis_colorbar_title="Vehicle Volume")
+
+                        # EDIT X-AXIS AND Y-AXIS TITLES - BEFORE displaying chart
+                        fig_sb.update_xaxes(title="Time (24-Hour)")
+                        fig_sb.update_yaxes(title="Date")
+
                         st.plotly_chart(fig_sb, use_container_width=True)
 
         else:
@@ -1108,6 +1118,11 @@ try:
                     pivot_table = pivot_table.reindex(sorted(pivot_table.index, key=lambda x: pd.to_datetime(x, format='%a %m/%d')))
                     fig = px.imshow(pivot_table, aspect='auto', title=f"{clean_title} - Hourly Pattern")
                     fig.update_layout(coloraxis_colorbar_title="Vehicle Volume")
+
+                    # Add axis titles BEFORE displaying chart
+                    fig.update_xaxes(title="Time (24-Hour)")
+                    fig.update_yaxes(title="Date")
+
                     st.plotly_chart(fig, use_container_width=True)
             else:
                 st.error(f"Could not find {direction} column in volume data")
@@ -1147,6 +1162,11 @@ try:
                 fig = px.imshow(pivot_table, aspect='auto', title=f"{clean_title} - Hourly Pattern")
                 unit = "mph" if variable == "Speed" else "min"
                 fig.update_layout(coloraxis_colorbar_title=f"{variable} ({unit})")
+
+                # Add axis titles BEFORE displaying chart
+                fig.update_xaxes(title="Time (24-Hour)")
+                fig.update_yaxes(title="Date")
+
                 st.plotly_chart(fig, use_container_width=True)
 
 
