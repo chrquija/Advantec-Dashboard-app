@@ -1188,19 +1188,6 @@ if show_cycle_length:
                 use_container_width=True,
                 hide_index=True
             )
-
-            # Optional: Show summary stats
-            st.subheader("📈 Summary Statistics")
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                st.metric("NB Average", f"{df[nb_col].mean():.1f}")
-                st.metric("NB Total", f"{df[nb_col].sum():.0f}")
-            with col2:
-                st.metric("SB Average", f"{df[sb_col].mean():.1f}")
-                st.metric("SB Total", f"{df[sb_col].sum():.0f}")
-            with col3:
-                st.metric("Combined Average", f"{df['Combined'].mean():.1f}")
-                st.metric("Combined Total", f"{df['Combined'].sum():.0f}")
         # END OF NEW CODE
 
     else:
