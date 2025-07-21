@@ -1122,7 +1122,7 @@ if show_cycle_length:
         st.stop()
 
     # --- 2. Find volume column(s) based on direction ---
-    if direction == "Northbound":
+    if direction == "NB":
         vol_col = find_column(df, ['northbound', 'NB', 'north'])
         if not vol_col:
             # Try fuzzy match: search for any column containing 'north'
@@ -1136,7 +1136,7 @@ if show_cycle_length:
             st.stop()
         st.info(f"Using Northbound column: {vol_col}")
 
-    elif direction == "Southbound":
+    elif direction == "SB":
         vol_col = find_column(df, ['southbound', 'SB', 'south'])
         if not vol_col:
             for col in df.columns:
