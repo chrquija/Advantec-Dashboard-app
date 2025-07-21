@@ -27,7 +27,7 @@ def format_value_with_units(value, variable):
 
 
 def create_enhanced_line_chart(df, x_col, y_col, chart_title, color_name="blue"):
-    """Create an enhanced line chart with day shading and peak/low annotations"""
+    """Create an enhanced line chart with day shading, time period shading, and peak/low annotations"""
 
     # Create the base figure using Graph Objects for more control
     fig = go.Figure()
@@ -55,12 +55,59 @@ def create_enhanced_line_chart(df, x_col, y_col, chart_title, color_name="blue")
                 fig.add_vrect(
                     x0=current_date,
                     x1=current_date + timedelta(days=1),
-                    fillcolor="lightgray",
-                    opacity=0.1,
+                    fillcolor="gray",
+                    opacity=0.08,
                     layer="below",
                     line_width=0,
                 )
             shade_toggle = not shade_toggle
+            current_date += timedelta(days=1)
+
+        # Add time period shading for single days worth of data
+        start_datetime = df[x_col].min()
+        end_datetime = df[x_col].max()
+
+        # Define time periods: AM (5:00-10:00), MD (11:00-15:00), PM (16:00-20:00)
+        time_periods = [
+            {"name": "AM", "start": 5, "end": 10, "color": "orange", "opacity": 0.12},
+            {"name": "MD", "start": 11, "end": 15, "color": "green", "opacity": 0.08},
+            {"name": "PM", "start": 16, "end": 20, "color": "red", "opacity": 0.12}
+        ]
+
+        # Iterate through each day in the date range
+        current_date = start_datetime.date()
+        end_date = end_datetime.date()
+
+        while current_date <= end_date:
+            for period in time_periods:
+                period_start = pd.Timestamp.combine(current_date, pd.Time(period["start"], 0))
+                period_end = pd.Timestamp.combine(current_date, pd.Time(period["end"], 0))
+
+                # Only add shading if the period overlaps with our data range
+                if period_start <= end_datetime and period_end >= start_datetime:
+                    fig.add_vrect(
+                        x0=max(period_start, start_datetime),
+                        x1=min(period_end, end_datetime),
+                        fillcolor=period["color"],
+                        opacity=period["opacity"],
+                        layer="below",
+                        line_width=0,
+                    )
+
+                    # Add period label only on the first day
+                    if current_date == start_datetime.date():
+                        midpoint = period_start + (period_end - period_start) / 2
+                        fig.add_annotation(
+                            x=midpoint,
+                            y=df[y_col].max() * 0.95,
+                            text=period["name"],
+                            showarrow=False,
+                            font=dict(size=10, color=period["color"]),
+                            bgcolor="rgba(255,255,255,0.8)",
+                            bordercolor=period["color"],
+                            borderwidth=1,
+                        )
+
             current_date += timedelta(days=1)
 
     # Find top 5 highest and lowest points
@@ -68,7 +115,7 @@ def create_enhanced_line_chart(df, x_col, y_col, chart_title, color_name="blue")
         highest_indices = df[y_col].nlargest(5).index
         lowest_indices = df[y_col].nsmallest(5).index
 
-        # Add annotations for highest points (orange with up arrow)
+        # Add annotations for highest points with improved contrast
         for i, idx in enumerate(highest_indices):
             fig.add_annotation(
                 x=df.loc[idx, x_col],
@@ -81,14 +128,14 @@ def create_enhanced_line_chart(df, x_col, y_col, chart_title, color_name="blue")
                 arrowcolor="orange",
                 ax=0,
                 ay=-35 - (i * 12),
-                bgcolor="rgba(0,0,0,0.9)",
+                bgcolor="rgba(255,255,255,0.95)",
                 bordercolor="orange",
-                borderwidth=3,
-                font=dict(color="orange", size=14),
+                borderwidth=2,
+                font=dict(color="darkorange", size=12, family="Arial Black"),
                 opacity=0.95
             )
 
-        # Add annotations for lowest points (pink with down arrow)
+        # Add annotations for lowest points with improved contrast
         for i, idx in enumerate(lowest_indices):
             fig.add_annotation(
                 x=df.loc[idx, x_col],
@@ -101,14 +148,14 @@ def create_enhanced_line_chart(df, x_col, y_col, chart_title, color_name="blue")
                 arrowcolor="hotpink",
                 ax=0,
                 ay=35 + (i * 12),
-                bgcolor="rgba(0,0,0,0.9)",
+                bgcolor="rgba(255,255,255,0.95)",
                 bordercolor="hotpink",
-                borderwidth=3,
-                font=dict(color="hotpink", size=14),
+                borderwidth=2,
+                font=dict(color="mediumvioletred", size=12, family="Arial Black"),
                 opacity=0.95
             )
 
-    # Update layout with prominent title
+    # Update layout - removed hardcoded colors for theme responsiveness
     fig.update_layout(
         title=dict(
             text=chart_title,
@@ -116,34 +163,29 @@ def create_enhanced_line_chart(df, x_col, y_col, chart_title, color_name="blue")
             y=0.95,
             xanchor='center',
             yanchor='top',
-            font=dict(size=18, color="darkblue", family="Arial Black")
+            font=dict(size=18, family="Arial Black")
         ),
         xaxis_title="Time",
         yaxis_title="Vehicle Volume" if "Vehicle Volume" in chart_title else y_col,
         hovermode='x unified',
         showlegend=True,
-        plot_bgcolor='white',
         margin=dict(t=80, b=50, l=50, r=50),
         height=500
     )
 
-    # Update axes
+    # Update axes - removed hardcoded colors for theme responsiveness
     fig.update_xaxes(
         showgrid=True,
         gridwidth=1,
-        gridcolor="lightgray",
         showline=True,
         linewidth=1,
-        linecolor="black"
     )
 
     fig.update_yaxes(
         showgrid=True,
         gridwidth=1,
-        gridcolor="lightgray",
         showline=True,
         linewidth=1,
-        linecolor="black"
     )
 
     return fig
@@ -179,21 +221,70 @@ def create_enhanced_multi_line_chart(df, x_col, y_cols, chart_title):
                 fig.add_vrect(
                     x0=current_date,
                     x1=current_date + timedelta(days=1),
-                    fillcolor="lightgray",
-                    opacity=0.1,
+                    fillcolor="gray",
+                    opacity=0.08,
                     layer="below",
                     line_width=0,
                 )
             shade_toggle = not shade_toggle
             current_date += timedelta(days=1)
 
-    # Add annotations for each line's peaks and lows
+        # Add time period shading for single days worth of data
+        start_datetime = df[x_col].min()
+        end_datetime = df[x_col].max()
+
+        # Define time periods: AM (5:00-10:00), MD (11:00-15:00), PM (16:00-20:00)
+        time_periods = [
+            {"name": "AM", "start": 5, "end": 10, "color": "orange", "opacity": 0.12},
+            {"name": "MD", "start": 11, "end": 15, "color": "green", "opacity": 0.08},
+            {"name": "PM", "start": 16, "end": 20, "color": "red", "opacity": 0.12}
+        ]
+
+        # Iterate through each day in the date range
+        current_date = start_datetime.date()
+        end_date = end_datetime.date()
+
+        while current_date <= end_date:
+            for period in time_periods:
+                period_start = pd.Timestamp.combine(current_date, pd.Time(period["start"], 0))
+                period_end = pd.Timestamp.combine(current_date, pd.Time(period["end"], 0))
+
+                # Only add shading if the period overlaps with our data range
+                if period_start <= end_datetime and period_end >= start_datetime:
+                    fig.add_vrect(
+                        x0=max(period_start, start_datetime),
+                        x1=min(period_end, end_datetime),
+                        fillcolor=period["color"],
+                        opacity=period["opacity"],
+                        layer="below",
+                        line_width=0,
+                    )
+
+                    # Add period label only on the first day
+                    if current_date == start_datetime.date():
+                        # Get max value from both columns for positioning
+                        max_y = max(df[y_cols[0]].max(), df[y_cols[1]].max())
+                        midpoint = period_start + (period_end - period_start) / 2
+                        fig.add_annotation(
+                            x=midpoint,
+                            y=max_y * 0.95,
+                            text=period["name"],
+                            showarrow=False,
+                            font=dict(size=10, color=period["color"]),
+                            bgcolor="rgba(255,255,255,0.8)",
+                            bordercolor=period["color"],
+                            borderwidth=1,
+                        )
+
+            current_date += timedelta(days=1)
+
+    # Add annotations for each line's peaks and lows with improved contrast
     for i, col in enumerate(y_cols):
         if len(df) >= 3:
             highest_indices = df[col].nlargest(3).index
             lowest_indices = df[col].nsmallest(3).index
 
-            # Peaks
+            # Peaks with improved contrast
             for j, idx in enumerate(highest_indices):
                 fig.add_annotation(
                     x=df.loc[idx, x_col],
@@ -206,14 +297,14 @@ def create_enhanced_multi_line_chart(df, x_col, y_cols, chart_title):
                     arrowcolor=colors[i],
                     ax=0,
                     ay=-30 - (j * 10),
-                    bgcolor="rgba(255,255,255,0.9)",
+                    bgcolor="rgba(255,255,255,0.95)",
                     bordercolor=colors[i],
                     borderwidth=2,
-                    font=dict(color="black", size=12),
-                    opacity=0.9
+                    font=dict(color=colors[i], size=11, family="Arial Black"),
+                    opacity=0.95
                 )
 
-            # Lows
+            # Lows with improved contrast
             for j, idx in enumerate(lowest_indices):
                 fig.add_annotation(
                     x=df.loc[idx, x_col],
@@ -226,14 +317,14 @@ def create_enhanced_multi_line_chart(df, x_col, y_cols, chart_title):
                     arrowcolor=colors[i],
                     ax=0,
                     ay=30 + (j * 10),
-                    bgcolor="rgba(255,255,255,0.9)",
+                    bgcolor="rgba(255,255,255,0.95)",
                     bordercolor=colors[i],
                     borderwidth=2,
-                    font=dict(color="black", size=12),
-                    opacity=0.9
+                    font=dict(color=colors[i], size=11, family="Arial Black"),
+                    opacity=0.95
                 )
 
-    # Update layout
+    # Update layout - removed hardcoded colors for theme responsiveness
     fig.update_layout(
         title=dict(
             text=chart_title,
@@ -241,19 +332,19 @@ def create_enhanced_multi_line_chart(df, x_col, y_cols, chart_title):
             y=0.95,
             xanchor='center',
             yanchor='top',
-            font=dict(size=18, color="darkblue", family="Arial Black")
+            font=dict(size=18, family="Arial Black")
         ),
         xaxis_title="Time",
         yaxis_title="Vehicle Volume" if "Vehicle Volume" in chart_title else "Value",
         hovermode='x unified',
         showlegend=True,
-        plot_bgcolor='white',
         margin=dict(t=80, b=50, l=50, r=50),
         height=500
     )
 
-    fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor="lightgray")
-    fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor="lightgray")
+    # Update axes - removed hardcoded colors for theme responsiveness
+    fig.update_xaxes(showgrid=True, gridwidth=1)
+    fig.update_yaxes(showgrid=True, gridwidth=1)
 
     # Store chart in session state
     st.session_state['current_chart'] = fig
