@@ -1331,19 +1331,19 @@ if show_cycle_length:
         col1, col2, col3, col4 = st.columns(4)
         with col1:
             st.markdown(
-                '<span style="color: #51CF66; font-weight: bold;">✅ OPTIMAL</span> - No changes needed',
+                '<span style="color: #51CF66; font-weight: bold;">✅ OPTIMAL</span> - No Changes To Cycle Length Needed',
                 unsafe_allow_html=True)
         with col2:
             st.markdown(
-                '<span style="color: #FF6B6B; font-weight: bold;">⬇️ REDUCE</span> - Lower cycle length',
+                '<span style="color: #FF6B6B; font-weight: bold;">⬇️ REDUCE</span> - Lower Cycle Length Needed',
                 unsafe_allow_html=True)
         with col3:
             st.markdown(
-                '<span style="color: #4ECDC4; font-weight: bold;">⬆️ INCREASE</span> - Higher cycle length',
+                '<span style="color: #4ECDC4; font-weight: bold;">⬆️ INCREASE</span> - Higher Cycle Length Needed',
                 unsafe_allow_html=True)
         with col4:
             st.markdown(
-                '<span style="color: #FFE66D; font-weight: bold;">⚠️ ADJUST</span> - Fine-tune cycle length',
+                '<span style="color: #FFE66D; font-weight: bold;">⚠️ ADJUST</span> - Cycle Length Needs Reevalation',
                 unsafe_allow_html=True)
 
         # --- Analysis period info ---
