@@ -1172,6 +1172,37 @@ if show_cycle_length:
             df['Combined'] = df[nb_col] + df[sb_col]
         vol_col = 'Combined'
         st.info(f"Using columns: NB={nb_col}, SB={sb_col} (summed as Combined)")
+        st.info(f"Using columns: NB={nb_col}, SB={sb_col} (summed as Combined)")
+
+        # ADD THIS NEW CODE HERE - RIGHT AFTER THE st.info LINE
+        # Create and display table for "Both" direction
+        if time_col:
+            # Show table with NB, SB, and Combined columns
+            table_df = df[[time_col, nb_col, sb_col, 'Combined']].copy()
+            table_df.columns = ['Time', 'NB', 'SB', 'Combined']
+
+            # Format the table nicely
+            st.subheader("📊 Volume Data Table")
+            st.dataframe(
+                table_df,
+                use_container_width=True,
+                hide_index=True
+            )
+
+            # Optional: Show summary stats
+            st.subheader("📈 Summary Statistics")
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("NB Average", f"{df[nb_col].mean():.1f}")
+                st.metric("NB Total", f"{df[nb_col].sum():.0f}")
+            with col2:
+                st.metric("SB Average", f"{df[sb_col].mean():.1f}")
+                st.metric("SB Total", f"{df[sb_col].sum():.0f}")
+            with col3:
+                st.metric("Combined Average", f"{df['Combined'].mean():.1f}")
+                st.metric("Combined Total", f"{df['Combined'].sum():.0f}")
+        # END OF NEW CODE
+
     else:
         st.error("❌ Invalid direction selection.")
         st.stop()
