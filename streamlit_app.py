@@ -871,8 +871,6 @@ try:
                         df_nb = df_nb.sort_values(time_col)
                         df_nb['day'] = df_nb[time_col].dt.strftime('%a %m/%d')
                         pivot_nb = df_nb.pivot_table(values="Northbound", index='day', columns='hour')
-                        pivot_nb = pivot_nb.reindex(
-                            sorted(pivot_nb.index, key=lambda x: pd.to_datetime(x, format='%a %m/%d')))
                         fig_nb = px.imshow(pivot_nb, aspect='auto', title="Northbound Pattern")
                         fig_nb.update_layout(coloraxis_colorbar_title="Volume (vph)")
                         st.plotly_chart(fig_nb, use_container_width=True)
@@ -884,208 +882,197 @@ try:
                         df_sb = df_sb.sort_values(time_col)
                         df_sb['day'] = df_sb[time_col].dt.strftime('%a %m/%d')
                         pivot_sb = df_sb.pivot_table(values="Southbound", index='day', columns='hour')
-                        pivot_sb = pivot_sb.reindex(
-                            sorted(pivot_sb.index, key=lambda x: pd.to_datetime(x, format='%a %m/%d')))
                         fig_sb = px.imshow(pivot_sb, aspect='auto', title="Southbound Pattern")
                         fig_sb.update_layout(coloraxis_colorbar_title="Volume (vph)")
                         st.plotly_chart(fig_sb, use_container_width=True)
 
-                    else:
-                    # FLIR ACYCLICA: Load both NB and SB files separately
-                    path_nb = path_map.get((variable, "NB", date_range))
-                    path_sb = path_map.get((variable, "SB", date_range))
+        else:
+            # FLIR ACYCLICA: Load both NB and SB files separately
+            path_nb = path_map.get((variable, "NB", date_range))
+            path_sb = path_map.get((variable, "SB", date_range))
 
-                    if not path_nb or not path_sb:
-                        raise FileNotFoundError("One or both directional files not found.")
+            if not path_nb or not path_sb:
+                raise FileNotFoundError("One or both directional files not found.")
 
-                    df_nb = pd.read_csv(path_nb)
-                    df_sb = pd.read_csv(path_sb)
+            df_nb = pd.read_csv(path_nb)
+            df_sb = pd.read_csv(path_sb)
 
-                    time_col = "Time"
-                    df_nb[time_col] = pd.to_datetime(df_nb[time_col], errors="coerce")
-                    df_sb[time_col] = pd.to_datetime(df_sb[time_col], errors="coerce")
+            time_col = "Time"
+            df_nb[time_col] = pd.to_datetime(df_nb[time_col], errors="coerce")
+            df_sb[time_col] = pd.to_datetime(df_sb[time_col], errors="coerce")
 
-                    df_nb.dropna(subset=[time_col], inplace=True)
-                    df_sb.dropna(subset=[time_col], inplace=True)
+            df_nb.dropna(subset=[time_col], inplace=True)
+            df_sb.dropna(subset=[time_col], inplace=True)
 
-                    df_nb.set_index(time_col, inplace=True)
-                    df_sb.set_index(time_col, inplace=True)
+            df_nb.set_index(time_col, inplace=True)
+            df_sb.set_index(time_col, inplace=True)
 
-                    # Use "Strength" column for Speed and Travel Time (instead of "Firsts")
-                    y_col = "Strength"
-                    df_nb[y_col] = pd.to_numeric(df_nb[y_col], errors='coerce')
-                    df_sb[y_col] = pd.to_numeric(df_sb[y_col], errors='coerce')
+            # Use "Strength" column for Speed and Travel Time (instead of "Firsts")
+            y_col = "Strength"
+            df_nb[y_col] = pd.to_numeric(df_nb[y_col], errors='coerce')
+            df_sb[y_col] = pd.to_numeric(df_sb[y_col], errors='coerce')
 
-                    df_nb = df_nb.rename(columns={y_col: "Northbound"})
-                    df_sb = df_sb.rename(columns={y_col: "Southbound"})
+            df_nb = df_nb.rename(columns={y_col: "Northbound"})
+            df_sb = df_sb.rename(columns={y_col: "Southbound"})
 
-                    combined = pd.concat([df_nb["Northbound"], df_sb["Southbound"]], axis=1)
-                    combined.dropna(inplace=True)
-                    combined.reset_index(inplace=True)
+            combined = pd.concat([df_nb["Northbound"], df_sb["Southbound"]], axis=1)
+            combined.dropna(inplace=True)
+            combined.reset_index(inplace=True)
 
-                    # Use clean titles for charts
-                    clean_title = get_base_title(variable, direction)
+            # Use clean titles for charts
+            clean_title = get_base_title(variable, direction)
 
-                    # Create charts based on chart type
-                    if chart_type == "Line":
-                        fig = create_enhanced_multi_line_chart(combined, time_col, ["Northbound", "Southbound"],
-                                                               clean_title)
-                        st.plotly_chart(fig, use_container_width=True)
-                    elif chart_type == "Bar":
-                        fig = px.bar(combined, x=time_col, y=["Northbound", "Southbound"],
-                                     title=clean_title, barmode='group')
-                        unit = "mph" if variable == "Speed" else "min"
-                        fig.update_layout(yaxis_title=f"{variable} ({unit})")
-                        st.plotly_chart(fig, use_container_width=True)
-                    elif chart_type == "Scatter":
-                        fig = px.scatter(combined, x=time_col, y=["Northbound", "Southbound"],
-                                         title=clean_title)
-                        unit = "mph" if variable == "Speed" else "min"
-                        fig.update_layout(yaxis_title=f"{variable} ({unit})")
-                        st.plotly_chart(fig, use_container_width=True)
-                    elif chart_type == "Box":
-                        # Melt the dataframe for box plot
-                        melted = combined.melt(id_vars=[time_col], value_vars=["Northbound", "Southbound"],
-                                               var_name="Direction", value_name="Value")
-                        fig = px.box(melted, x="Direction", y="Value",
-                                     title=f"{clean_title} - Distribution Analysis")
-                        unit = "mph" if variable == "Speed" else "min"
-                        fig.update_layout(yaxis_title=f"{variable} ({unit})")
-                        st.plotly_chart(fig, use_container_width=True)
-                    elif chart_type == "Heatmap":
-                        # Create side-by-side heatmaps
-                        st.subheader(f"📊 {variable} Pattern Analysis")
-                        col1, col2 = st.columns(2)
+            # Create charts based on chart type
+            if chart_type == "Line":
+                fig = create_enhanced_multi_line_chart(combined, time_col, ["Northbound", "Southbound"], clean_title)
+                st.plotly_chart(fig, use_container_width=True)
+            elif chart_type == "Bar":
+                fig = px.bar(combined, x=time_col, y=["Northbound", "Southbound"],
+                             title=clean_title, barmode='group')
+                unit = "mph" if variable == "Speed" else "min"
+                fig.update_layout(yaxis_title=f"{variable} ({unit})")
+                st.plotly_chart(fig, use_container_width=True)
+            elif chart_type == "Scatter":
+                fig = px.scatter(combined, x=time_col, y=["Northbound", "Southbound"],
+                                 title=clean_title)
+                unit = "mph" if variable == "Speed" else "min"
+                fig.update_layout(yaxis_title=f"{variable} ({unit})")
+                st.plotly_chart(fig, use_container_width=True)
+            elif chart_type == "Box":
+                # Melt the dataframe for box plot
+                melted = combined.melt(id_vars=[time_col], value_vars=["Northbound", "Southbound"],
+                                       var_name="Direction", value_name="Value")
+                fig = px.box(melted, x="Direction", y="Value",
+                             title=f"{clean_title} - Distribution Analysis")
+                unit = "mph" if variable == "Speed" else "min"
+                fig.update_layout(yaxis_title=f"{variable} ({unit})")
+                st.plotly_chart(fig, use_container_width=True)
+            elif chart_type == "Heatmap":
+                # Create side-by-side heatmaps
+                st.subheader(f"📊 {variable} Pattern Analysis")
+                col1, col2 = st.columns(2)
 
-                        with col1:
-                            st.markdown("**🔵 Northbound**")
-                            df_nb_heat = combined[[time_col, "Northbound"]].copy()
-                            df_nb_heat['hour'] = df_nb_heat[time_col].dt.hour
-                            df_nb_heat = df_nb_heat.sort_values(time_col)
-                            df_nb_heat['day'] = df_nb_heat[time_col].dt.strftime('%a %m/%d')
-                            pivot_nb = df_nb_heat.pivot_table(values="Northbound", index='day', columns='hour')
-                            pivot_nb = pivot_nb.reindex(
-                                sorted(pivot_nb.index, key=lambda x: pd.to_datetime(x, format='%a %m/%d')))
-                            fig_nb = px.imshow(pivot_nb, aspect='auto', title="Northbound Pattern")
-                            unit = "mph" if variable == "Speed" else "min"
-                            fig_nb.update_layout(coloraxis_colorbar_title=f"{variable} ({unit})")
-                            st.plotly_chart(fig_nb, use_container_width=True)
+                with col1:
+                    st.markdown("**🔵 Northbound**")
+                    df_nb_heat = combined[[time_col, "Northbound"]].copy()
+                    df_nb_heat['hour'] = df_nb_heat[time_col].dt.hour
+                    df_nb_heat = df_nb_heat.sort_values(time_col)
+                    df_nb_heat['day'] = df_nb_heat[time_col].dt.strftime('%a %m/%d')
+                    pivot_nb = df_nb_heat.pivot_table(values="Northbound", index='day', columns='hour')
+                    fig_nb = px.imshow(pivot_nb, aspect='auto', title="Northbound Pattern")
+                    unit = "mph" if variable == "Speed" else "min"
+                    fig_nb.update_layout(coloraxis_colorbar_title=f"{variable} ({unit})")
+                    st.plotly_chart(fig_nb, use_container_width=True)
 
-                        with col2:
-                            st.markdown("**🔴 Southbound**")
-                            df_sb_heat = combined[[time_col, "Southbound"]].copy()
-                            df_sb_heat['hour'] = df_sb_heat[time_col].dt.hour
-                            df_sb_heat = df_sb_heat.sort_values(time_col)
-                            df_sb_heat['day'] = df_sb_heat[time_col].dt.strftime('%a %m/%d')
-                            pivot_sb = df_sb_heat.pivot_table(values="Southbound", index='day', columns='hour')
-                            pivot_sb = pivot_sb.reindex(
-                                sorted(pivot_sb.index, key=lambda x: pd.to_datetime(x, format='%a %m/%d')))
-                            fig_sb = px.imshow(pivot_sb, aspect='auto', title="Southbound Pattern")
-                            unit = "mph" if variable == "Speed" else "min"
-                            fig_sb.update_layout(coloraxis_colorbar_title=f"{variable} ({unit})")
-                            st.plotly_chart(fig_sb, use_container_width=True)
+                with col2:
+                    st.markdown("**🔴 Southbound**")
+                    df_sb_heat = combined[[time_col, "Southbound"]].copy()
+                    df_sb_heat['hour'] = df_sb_heat[time_col].dt.hour
+                    df_sb_heat = df_sb_heat.sort_values(time_col)
+                    df_sb_heat['day'] = df_sb_heat[time_col].dt.strftime('%a %m/%d')
+                    pivot_sb = df_sb_heat.pivot_table(values="Southbound", index='day', columns='hour')
+                    fig_sb = px.imshow(pivot_sb, aspect='auto', title="Southbound Pattern")
+                    unit = "mph" if variable == "Speed" else "min"
+                    fig_sb.update_layout(coloraxis_colorbar_title=f"{variable} ({unit})")
+                    st.plotly_chart(fig_sb, use_container_width=True)
 
 
-                else:
-                    # SINGLE DIRECTION LOGIC
-                    df = pd.read_csv(selected_path)
+    else:
+        # SINGLE DIRECTION LOGIC
+        df = pd.read_csv(selected_path)
 
-                    # Check if Time column exists, if not find it
-                    if "Time" not in df.columns:
-                        time_col = find_column(df, ["time", "timestamp", "date"])
-                        if not time_col:
-                            raise ValueError("No time column found in the dataset")
-                    else:
-                        time_col = "Time"
+        # Check if Time column exists, if not find it
+        if "Time" not in df.columns:
+            time_col = find_column(df, ["time", "timestamp", "date"])
+            if not time_col:
+                raise ValueError("No time column found in the dataset")
+        else:
+            time_col = "Time"
 
-                    df[time_col] = pd.to_datetime(df[time_col], errors="coerce")
-                    df.dropna(subset=[time_col], inplace=True)
-                    df.set_index(time_col, inplace=True)
+        df[time_col] = pd.to_datetime(df[time_col], errors="coerce")
+        df.dropna(subset=[time_col], inplace=True)
+        df.set_index(time_col, inplace=True)
 
-                    # Clean title for single direction
-                    clean_title = get_base_title(variable, direction)
+        # Clean title for single direction
+        clean_title = get_base_title(variable, direction)
 
-                    # Determine column and chart rendering based on data source
-                    if variable == "Vehicle Volume":
-                        # KINETIC MOBILITY: Find the appropriate column - UPDATED LOGIC
-                        if direction == "NB":
-                            y_col = find_column(df, ["northbound", "nb"])
-                        else:  # SB
-                            y_col = find_column(df, ["southbound", "sb"])
+        # Determine column and chart rendering based on data source
+        if variable == "Vehicle Volume":
+            # KINETIC MOBILITY: Find the appropriate column - UPDATED LOGIC
+            if direction == "NB":
+                y_col = find_column(df, ["northbound", "nb"])
+            else:  # SB
+                y_col = find_column(df, ["southbound", "sb"])
 
-                        if y_col:
-                            df[y_col] = pd.to_numeric(df[y_col], errors='coerce')
-                            df.dropna(subset=[y_col], inplace=True)
-                            df.reset_index(inplace=True)
+            if y_col:
+                df[y_col] = pd.to_numeric(df[y_col], errors='coerce')
+                df.dropna(subset=[y_col], inplace=True)
+                df.reset_index(inplace=True)
 
-                            # Create charts based on chart type
-                            if chart_type == "Line":
-                                fig = create_enhanced_line_chart(df, time_col, y_col, clean_title)
-                                st.plotly_chart(fig, use_container_width=True)
-                            elif chart_type == "Bar":
-                                fig = px.bar(df, x=time_col, y=y_col, title=clean_title)
-                                fig.update_layout(yaxis_title="Vehicle Volume (vph)")
-                                st.plotly_chart(fig, use_container_width=True)
-                            elif chart_type == "Scatter":
-                                fig = px.scatter(df, x=time_col, y=y_col, title=clean_title)
-                                fig.update_layout(yaxis_title="Vehicle Volume (vph)")
-                                st.plotly_chart(fig, use_container_width=True)
-                            elif chart_type == "Box":
-                                fig = px.box(df, y=y_col, title=f"{clean_title} - Distribution Analysis")
-                                fig.update_layout(yaxis_title="Vehicle Volume (vph)")
-                                st.plotly_chart(fig, use_container_width=True)
-                            elif chart_type == "Heatmap":
-                                df_heat = df.copy()
-                                df_heat['hour'] = df_heat[time_col].dt.hour
-                                df_heat = df_heat.sort_values(time_col)
-                                df_heat['day'] = df_heat[time_col].dt.strftime('%a %m/%d')
-                                pivot_table = df_heat.pivot_table(values=y_col, index='day', columns='hour')
-                                pivot_table = pivot_table.reindex(
-                                    sorted(pivot_table.index, key=lambda x: pd.to_datetime(x, format='%a %m/%d')))
-                                fig = px.imshow(pivot_table, aspect='auto', title=f"{clean_title} - Hourly Pattern")
-                                fig.update_layout(coloraxis_colorbar_title="Volume (vph)")
-                                st.plotly_chart(fig, use_container_width=True)
-                        else:
-                            st.error(f"Could not find {direction} column in volume data")
-                            st.write("Available columns:", list(df.columns))
-                    else:
-                        # FLIR ACYCLICA: Use "Strength" column
-                        y_col = "Strength"
-                        df[y_col] = pd.to_numeric(df[y_col], errors='coerce')
-                        df.dropna(subset=[y_col], inplace=True)
-                        df.reset_index(inplace=True)
+                # Create charts based on chart type
+                if chart_type == "Line":
+                    fig = create_enhanced_line_chart(df, time_col, y_col, clean_title)
+                    st.plotly_chart(fig, use_container_width=True)
+                elif chart_type == "Bar":
+                    fig = px.bar(df, x=time_col, y=y_col, title=clean_title)
+                    fig.update_layout(yaxis_title="Vehicle Volume (vph)")
+                    st.plotly_chart(fig, use_container_width=True)
+                elif chart_type == "Scatter":
+                    fig = px.scatter(df, x=time_col, y=y_col, title=clean_title)
+                    fig.update_layout(yaxis_title="Vehicle Volume (vph)")
+                    st.plotly_chart(fig, use_container_width=True)
+                elif chart_type == "Box":
+                    fig = px.box(df, y=y_col, title=f"{clean_title} - Distribution Analysis")
+                    fig.update_layout(yaxis_title="Vehicle Volume (vph)")
+                    st.plotly_chart(fig, use_container_width=True)
+                elif chart_type == "Heatmap":
+                    df_heat = df.copy()
+                    df_heat['hour'] = df_heat[time_col].dt.hour
+                    df_heat = df_heat.sort_values(time_col)
+                    df_heat['day'] = df_heat[time_col].dt.strftime('%a %m/%d')
+                    pivot_table = df_heat.pivot_table(values=y_col, index='day', columns='hour')
+                    fig = px.imshow(pivot_table, aspect='auto', title=f"{clean_title} - Hourly Pattern")
+                    fig.update_layout(coloraxis_colorbar_title="Volume (vph)")
+                    st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.error(f"Could not find {direction} column in volume data")
+                st.write("Available columns:", list(df.columns))
+        else:
+            # FLIR ACYCLICA: Use "Strength" column
+            y_col = "Strength"
+            df[y_col] = pd.to_numeric(df[y_col], errors='coerce')
+            df.dropna(subset=[y_col], inplace=True)
+            df.reset_index(inplace=True)
 
-                        # Create charts based on chart type
-                        if chart_type == "Line":
-                            fig = create_enhanced_line_chart(df, time_col, y_col, clean_title)
-                            st.plotly_chart(fig, use_container_width=True)
-                        elif chart_type == "Bar":
-                            fig = px.bar(df, x=time_col, y=y_col, title=clean_title)
-                            unit = "mph" if variable == "Speed" else "min"
-                            fig.update_layout(yaxis_title=f"{variable} ({unit})")
-                            st.plotly_chart(fig, use_container_width=True)
-                        elif chart_type == "Scatter":
-                            fig = px.scatter(df, x=time_col, y=y_col, title=clean_title)
-                            unit = "mph" if variable == "Speed" else "min"
-                            fig.update_layout(yaxis_title=f"{variable} ({unit})")
-                            st.plotly_chart(fig, use_container_width=True)
-                        elif chart_type == "Box":
-                            fig = px.box(df, y=y_col, title=f"{clean_title} - Distribution Analysis")
-                            unit = "mph" if variable == "Speed" else "min"
-                            fig.update_layout(yaxis_title=f"{variable} ({unit})")
-                            st.plotly_chart(fig, use_container_width=True)
-                        elif chart_type == "Heatmap":
-                            df_heat = df.copy()
-                            df_heat['hour'] = df_heat[time_col].dt.hour
-                            df_heat = df_heat.sort_values(time_col)
-                            df_heat['day'] = df_heat[time_col].dt.strftime('%a %m/%d')
-                            pivot_table = df_heat.pivot_table(values=y_col, index='day', columns='hour')
-                            pivot_table = pivot_table.reindex(
-                                sorted(pivot_table.index, key=lambda x: pd.to_datetime(x, format='%a %m/%d')))
-                            fig = px.imshow(pivot_table, aspect='auto', title=f"{clean_title} - Hourly Pattern")
-                            unit = "mph" if variable == "Speed" else "min"
-                            fig.update_layout(coloraxis_colorbar_title=f"{variable} ({unit})")
-                            st.plotly_chart(fig, use_container_width=True)
+            # Create charts based on chart type
+            if chart_type == "Line":
+                fig = create_enhanced_line_chart(df, time_col, y_col, clean_title)
+                st.plotly_chart(fig, use_container_width=True)
+            elif chart_type == "Bar":
+                fig = px.bar(df, x=time_col, y=y_col, title=clean_title)
+                unit = "mph" if variable == "Speed" else "min"
+                fig.update_layout(yaxis_title=f"{variable} ({unit})")
+                st.plotly_chart(fig, use_container_width=True)
+            elif chart_type == "Scatter":
+                fig = px.scatter(df, x=time_col, y=y_col, title=clean_title)
+                unit = "mph" if variable == "Speed" else "min"
+                fig.update_layout(yaxis_title=f"{variable} ({unit})")
+                st.plotly_chart(fig, use_container_width=True)
+            elif chart_type == "Box":
+                fig = px.box(df, y=y_col, title=f"{clean_title} - Distribution Analysis")
+                unit = "mph" if variable == "Speed" else "min"
+                fig.update_layout(yaxis_title=f"{variable} ({unit})")
+                st.plotly_chart(fig, use_container_width=True)
+            elif chart_type == "Heatmap":
+                df_heat = df.copy()
+                df_heat['hour'] = df_heat[time_col].dt.hour
+                df_heat = df_heat.sort_values(time_col)
+                df_heat['day'] = df_heat[time_col].dt.strftime('%a %m/%d')
+                pivot_table = df_heat.pivot_table(values=y_col, index='day', columns='hour')
+                fig = px.imshow(pivot_table, aspect='auto', title=f"{clean_title} - Hourly Pattern")
+                unit = "mph" if variable == "Speed" else "min"
+                fig.update_layout(coloraxis_colorbar_title=f"{variable} ({unit})")
+                st.plotly_chart(fig, use_container_width=True)
 
 
 except Exception as e:
