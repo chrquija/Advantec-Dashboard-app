@@ -859,6 +859,8 @@ try:
                     fig.update_layout(yaxis_title="Vehicle Volume (vph)")
                     st.plotly_chart(fig, use_container_width=True)
                 elif chart_type == "Heatmap":
+
+
                     # Create side-by-side heatmaps
                     st.subheader("📊 Hourly Traffic Pattern Analysis")
                     col1, col2 = st.columns(2)
@@ -959,6 +961,7 @@ try:
                     df_nb_heat = df_nb_heat.sort_values(time_col)
                     df_nb_heat['day'] = df_nb_heat[time_col].dt.strftime('%a %m/%d')
                     pivot_nb = df_nb_heat.pivot_table(values="Northbound", index='day', columns='hour')
+                    pivot_nb = pivot_nb.reindex(sorted(pivot_nb.index, key=lambda x: pd.to_datetime(x, format='%a %m/%d')))
                     fig_nb = px.imshow(pivot_nb, aspect='auto', title="Northbound Pattern")
                     unit = "mph" if variable == "Speed" else "min"
                     fig_nb.update_layout(coloraxis_colorbar_title=f"{variable} ({unit})")
@@ -971,6 +974,7 @@ try:
                     df_sb_heat = df_sb_heat.sort_values(time_col)
                     df_sb_heat['day'] = df_sb_heat[time_col].dt.strftime('%a %m/%d')
                     pivot_sb = df_sb_heat.pivot_table(values="Southbound", index='day', columns='hour')
+                    pivot_sb = pivot_sb.reindex(sorted(pivot_sb.index, key=lambda x: pd.to_datetime(x, format='%a %m/%d')))
                     fig_sb = px.imshow(pivot_sb, aspect='auto', title="Southbound Pattern")
                     unit = "mph" if variable == "Speed" else "min"
                     fig_sb.update_layout(coloraxis_colorbar_title=f"{variable} ({unit})")
@@ -1031,6 +1035,7 @@ try:
                     df_heat = df_heat.sort_values(time_col)
                     df_heat['day'] = df_heat[time_col].dt.strftime('%a %m/%d')
                     pivot_table = df_heat.pivot_table(values=y_col, index='day', columns='hour')
+                    pivot_table = pivot_table.reindex(sorted(pivot_table.index, key=lambda x: pd.to_datetime(x, format='%a %m/%d')))
                     fig = px.imshow(pivot_table, aspect='auto', title=f"{clean_title} - Hourly Pattern")
                     fig.update_layout(coloraxis_colorbar_title="Volume (vph)")
                     st.plotly_chart(fig, use_container_width=True)
