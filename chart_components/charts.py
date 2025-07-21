@@ -206,10 +206,10 @@ def create_enhanced_multi_line_chart(df, x_col, y_cols, chart_title):
                     arrowcolor=colors[i],
                     ax=0,
                     ay=-30 - (j * 10),
-                    bgcolor="rgba(0,0,0,0.9)",
+                    bgcolor="rgba(255,255,255,0.9)",
                     bordercolor=colors[i],
                     borderwidth=2,
-                    font=dict(color=colors[i], size=12),
+                    font=dict(color="black", size=12),
                     opacity=0.9
                 )
 
@@ -226,10 +226,10 @@ def create_enhanced_multi_line_chart(df, x_col, y_cols, chart_title):
                     arrowcolor=colors[i],
                     ax=0,
                     ay=30 + (j * 10),
-                    bgcolor="rgba(0,0,0,0.9)",
+                    bgcolor="rgba(255,255,255,0.9)",
                     bordercolor=colors[i],
                     borderwidth=2,
-                    font=dict(color=colors[i], size=12),
+                    font=dict(color="black", size=12),
                     opacity=0.9
                 )
 
