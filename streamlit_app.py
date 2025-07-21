@@ -904,10 +904,10 @@ try:
                     with col1:
                         st.markdown("**🔵 Northbound Traffic**")
                         df_nb = combined[[time_col, "Northbound"]].copy()
-                        df_nb['hour'] = df_nb[time_col].dt.hour
+                        df_nb['Time (24-Hour)'] = df_nb[time_col].dt.hour
                         # Sort by date first, then format for display
                         df_nb = df_nb.sort_values(time_col)
-                        df_nb['day'] = df_nb[time_col].dt.strftime('%a %m/%d')
+                        df_nb['Date'] = df_nb[time_col].dt.strftime('%a %m/%d')
                         pivot_nb = df_nb.pivot_table(values="Northbound", index='day', columns='hour')
                         fig_nb = px.imshow(pivot_nb, aspect='auto', title="Northbound Pattern")
                         fig_nb.update_layout(coloraxis_colorbar_title="Vehicle Volume")
@@ -916,9 +916,9 @@ try:
                     with col2:
                         st.markdown("**🔴 Southbound Traffic**")
                         df_sb = combined[[time_col, "Southbound"]].copy()
-                        df_sb['hour'] = df_sb[time_col].dt.hour
+                        df_sb['Time (24-Hour)'] = df_sb[time_col].dt.hour
                         df_sb = df_sb.sort_values(time_col)
-                        df_sb['day'] = df_sb[time_col].dt.strftime('%a %m/%d')
+                        df_sb['Date'] = df_sb[time_col].dt.strftime('%a %m/%d')
                         pivot_sb = df_sb.pivot_table(values="Southbound", index='day', columns='hour')
                         fig_sb = px.imshow(pivot_sb, aspect='auto', title="Southbound Pattern")
                         fig_sb.update_layout(coloraxis_colorbar_title="Vehicle Volume")
@@ -993,9 +993,9 @@ try:
                 with col1:
                     st.markdown("**🔵 Northbound**")
                     df_nb_heat = combined[[time_col, "Northbound"]].copy()
-                    df_nb_heat['hour'] = df_nb_heat[time_col].dt.hour
+                    df_nb_heat['Time (24-Hour)'] = df_nb_heat[time_col].dt.hour
                     df_nb_heat = df_nb_heat.sort_values(time_col)
-                    df_nb_heat['day'] = df_nb_heat[time_col].dt.strftime('%a %m/%d')
+                    df_nb_heat['Date'] = df_nb_heat[time_col].dt.strftime('%a %m/%d')
                     pivot_nb = df_nb_heat.pivot_table(values="Northbound", index='day', columns='hour')
                     pivot_nb = pivot_nb.reindex(sorted(pivot_nb.index, key=lambda x: pd.to_datetime(x, format='%a %m/%d')))
                     fig_nb = px.imshow(pivot_nb, aspect='auto', title="Northbound Pattern")
@@ -1006,9 +1006,9 @@ try:
                 with col2:
                     st.markdown("**🔴 Southbound**")
                     df_sb_heat = combined[[time_col, "Southbound"]].copy()
-                    df_sb_heat['hour'] = df_sb_heat[time_col].dt.hour
+                    df_sb_heat['Time (24-Hour)'] = df_sb_heat[time_col].dt.hour
                     df_sb_heat = df_sb_heat.sort_values(time_col)
-                    df_sb_heat['day'] = df_sb_heat[time_col].dt.strftime('%a %m/%d')
+                    df_sb_heat['Date'] = df_sb_heat[time_col].dt.strftime('%a %m/%d')
                     pivot_sb = df_sb_heat.pivot_table(values="Southbound", index='day', columns='hour')
                     pivot_sb = pivot_sb.reindex(sorted(pivot_sb.index, key=lambda x: pd.to_datetime(x, format='%a %m/%d')))
                     fig_sb = px.imshow(pivot_sb, aspect='auto', title="Southbound Pattern")
@@ -1101,9 +1101,9 @@ try:
                     st.plotly_chart(fig, use_container_width=True)
                 elif chart_type == "Heatmap":
                     df_heat = df.copy()
-                    df_heat['hour'] = df_heat[time_col].dt.hour
+                    df_heat['Time (24-Hour)'] = df_heat[time_col].dt.hour
                     df_heat = df_heat.sort_values(time_col)
-                    df_heat['day'] = df_heat[time_col].dt.strftime('%a %m/%d')
+                    df_heat['Date'] = df_heat[time_col].dt.strftime('%a %m/%d')
                     pivot_table = df_heat.pivot_table(values=y_col, index='day', columns='hour')
                     pivot_table = pivot_table.reindex(sorted(pivot_table.index, key=lambda x: pd.to_datetime(x, format='%a %m/%d')))
                     fig = px.imshow(pivot_table, aspect='auto', title=f"{clean_title} - Hourly Pattern")
@@ -1140,9 +1140,9 @@ try:
                 st.plotly_chart(fig, use_container_width=True)
             elif chart_type == "Heatmap":
                 df_heat = df.copy()
-                df_heat['hour'] = df_heat[time_col].dt.hour
+                df_heat['Time (24-Hour)'] = df_heat[time_col].dt.hour
                 df_heat = df_heat.sort_values(time_col)
-                df_heat['day'] = df_heat[time_col].dt.strftime('%a %m/%d')
+                df_heat['Date'] = df_heat[time_col].dt.strftime('%a %m/%d')
                 pivot_table = df_heat.pivot_table(values=y_col, index='day', columns='hour')
                 fig = px.imshow(pivot_table, aspect='auto', title=f"{clean_title} - Hourly Pattern")
                 unit = "mph" if variable == "Speed" else "min"
@@ -1454,7 +1454,7 @@ else:
         col1, col2, col3 = st.columns(3)
         with col1:
             st.metric("**🔵 Northbound**", "", "")
-            st.write(f"Average: **{df[nb_vol_col].mean():.0f} Vehicle Per Hour**")
+            st.write(f"Average: **{df[nb_vol_col].mean():.0f} Vehicles Per Hour**")
             st.write(f"Peak: **{df[nb_vol_col].max():.0f} Vehicles**")
             st.write(f"Low: **{df[nb_vol_col].min():.0f} Vehicles**")
         with col2:
