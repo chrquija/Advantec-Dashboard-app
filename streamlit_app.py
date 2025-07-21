@@ -910,7 +910,7 @@ try:
                         df_nb['day'] = df_nb[time_col].dt.strftime('%a %m/%d')
                         pivot_nb = df_nb.pivot_table(values="Northbound", index='day', columns='hour')
                         fig_nb = px.imshow(pivot_nb, aspect='auto', title="Northbound Pattern")
-                        fig_nb.update_layout(coloraxis_colorbar_title="Vehicle Volume)")
+                        fig_nb.update_layout(coloraxis_colorbar_title="Vehicle Volume")
                         st.plotly_chart(fig_nb, use_container_width=True)
 
                     with col2:
