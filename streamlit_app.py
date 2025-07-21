@@ -794,7 +794,24 @@ try:
                 st.error("No time column found. Please ensure your data has a time-related column.")
                 st.stop()
 
-            df[time_col] = pd.to_datetime(df[time_col], errors="coerce")
+            # For Vehicle Volume data - combine date with time if needed
+            if variable == "Vehicle Volume":
+                # Check if the time column contains only time (no date)
+                sample_time = str(df[time_col].iloc[0]) if not df.empty else ""
+                if len(sample_time.split()) == 1 and ":" in sample_time:
+                    # Only time found, need to add date based on date_range
+                    if "april" in str(date_range).lower() or "04" in str(date_range) or "2025-04-10" in str(date_range):
+                        base_date = "2025-04-10"
+                    elif "feb" in str(date_range).lower() or "02" in str(date_range) or "2025-02-13" in str(date_range):
+                        base_date = "2025-02-13"
+                    else:
+                        base_date = "2025-04-10"  # default to April data
+                    df[time_col] = pd.to_datetime(base_date + " " + df[time_col].astype(str), errors="coerce")
+                else:
+                    # Full datetime already present
+                    df[time_col] = pd.to_datetime(df[time_col], errors="coerce")
+            else:
+                df[time_col] = pd.to_datetime(df[time_col], errors="coerce")
             df.dropna(subset=[time_col], inplace=True)
             df.set_index(time_col, inplace=True)
 
