@@ -879,12 +879,12 @@ try:
                 elif chart_type == "Bar":
                     fig = px.bar(combined, x=time_col, y=["Northbound", "Southbound"],
                                  title=clean_title, barmode='group')
-                    fig.update_layout(yaxis_title="Vehicle Volume (vph)")
+                    fig.update_layout(yaxis_title="Vehicle Volume")
                     st.plotly_chart(fig, use_container_width=True)
                 elif chart_type == "Scatter":
                     fig = px.scatter(combined, x=time_col, y=["Northbound", "Southbound"],
                                      title=clean_title)
-                    fig.update_layout(yaxis_title="Vehicle Volume (vph)")
+                    fig.update_layout(yaxis_title="Vehicle Volume")
                     st.plotly_chart(fig, use_container_width=True)
                 elif chart_type == "Box":
                     # Melt the dataframe for box plot
@@ -892,7 +892,7 @@ try:
                                            var_name="Direction", value_name="Volume")
                     fig = px.box(melted, x="Direction", y="Volume",
                                  title=f"{clean_title} - Distribution Analysis")
-                    fig.update_layout(yaxis_title="Vehicle Volume (vph)")
+                    fig.update_layout(yaxis_title="Vehicle Volume")
                     st.plotly_chart(fig, use_container_width=True)
                 elif chart_type == "Heatmap":
 
@@ -910,7 +910,7 @@ try:
                         df_nb['day'] = df_nb[time_col].dt.strftime('%a %m/%d')
                         pivot_nb = df_nb.pivot_table(values="Northbound", index='day', columns='hour')
                         fig_nb = px.imshow(pivot_nb, aspect='auto', title="Northbound Pattern")
-                        fig_nb.update_layout(coloraxis_colorbar_title="Volume (vph)")
+                        fig_nb.update_layout(coloraxis_colorbar_title="Vehicle Volume)")
                         st.plotly_chart(fig_nb, use_container_width=True)
 
                     with col2:
@@ -921,7 +921,7 @@ try:
                         df_sb['day'] = df_sb[time_col].dt.strftime('%a %m/%d')
                         pivot_sb = df_sb.pivot_table(values="Southbound", index='day', columns='hour')
                         fig_sb = px.imshow(pivot_sb, aspect='auto', title="Southbound Pattern")
-                        fig_sb.update_layout(coloraxis_colorbar_title="Volume (vph)")
+                        fig_sb.update_layout(coloraxis_colorbar_title="Vehicle Volume")
                         st.plotly_chart(fig_sb, use_container_width=True)
 
         else:
@@ -1089,15 +1089,15 @@ try:
                     st.plotly_chart(fig, use_container_width=True)
                 elif chart_type == "Bar":
                     fig = px.bar(df, x=time_col, y=y_col, title=clean_title)
-                    fig.update_layout(yaxis_title="Vehicle Volume (vph)")
+                    fig.update_layout(yaxis_title="Vehicle Volume")
                     st.plotly_chart(fig, use_container_width=True)
                 elif chart_type == "Scatter":
                     fig = px.scatter(df, x=time_col, y=y_col, title=clean_title)
-                    fig.update_layout(yaxis_title="Vehicle Volume (vph)")
+                    fig.update_layout(yaxis_title="Vehicle Volume")
                     st.plotly_chart(fig, use_container_width=True)
                 elif chart_type == "Box":
                     fig = px.box(df, y=y_col, title=f"{clean_title} - Distribution Analysis")
-                    fig.update_layout(yaxis_title="Vehicle Volume (vph)")
+                    fig.update_layout(yaxis_title="Vehicle Volume")
                     st.plotly_chart(fig, use_container_width=True)
                 elif chart_type == "Heatmap":
                     df_heat = df.copy()
@@ -1107,7 +1107,7 @@ try:
                     pivot_table = df_heat.pivot_table(values=y_col, index='day', columns='hour')
                     pivot_table = pivot_table.reindex(sorted(pivot_table.index, key=lambda x: pd.to_datetime(x, format='%a %m/%d')))
                     fig = px.imshow(pivot_table, aspect='auto', title=f"{clean_title} - Hourly Pattern")
-                    fig.update_layout(coloraxis_colorbar_title="Volume (vph)")
+                    fig.update_layout(coloraxis_colorbar_title="Vehicle Volume")
                     st.plotly_chart(fig, use_container_width=True)
             else:
                 st.error(f"Could not find {direction} column in volume data")
@@ -1454,21 +1454,21 @@ else:
         col1, col2, col3 = st.columns(3)
         with col1:
             st.metric("**🔵 Northbound**", "", "")
-            st.write(f"Average: **{df[nb_vol_col].mean():.0f} vph**")
-            st.write(f"Peak: **{df[nb_vol_col].max():.0f} vph**")
-            st.write(f"Low: **{df[nb_vol_col].min():.0f} vph**")
+            st.write(f"Average: **{df[nb_vol_col].mean():.0f} Vehicle Per Hour**")
+            st.write(f"Peak: **{df[nb_vol_col].max():.0f} Vehicles**")
+            st.write(f"Low: **{df[nb_vol_col].min():.0f} Vehicles**")
         with col2:
             st.metric("**🔴 Southbound**", "", "")
-            st.write(f"Average: **{df[sb_vol_col].mean():.0f} vph**")
-            st.write(f"Peak: **{df[sb_vol_col].max():.0f} vph**")
-            st.write(f"Low: **{df[sb_vol_col].min():.0f} vph**")
+            st.write(f"Average: **{df[sb_vol_col].mean():.0f} Vehicles Per Hour**")
+            st.write(f"Peak: **{df[sb_vol_col].max():.0f} Vehicles**")
+            st.write(f"Low: **{df[sb_vol_col].min():.0f} Vehicles**")
         with col3:
             st.metric("**📊 Combined**", "", "")
             total_avg = (df[nb_vol_col].mean() + df[sb_vol_col].mean())
             total_peak = (df[nb_vol_col].max() + df[sb_vol_col].max())
-            st.write(f"Total Average: **{total_avg:.0f} vph**")
-            st.write(f"Total Peak: **{total_peak:.0f} vph**")
-            st.write(f"Daily Total: **{df[[nb_vol_col, sb_vol_col]].sum().sum():.0f} vehicles**")
+            st.write(f"Total Average: **{total_avg:.0f} Vehicles Per Hour**")
+            st.write(f"Total Peak: **{total_peak:.0f} Vehicles**")
+            st.write(f"Daily Total: **{df[[nb_vol_col, sb_vol_col]].sum().sum():.0f} Vehicles**")
     else:
         st.warning("⚠️ Could not find Northbound and Southbound volume columns in the data.")
         st.info("Available columns: " + ", ".join(df.columns))
@@ -1668,7 +1668,7 @@ if variable == "Vehicle Volume":
                     elif kpi_type == "Total Volume":
                         vol_col = nb_vol_col if direction_choice == "NB" else sb_vol_col
                         total_volume = period_df[vol_col].sum()
-                        st.metric("Total Volume", f"{total_volume:,.0f} vph")
+                        st.metric("Total Volume", f"{total_volume:,.0f} Vehicles")
                     elif kpi_type == "Peak Congestion Time" and nb_speed_col and sb_speed_col:
                         speed_col = nb_speed_col if direction_choice == "NB" else sb_speed_col
                         min_speed = period_df[speed_col].min()
