@@ -271,7 +271,7 @@ def create_enhanced_line_chart(df, x_col, y_col, chart_title):
         # More than a month - show every month
         fig.update_xaxes(dtick="M1")
 
-    # Enhanced axes styling
+    # Enhanced axes styling with better dark mode support
     fig.update_xaxes(
         showgrid=True,
         gridwidth=1,
@@ -279,8 +279,17 @@ def create_enhanced_line_chart(df, x_col, y_col, chart_title):
         showline=True,
         linewidth=2,
         linecolor='#5DADE2',
-        title_font=dict(size=14, color="#1B4F72", family="Arial", weight="bold"),
-        tickangle=45  # Angle labels for better readability
+        title_font=dict(
+            size=16,
+            color="#FFFFFF",  # White text for better visibility in both modes
+            family="Arial",
+            weight="bold"
+        ),
+        tickangle=45,  # Angle labels for better readability
+        tickfont=dict(
+            color="#FFFFFF",  # White tick labels
+            size=12
+        )
     )
 
     fig.update_yaxes(
@@ -290,7 +299,16 @@ def create_enhanced_line_chart(df, x_col, y_col, chart_title):
         showline=True,
         linewidth=2,
         linecolor='#5DADE2',
-        title_font=dict(size=14, color="#1B4F72", family="Arial", weight="bold")
+        title_font=dict(
+            size=16,
+            color="#FFFFFF",  # White text for better visibility in both modes
+            family="Arial",
+            weight="bold"
+        ),
+        tickfont=dict(
+            color="#FFFFFF",  # White tick labels
+            size=12
+        )
     )
 
     return fig
@@ -415,7 +433,7 @@ def create_enhanced_multi_line_chart(df, x_col, y_cols, chart_title):
         # More than a month - show every month
         fig.update_xaxes(dtick="M1")
 
-    # Enhanced axes styling
+    # Enhanced axes styling with better dark mode support
     fig.update_xaxes(
         showgrid=True,
         gridwidth=1,
@@ -423,8 +441,17 @@ def create_enhanced_multi_line_chart(df, x_col, y_cols, chart_title):
         showline=True,
         linewidth=2,
         linecolor='#5DADE2',
-        title_font=dict(size=14, color="#1B4F72", family="Arial", weight="bold"),
-        tickangle=45  # Angle labels for better readability
+        title_font=dict(
+            size=16,
+            color="#FFFFFF",  # White text for better visibility in both modes
+            family="Arial",
+            weight="bold"
+        ),
+        tickangle=45,  # Angle labels for better readability
+        tickfont=dict(
+            color="#FFFFFF",  # White tick labels
+            size=12
+        )
     )
 
     fig.update_yaxes(
@@ -434,7 +461,16 @@ def create_enhanced_multi_line_chart(df, x_col, y_cols, chart_title):
         showline=True,
         linewidth=2,
         linecolor='#5DADE2',
-        title_font=dict(size=14, color="#1B4F72", family="Arial", weight="bold")
+        title_font=dict(
+            size=16,
+            color="#FFFFFF",  # White text for better visibility in both modes
+            family="Arial",
+            weight="bold"
+        ),
+        tickfont=dict(
+            color="#FFFFFF",  # White tick labels
+            size=12
+        )
     )
 
     return fig
