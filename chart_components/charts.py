@@ -246,21 +246,14 @@ def create_enhanced_line_chart(df, x_col, y_col, chart_title):
     # Get smart axis titles
     smart_yaxis_title = get_smart_yaxis_title(y_col, chart_title)
 
-    # Enhanced layout with beautiful styling and smart axis naming
+    # Enhanced layout with NO TITLE (since there's already a title section above)
     fig.update_layout(
-        title=dict(
-            text=chart_title,
-            x=0.5,
-            y=0.95,
-            xanchor='center',
-            yanchor='top',
-            font=dict(size=20, family="Arial", weight="bold", color="#1B4F72")
-        ),
+        title=None,  # Remove chart title to prevent duplication
         xaxis_title=get_smart_xaxis_title(x_col),  # Smart X-axis naming!
         yaxis_title=smart_yaxis_title,  # Smart Y-axis naming!
         hovermode='x unified',
-        showlegend=False,
-        margin=dict(t=80, b=50, l=50, r=50),
+        showlegend=False,  # Hide legend since it's redundant
+        margin=dict(t=20, b=50, l=50, r=50),  # Reduced top margin since no title
         height=520,
         plot_bgcolor='rgba(248,251,255,0.8)',  # Very light blue background
     )
@@ -391,27 +384,20 @@ def create_enhanced_multi_line_chart(df, x_col, y_cols, chart_title):
     # Determine smart Y-axis title (use first column as representative)
     smart_yaxis_title = get_smart_yaxis_title(y_cols[0], chart_title)
 
-    # Enhanced layout with beautiful styling and smart axis naming
+    # Enhanced layout with NO TITLE (since there's already a title section above)
     fig.update_layout(
-        title=dict(
-            text=chart_title,
-            x=0.5,
-            y=0.95,
-            xanchor='center',
-            yanchor='top',
-            font=dict(size=20, family="Arial", weight="bold", color="#1B4F72")
-        ),
+        title=None,  # Remove chart title to prevent duplication
         xaxis_title=get_smart_xaxis_title(x_col),  # Smart X-axis naming!
         yaxis_title=smart_yaxis_title,  # Smart Y-axis naming!
         hovermode='x unified',
-        showlegend=True,
+        showlegend=True,  # Keep legend for multi-line to distinguish lines
         legend=dict(
             bgcolor="rgba(255,255,255,0.9)",
             bordercolor="#5DADE2",
             borderwidth=2,
             font=dict(color="#1B4F72", size=12)
         ),
-        margin=dict(t=80, b=50, l=50, r=50),
+        margin=dict(t=20, b=50, l=50, r=50),  # Reduced top margin since no title
         height=520,
         plot_bgcolor='rgba(248,251,255,0.8)',  # Very light blue background
     )
