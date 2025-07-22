@@ -26,50 +26,6 @@ def format_value_with_units(value, variable):
     return f"{value:.1f}"
 
 
-def get_smart_yaxis_title(y_col, chart_title):
-    """Generate intelligent Y-axis titles based on column content"""
-    col_lower = y_col.lower()
-
-    # Check for speed-related columns
-    if "speed" in col_lower:
-        if any(x in col_lower for x in ['mph', 'miles']):
-            return "Speed (mph)"
-        elif any(x in col_lower for x in ['kmh', 'km/h', 'kph']):
-            return "Speed (km/h)"
-        else:
-            return "Speed"
-
-    # Check for travel time columns
-    elif any(word in col_lower for word in ['travel', 'time', 'duration', 'delay']):
-        if any(x in col_lower for x in ['min', 'minute']):
-            return "Travel Time (minutes)"
-        elif any(x in col_lower for x in ['sec', 'second']):
-            return "Travel Time (seconds)"
-        elif any(x in col_lower for x in ['hour', 'hr']):
-            return "Travel Time (hours)"
-        else:
-            return "Travel Time"
-
-    # Check for volume/count columns
-    elif any(word in col_lower for word in ['volume', 'count', 'vehicles', 'traffic']):
-        return "Vehicle Volume"
-
-    # Check for density columns
-    elif any(word in col_lower for word in ['density', 'occupancy']):
-        if '%' in col_lower or 'percent' in col_lower:
-            return "Density (%)"
-        else:
-            return "Density"
-
-    # Check for flow rate columns
-    elif any(word in col_lower for word in ['flow', 'rate']):
-        return "Flow Rate"
-
-    # Default: Clean up column name by replacing underscores and capitalizing
-    else:
-        return y_col.replace('_', ' ').replace('-', ' ').title()
-
-
 def create_enhanced_line_chart(df, x_col, y_col, chart_title, color_name="blue"):
     """Create an enhanced single line chart with beautiful blue styling and time period shading"""
 
@@ -113,9 +69,9 @@ def create_enhanced_line_chart(df, x_col, y_col, chart_title, color_name="blue")
 
         # Define time periods with modern blue-themed palette
         time_periods = [
-            {"name": "AM Peak", "start": 5, "end": 10, "color": "#3498DB", "opacity": 0.15},  # Light blue
-            {"name": "Midday", "start": 11, "end": 15, "color": "#85C1E9", "opacity": 0.12},  # Lighter blue
-            {"name": "PM Peak", "start": 16, "end": 20, "color": "#5DADE2", "opacity": 0.18}  # Medium blue
+            {"name": "AM (5:00 - 10:00)", "start": 5, "end": 10, "color": "#3498DB", "opacity": 0.15},  # Light blue
+            {"name": "MD (11:00 - 15:00)", "start": 11, "end": 15, "color": "#85C1E9", "opacity": 0.12},  # Lighter blue
+            {"name": "PM (16:00 - 20:00)", "start": 16, "end": 20, "color": "#5DADE2", "opacity": 0.18}  # Medium blue
         ]
 
         # Iterate through each day in the date range
@@ -138,7 +94,7 @@ def create_enhanced_line_chart(df, x_col, y_col, chart_title, color_name="blue")
                         line_width=0,
                     )
 
-                    # Add elegant period labels
+                    # Add elegant period labels (removed borderrad - not supported)
                     if current_date == start_datetime.date():
                         midpoint = period_start + (period_end - period_start) / 2
                         fig.add_annotation(
@@ -159,7 +115,7 @@ def create_enhanced_line_chart(df, x_col, y_col, chart_title, color_name="blue")
         highest_indices = df[y_col].nlargest(5).index
         lowest_indices = df[y_col].nsmallest(5).index
 
-        # Enhanced annotations for highest points
+        # Enhanced annotations for highest points (removed borderrad)
         for i, idx in enumerate(highest_indices):
             fig.add_annotation(
                 x=df.loc[idx, x_col],
@@ -179,7 +135,7 @@ def create_enhanced_line_chart(df, x_col, y_col, chart_title, color_name="blue")
                 opacity=0.95
             )
 
-        # Enhanced annotations for lowest points
+        # Enhanced annotations for lowest points (removed borderrad)
         for i, idx in enumerate(lowest_indices):
             fig.add_annotation(
                 x=df.loc[idx, x_col],
@@ -199,7 +155,7 @@ def create_enhanced_line_chart(df, x_col, y_col, chart_title, color_name="blue")
                 opacity=0.95
             )
 
-    # Enhanced layout with beautiful styling and smart Y-axis naming
+    # Enhanced layout with beautiful styling
     fig.update_layout(
         title=dict(
             text=chart_title,
@@ -209,8 +165,8 @@ def create_enhanced_line_chart(df, x_col, y_col, chart_title, color_name="blue")
             yanchor='top',
             font=dict(size=20, family="Arial", weight="bold", color="#1B4F72")
         ),
-        xaxis_title="Time",
-        yaxis_title=get_smart_yaxis_title(y_col, chart_title),  # Smart Y-axis naming!
+        xaxis_title="TIME (24-HOUR)",
+        yaxis_title="VEHICLE VOLUME" if "Vehicle Volume" in chart_title else y_col,
         hovermode='x unified',
         showlegend=True,
         margin=dict(t=80, b=50, l=50, r=50),
@@ -298,9 +254,9 @@ def create_enhanced_multi_line_chart(df, x_col, y_cols, chart_title):
 
         # Define time periods with modern blue-themed palette
         time_periods = [
-            {"name": "AM Peak", "start": 5, "end": 10, "color": "#3498DB", "opacity": 0.15},  # Light blue
-            {"name": "Midday", "start": 11, "end": 15, "color": "#85C1E9", "opacity": 0.12},  # Lighter blue
-            {"name": "PM Peak", "start": 16, "end": 20, "color": "#5DADE2", "opacity": 0.18}  # Medium blue
+            {"name": "AM (5:00 - 10:00)", "start": 5, "end": 10, "color": "#3498DB", "opacity": 0.15},  # Light blue
+            {"name": "MD (11:00 - 15:00)", "start": 11, "end": 15, "color": "#85C1E9", "opacity": 0.12},  # Lighter blue
+            {"name": "PM (16:00 - 20:00)", "start": 16, "end": 20, "color": "#5DADE2", "opacity": 0.18}  # Medium blue
         ]
 
         # Iterate through each day in the date range
@@ -323,7 +279,7 @@ def create_enhanced_multi_line_chart(df, x_col, y_cols, chart_title):
                         line_width=0,
                     )
 
-                    # Add elegant period labels
+                    # Add elegant period labels (removed borderrad)
                     if current_date == start_datetime.date():
                         # Get max value from both columns for positioning
                         max_y = max(df[y_cols[0]].max(), df[y_cols[1]].max())
@@ -347,7 +303,7 @@ def create_enhanced_multi_line_chart(df, x_col, y_cols, chart_title):
             highest_indices = df[col].nlargest(3).index
             lowest_indices = df[col].nsmallest(3).index
 
-            # Enhanced peaks with improved styling
+            # Enhanced peaks with improved styling (removed borderrad)
             for j, idx in enumerate(highest_indices):
                 fig.add_annotation(
                     x=df.loc[idx, x_col],
@@ -367,7 +323,7 @@ def create_enhanced_multi_line_chart(df, x_col, y_cols, chart_title):
                     opacity=0.95
                 )
 
-            # Enhanced lows with improved styling
+            # Enhanced lows with improved styling (removed borderrad)
             for j, idx in enumerate(lowest_indices):
                 fig.add_annotation(
                     x=df.loc[idx, x_col],
@@ -387,10 +343,7 @@ def create_enhanced_multi_line_chart(df, x_col, y_cols, chart_title):
                     opacity=0.95
                 )
 
-    # Determine smart Y-axis title (use first column as representative)
-    smart_yaxis_title = get_smart_yaxis_title(y_cols[0], chart_title)
-
-    # Enhanced layout with beautiful styling and smart Y-axis naming
+    # Enhanced layout with beautiful styling
     fig.update_layout(
         title=dict(
             text=chart_title,
@@ -401,7 +354,7 @@ def create_enhanced_multi_line_chart(df, x_col, y_cols, chart_title):
             font=dict(size=20, family="Arial", weight="bold", color="#1B4F72")
         ),
         xaxis_title="Time",
-        yaxis_title=smart_yaxis_title,  # Smart Y-axis naming!
+        yaxis_title="Vehicle Volume" if "Vehicle Volume" in chart_title else "Value",
         hovermode='x unified',
         showlegend=True,
         legend=dict(
