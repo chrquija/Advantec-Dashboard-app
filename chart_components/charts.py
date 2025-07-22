@@ -248,7 +248,7 @@ def create_enhanced_line_chart(df, x_col, y_col, chart_title):
 
     # Enhanced layout with NO TITLE (since there's already a title section above)
     fig.update_layout(
-        title=None,  # Remove chart title to prevent duplication
+        title="",  # Remove chart title to prevent duplication
         xaxis_title=get_smart_xaxis_title(x_col),  # Smart X-axis naming!
         yaxis_title=smart_yaxis_title,  # Smart Y-axis naming!
         hovermode='x unified',
@@ -386,7 +386,7 @@ def create_enhanced_multi_line_chart(df, x_col, y_cols, chart_title):
 
     # Enhanced layout with NO TITLE (since there's already a title section above)
     fig.update_layout(
-        title=None,  # Remove chart title to prevent duplication
+        title="",  # Remove chart title to prevent duplication
         xaxis_title=get_smart_xaxis_title(x_col),  # Smart X-axis naming!
         yaxis_title=smart_yaxis_title,  # Smart Y-axis naming!
         hovermode='x unified',
