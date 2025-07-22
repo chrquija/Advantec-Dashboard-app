@@ -1,7 +1,9 @@
-import plotly.graph_objects as go
-import plotly.express as px
+import streamlit as st
 import pandas as pd
-from datetime import time, timedelta
+import plotly.express as px
+import plotly.graph_objects as go
+from datetime import timedelta, time  # Add 'time' import
+import numpy as np
 
 
 def is_single_day_data(df, x_col):
@@ -165,7 +167,7 @@ def add_alternating_day_shading(fig, df, x_col):
 
 
 def create_enhanced_line_chart(df, x_col, y_col, chart_title):
-    """Create an enhanced line chart with beautiful blue styling"""
+    """Create an enhanced line chart with beautiful blue styling and smart shading"""
 
     fig = go.Figure()
 
@@ -302,7 +304,7 @@ def create_enhanced_line_chart(df, x_col, y_col, chart_title):
 
 
 def create_enhanced_multi_line_chart(df, x_col, y_cols, chart_title):
-    """Create an enhanced multi-line chart for 'Both' direction data with beautiful blue styling"""
+    """Create an enhanced multi-line chart for 'Both' direction data with smart shading"""
 
     fig = go.Figure()
 
@@ -452,35 +454,10 @@ def create_enhanced_multi_line_chart(df, x_col, y_cols, chart_title):
     return fig
 
 
-def create_enhanced_bar_chart(df, x_col, y_col, chart_title):
-    """Create an enhanced bar chart with beautiful blue styling"""
+def create_bar_chart(df, x_col, y_col, chart_title, color_name="blue"):
+    """Create a bar chart with customizations"""
+    fig = px.bar(df, x=x_col, y=y_col, title=chart_title, color_discrete_sequence=[color_name])
 
-    fig = go.Figure()
-
-    fig.add_trace(go.Bar(
-        x=df[x_col],
-        y=df[y_col],
-        name=y_col,
-        marker=dict(
-            color='#2E86C1',
-            line=dict(color='#1B4F72', width=1)
-        )
-    ))
-
-    # Smart shading: Time periods for single day, alternating days for multi-day
-    if not df.empty:
-        if is_single_day_data(df, x_col):
-            # Single day: Add time period shading
-            max_y = df[y_col].max()
-            add_time_period_shading(fig, df, x_col, max_y)
-        else:
-            # Multi-day: Add alternating day shading
-            add_alternating_day_shading(fig, df, x_col)
-
-    # Get smart axis titles
-    smart_yaxis_title = get_smart_yaxis_title(y_col, chart_title)
-
-    # Enhanced layout with beautiful styling and smart axis naming
     fig.update_layout(
         title=dict(
             text=chart_title,
@@ -488,83 +465,22 @@ def create_enhanced_bar_chart(df, x_col, y_col, chart_title):
             y=0.95,
             xanchor='center',
             yanchor='top',
-            font=dict(size=20, family="Arial", weight="bold", color="#1B4F72")
+            font=dict(size=18, color="darkblue", family="Arial Black")
         ),
-        xaxis_title=get_smart_xaxis_title(x_col),
-        yaxis_title=smart_yaxis_title,
-        hovermode='x unified',
-        showlegend=False,
+        xaxis_title="Time",
+        yaxis_title="Value",
+        plot_bgcolor='white',
         margin=dict(t=80, b=50, l=50, r=50),
-        height=520,
-        plot_bgcolor='rgba(248,251,255,0.8)',
-    )
-
-    # Smart X-axis tick configuration based on data span
-    data_span = get_data_span_days(df, x_col)
-
-    if data_span == 1:
-        fig.update_xaxes(dtick=3600000)
-    elif data_span <= 31:
-        fig.update_xaxes(dtick="D1")
-    else:
-        fig.update_xaxes(dtick="M1")
-
-    # Enhanced axes styling
-    fig.update_xaxes(
-        showgrid=True,
-        gridwidth=1,
-        gridcolor='rgba(52, 152, 219, 0.2)',
-        showline=True,
-        linewidth=2,
-        linecolor='#5DADE2',
-        title_font=dict(size=14, color="#1B4F72", family="Arial", weight="bold"),
-        tickangle=45
-    )
-
-    fig.update_yaxes(
-        showgrid=True,
-        gridwidth=1,
-        gridcolor='rgba(52, 152, 219, 0.2)',
-        showline=True,
-        linewidth=2,
-        linecolor='#5DADE2',
-        title_font=dict(size=14, color="#1B4F72", family="Arial", weight="bold")
+        height=500
     )
 
     return fig
 
 
-def create_enhanced_scatter_chart(df, x_col, y_col, chart_title):
-    """Create an enhanced scatter chart with beautiful blue styling"""
+def create_scatter_plot(df, x_col, y_col, chart_title, color_name="blue"):
+    """Create a scatter plot with customizations"""
+    fig = px.scatter(df, x=x_col, y=y_col, title=chart_title, color_discrete_sequence=[color_name])
 
-    fig = go.Figure()
-
-    fig.add_trace(go.Scatter(
-        x=df[x_col],
-        y=df[y_col],
-        mode='markers',
-        name=y_col,
-        marker=dict(
-            size=8,
-            color='#2E86C1',
-            line=dict(width=2, color='white')
-        )
-    ))
-
-    # Smart shading: Time periods for single day, alternating days for multi-day
-    if not df.empty:
-        if is_single_day_data(df, x_col):
-            # Single day: Add time period shading
-            max_y = df[y_col].max()
-            add_time_period_shading(fig, df, x_col, max_y)
-        else:
-            # Multi-day: Add alternating day shading
-            add_alternating_day_shading(fig, df, x_col)
-
-    # Get smart axis titles
-    smart_yaxis_title = get_smart_yaxis_title(y_col, chart_title)
-
-    # Enhanced layout with beautiful styling and smart axis naming
     fig.update_layout(
         title=dict(
             text=chart_title,
@@ -572,79 +488,22 @@ def create_enhanced_scatter_chart(df, x_col, y_col, chart_title):
             y=0.95,
             xanchor='center',
             yanchor='top',
-            font=dict(size=20, family="Arial", weight="bold", color="#1B4F72")
+            font=dict(size=18, color="darkblue", family="Arial Black")
         ),
-        xaxis_title=get_smart_xaxis_title(x_col),
-        yaxis_title=smart_yaxis_title,
-        hovermode='x unified',
-        showlegend=False,
+        xaxis_title="Time",
+        yaxis_title="Value",
+        plot_bgcolor='white',
         margin=dict(t=80, b=50, l=50, r=50),
-        height=520,
-        plot_bgcolor='rgba(248,251,255,0.8)',
-    )
-
-    # Smart X-axis tick configuration based on data span
-    data_span = get_data_span_days(df, x_col)
-
-    if data_span == 1:
-        fig.update_xaxes(dtick=3600000)
-    elif data_span <= 31:
-        fig.update_xaxes(dtick="D1")
-    else:
-        fig.update_xaxes(dtick="M1")
-
-    # Enhanced axes styling
-    fig.update_xaxes(
-        showgrid=True,
-        gridwidth=1,
-        gridcolor='rgba(52, 152, 219, 0.2)',
-        showline=True,
-        linewidth=2,
-        linecolor='#5DADE2',
-        title_font=dict(size=14, color="#1B4F72", family="Arial", weight="bold"),
-        tickangle=45
-    )
-
-    fig.update_yaxes(
-        showgrid=True,
-        gridwidth=1,
-        gridcolor='rgba(52, 152, 219, 0.2)',
-        showline=True,
-        linewidth=2,
-        linecolor='#5DADE2',
-        title_font=dict(size=14, color="#1B4F72", family="Arial", weight="bold")
+        height=500
     )
 
     return fig
 
 
-def create_enhanced_box_chart(df, x_col, y_col, chart_title):
-    """Create an enhanced box chart with beautiful blue styling"""
+def create_box_plot(df, x_col, y_col, chart_title):
+    """Create a box plot with customizations"""
+    fig = px.box(df, x=x_col, y=y_col, title=chart_title)
 
-    fig = go.Figure()
-
-    fig.add_trace(go.Box(
-        x=df[x_col],
-        y=df[y_col],
-        name=y_col,
-        marker=dict(color='#2E86C1'),
-        line=dict(color='#1B4F72')
-    ))
-
-    # Smart shading: Time periods for single day, alternating days for multi-day
-    if not df.empty:
-        if is_single_day_data(df, x_col):
-            # Single day: Add time period shading
-            max_y = df[y_col].max()
-            add_time_period_shading(fig, df, x_col, max_y)
-        else:
-            # Multi-day: Add alternating day shading
-            add_alternating_day_shading(fig, df, x_col)
-
-    # Get smart axis titles
-    smart_yaxis_title = get_smart_yaxis_title(y_col, chart_title)
-
-    # Enhanced layout with beautiful styling and smart axis naming
     fig.update_layout(
         title=dict(
             text=chart_title,
@@ -652,103 +511,15 @@ def create_enhanced_box_chart(df, x_col, y_col, chart_title):
             y=0.95,
             xanchor='center',
             yanchor='top',
-            font=dict(size=20, family="Arial", weight="bold", color="#1B4F72")
+            font=dict(size=18, color="darkblue", family="Arial Black")
         ),
-        xaxis_title=get_smart_xaxis_title(x_col),
-        yaxis_title=smart_yaxis_title,
-        hovermode='x unified',
-        showlegend=False,
+        xaxis_title="Time",
+        yaxis_title="Value",
+        plot_bgcolor='white',
         margin=dict(t=80, b=50, l=50, r=50),
-        height=520,
-        plot_bgcolor='rgba(248,251,255,0.8)',
-    )
-
-    # Smart X-axis tick configuration based on data span
-    data_span = get_data_span_days(df, x_col)
-
-    if data_span == 1:
-        fig.update_xaxes(dtick=3600000)
-    elif data_span <= 31:
-        fig.update_xaxes(dtick="D1")
-    else:
-        fig.update_xaxes(dtick="M1")
-
-    # Enhanced axes styling
-    fig.update_xaxes(
-        showgrid=True,
-        gridwidth=1,
-        gridcolor='rgba(52, 152, 219, 0.2)',
-        showline=True,
-        linewidth=2,
-        linecolor='#5DADE2',
-        title_font=dict(size=14, color="#1B4F72", family="Arial", weight="bold"),
-        tickangle=45
-    )
-
-    fig.update_yaxes(
-        showgrid=True,
-        gridwidth=1,
-        gridcolor='rgba(52, 152, 219, 0.2)',
-        showline=True,
-        linewidth=2,
-        linecolor='#5DADE2',
-        title_font=dict(size=14, color="#1B4F72", family="Arial", weight="bold")
+        height=500
     )
 
     return fig
 
 
-def create_enhanced_heatmap(df, x_col, y_col, values_col, chart_title):
-    """Create an enhanced heatmap with beautiful blue styling"""
-
-    # Create pivot table for heatmap
-    pivot_df = df.pivot_table(values=values_col, index=y_col, columns=x_col, aggfunc='mean')
-
-    fig = go.Figure(data=go.Heatmap(
-        z=pivot_df.values,
-        x=pivot_df.columns,
-        y=pivot_df.index,
-        colorscale='Blues',
-        colorbar=dict(title=get_smart_yaxis_title(values_col, chart_title))
-    ))
-
-    # Enhanced layout with beautiful styling and smart axis naming
-    fig.update_layout(
-        title=dict(
-            text=chart_title,
-            x=0.5,
-            y=0.95,
-            xanchor='center',
-            yanchor='top',
-            font=dict(size=20, family="Arial", weight="bold", color="#1B4F72")
-        ),
-        xaxis_title=get_smart_xaxis_title(x_col),
-        yaxis_title=get_smart_yaxis_title(y_col, chart_title),
-        margin=dict(t=80, b=50, l=50, r=50),
-        height=520,
-        plot_bgcolor='rgba(248,251,255,0.8)',
-    )
-
-    # Enhanced axes styling
-    fig.update_xaxes(
-        showgrid=True,
-        gridwidth=1,
-        gridcolor='rgba(52, 152, 219, 0.2)',
-        showline=True,
-        linewidth=2,
-        linecolor='#5DADE2',
-        title_font=dict(size=14, color="#1B4F72", family="Arial", weight="bold"),
-        tickangle=45
-    )
-
-    fig.update_yaxes(
-        showgrid=True,
-        gridwidth=1,
-        gridcolor='rgba(52, 152, 219, 0.2)',
-        showline=True,
-        linewidth=2,
-        linecolor='#5DADE2',
-        title_font=dict(size=14, color="#1B4F72", family="Arial", weight="bold")
-    )
-
-    return fig
