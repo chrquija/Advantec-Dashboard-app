@@ -38,11 +38,19 @@ def get_smart_yaxis_title(y_col, chart_title):
         if col_lower == "strength" or "avg_speed" in col_lower:
             return "Speed (mph)"
 
-    # Volume variable mappings
-    elif "vehicle volume" in title_lower:
+        # Volume variable mappings - Enhanced with better pattern matching
+    elif "vehicle volume" in title_lower or "volume" in title_lower:
+        # Check for common volume patterns
         if ("total_volume" in col_lower or
-                col_lower in ["04/10/2025 Northbound", "04/10/2025 Southbound",
-                              "02/13/2025 Northbound", "02/13/2025 Southbound"]):
+                "volume" in col_lower or
+                "northbound" in col_lower or
+                "southbound" in col_lower or
+                # Date-based column patterns (MM/DD/YYYY format)
+                any(date_pattern in col_lower for date_pattern in [
+                    "04/10/2025", "02/13/2025", "/2024", "/2025", "/2026"
+                ]) or
+                # Any column that looks like a date with direction
+                ("/" in col_lower and ("north" in col_lower or "south" in col_lower))):
             return "Vehicle Volume"
 
     # Default: Clean up column name by replacing underscores and capitalizing
