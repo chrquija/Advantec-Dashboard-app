@@ -165,8 +165,8 @@ def create_enhanced_line_chart(df, x_col, y_col, chart_title, color_name="blue")
             yanchor='top',
             font=dict(size=20, family="Arial", weight="bold", color="#1B4F72")
         ),
-        xaxis_title="Time",
-        yaxis_title="Vehicle Volume" if "Vehicle Volume" in chart_title else y_col,
+        xaxis_title="TIME (24-HOUR)",
+        yaxis_title="VEHICLE VOLUME" if "Vehicle Volume" in chart_title else y_col,
         hovermode='x unified',
         showlegend=True,
         margin=dict(t=80, b=50, l=50, r=50),
