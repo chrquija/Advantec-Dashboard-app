@@ -41,8 +41,8 @@ def get_smart_yaxis_title(y_col, chart_title):
     # Volume variable mappings
     elif "vehicle volume" in title_lower:
         if ("total_volume" in col_lower or
-                col_lower in ["04/10/2025 northbound", "04/10/2025 southbound",
-                              "02/13/2025 northbound", "02/13/2025 southbound"]):
+                col_lower in ["04/10/2025 Northbound", "04/10/2025 Southbound",
+                              "02/13/2025 Northbound", "02/13/2025 Southbound"]):
             return "Vehicle Volume"
 
     # Default: Clean up column name by replacing underscores and capitalizing
