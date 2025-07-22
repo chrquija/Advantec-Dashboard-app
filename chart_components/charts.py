@@ -94,7 +94,7 @@ def create_enhanced_line_chart(df, x_col, y_col, chart_title, color_name="blue")
                         line_width=0,
                     )
 
-                    # Add elegant period labels
+                    # Add elegant period labels (removed borderrad - not supported)
                     if current_date == start_datetime.date():
                         midpoint = period_start + (period_end - period_start) / 2
                         fig.add_annotation(
@@ -106,7 +106,6 @@ def create_enhanced_line_chart(df, x_col, y_col, chart_title, color_name="blue")
                             bgcolor="rgba(255,255,255,0.9)",
                             bordercolor=period["color"],
                             borderwidth=2,
-                            borderrad=4,
                         )
 
             current_date += timedelta(days=1)
@@ -116,12 +115,12 @@ def create_enhanced_line_chart(df, x_col, y_col, chart_title, color_name="blue")
         highest_indices = df[y_col].nlargest(5).index
         lowest_indices = df[y_col].nsmallest(5).index
 
-        # Enhanced annotations for highest points
+        # Enhanced annotations for highest points (removed borderrad)
         for i, idx in enumerate(highest_indices):
             fig.add_annotation(
                 x=df.loc[idx, x_col],
                 y=df.loc[idx, y_col],
-                text=f"🔺 {df.loc[idx, y_col]:.1f}",
+                text=f" {df.loc[idx, y_col]:.1f}",
                 showarrow=True,
                 arrowhead=2,
                 arrowsize=1.2,
@@ -132,17 +131,16 @@ def create_enhanced_line_chart(df, x_col, y_col, chart_title, color_name="blue")
                 bgcolor="rgba(255,255,255,0.95)",
                 bordercolor="#1565C0",
                 borderwidth=2,
-                borderrad=6,
                 font=dict(color="#0D47A1", size=11, family="Arial", weight="bold"),
                 opacity=0.95
             )
 
-        # Enhanced annotations for lowest points
+        # Enhanced annotations for lowest points (removed borderrad)
         for i, idx in enumerate(lowest_indices):
             fig.add_annotation(
                 x=df.loc[idx, x_col],
                 y=df.loc[idx, y_col],
-                text=f"🔻 {df.loc[idx, y_col]:.1f}",
+                text=f" {df.loc[idx, y_col]:.1f}",
                 showarrow=True,
                 arrowhead=2,
                 arrowsize=1.2,
@@ -153,7 +151,6 @@ def create_enhanced_line_chart(df, x_col, y_col, chart_title, color_name="blue")
                 bgcolor="rgba(255,255,255,0.95)",
                 bordercolor="#42A5F5",
                 borderwidth=2,
-                borderrad=6,
                 font=dict(color="#1976D2", size=11, family="Arial", weight="bold"),
                 opacity=0.95
             )
@@ -282,7 +279,7 @@ def create_enhanced_multi_line_chart(df, x_col, y_cols, chart_title):
                         line_width=0,
                     )
 
-                    # Add elegant period labels
+                    # Add elegant period labels (removed borderrad)
                     if current_date == start_datetime.date():
                         # Get max value from both columns for positioning
                         max_y = max(df[y_cols[0]].max(), df[y_cols[1]].max())
@@ -296,7 +293,6 @@ def create_enhanced_multi_line_chart(df, x_col, y_cols, chart_title):
                             bgcolor="rgba(255,255,255,0.9)",
                             bordercolor=period["color"],
                             borderwidth=2,
-                            borderrad=4,
                         )
 
             current_date += timedelta(days=1)
@@ -307,12 +303,12 @@ def create_enhanced_multi_line_chart(df, x_col, y_cols, chart_title):
             highest_indices = df[col].nlargest(3).index
             lowest_indices = df[col].nsmallest(3).index
 
-            # Enhanced peaks with improved styling
+            # Enhanced peaks with improved styling (removed borderrad)
             for j, idx in enumerate(highest_indices):
                 fig.add_annotation(
                     x=df.loc[idx, x_col],
                     y=df.loc[idx, col],
-                    text=f"🔺 {df.loc[idx, col]:.1f}",
+                    text=f" {df.loc[idx, col]:.1f}",
                     showarrow=True,
                     arrowhead=2,
                     arrowsize=1.2,
@@ -323,17 +319,16 @@ def create_enhanced_multi_line_chart(df, x_col, y_cols, chart_title):
                     bgcolor="rgba(255,255,255,0.95)",
                     bordercolor=colors[i],
                     borderwidth=2,
-                    borderrad=6,
                     font=dict(color=colors[i], size=10, family="Arial", weight="bold"),
                     opacity=0.95
                 )
 
-            # Enhanced lows with improved styling
+            # Enhanced lows with improved styling (removed borderrad)
             for j, idx in enumerate(lowest_indices):
                 fig.add_annotation(
                     x=df.loc[idx, x_col],
                     y=df.loc[idx, col],
-                    text=f"🔻 {df.loc[idx, col]:.1f}",
+                    text=f" {df.loc[idx, col]:.1f}",
                     showarrow=True,
                     arrowhead=2,
                     arrowsize=1.2,
@@ -344,7 +339,6 @@ def create_enhanced_multi_line_chart(df, x_col, y_cols, chart_title):
                     bgcolor="rgba(255,255,255,0.95)",
                     bordercolor=colors[i],
                     borderwidth=2,
-                    borderrad=6,
                     font=dict(color=colors[i], size=10, family="Arial", weight="bold"),
                     opacity=0.95
                 )
