@@ -69,9 +69,9 @@ def create_enhanced_line_chart(df, x_col, y_col, chart_title, color_name="blue")
 
         # Define time periods with modern blue-themed palette
         time_periods = [
-            {"name": "AM Peak", "start": 5, "end": 10, "color": "#3498DB", "opacity": 0.15},  # Light blue
-            {"name": "Midday", "start": 11, "end": 15, "color": "#85C1E9", "opacity": 0.12},  # Lighter blue
-            {"name": "PM Peak", "start": 16, "end": 20, "color": "#5DADE2", "opacity": 0.18}  # Medium blue
+            {"name": "AM (5:00 - 10:00)", "start": 5, "end": 10, "color": "#3498DB", "opacity": 0.15},  # Light blue
+            {"name": "MD (11:00 - 15:00)", "start": 11, "end": 15, "color": "#85C1E9", "opacity": 0.12},  # Lighter blue
+            {"name": "PM (16:00 - 20:00)", "start": 16, "end": 20, "color": "#5DADE2", "opacity": 0.18}  # Medium blue
         ]
 
         # Iterate through each day in the date range
