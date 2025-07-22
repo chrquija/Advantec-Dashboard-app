@@ -26,8 +26,76 @@ def format_value_with_units(value, variable):
     return f"{value:.1f}"
 
 
+from datetime import timedelta, time
+import pandas as pd
+import plotly.graph_objects as go
+
+
+def get_smart_xaxis_title(x_col):
+    """Generate intelligent X-axis titles based on column content"""
+    col_lower = x_col.lower()
+
+    # Specific mappings for your use case
+    if col_lower == "local_datetime":
+        return "Date & Time"
+    elif col_lower in ["time"]:
+        return "Date & Time"
+
+    # Default: Clean up column name by replacing underscores and capitalizing
+    else:
+        return x_col.replace('_', ' ').replace('-', ' ').title()
+
+
+def get_smart_yaxis_title(y_col, chart_title):
+    """Generate intelligent Y-axis titles based on column content and variable selection"""
+    col_lower = y_col.lower()
+
+    # Check what variable is selected based on chart title
+    title_lower = chart_title.lower()
+
+    # Travel Time variable mappings
+    if "travel time" in title_lower:
+        if col_lower == "strength" or "avg_travel_time" in col_lower:
+            return "Travel Time (minutes)"
+
+    # Speed variable mappings
+    elif "speed" in title_lower:
+        if col_lower == "strength" or "avg_speed" in col_lower:
+            return "Speed (mph)"
+
+    # Volume variable mappings
+    elif "vehicle volume" in title_lower:
+        if ("total_volume" in col_lower or
+                col_lower in ["04/10/2025 northbound", "04/10/2025 southbound",
+                              "02/13/2025 northbound", "02/13/2025 southbound"]):
+            return "Vehicle Volume"
+
+    # Default: Clean up column name by replacing underscores and capitalizing
+    return y_col.replace('_', ' ').replace('-', ' ').title()
+
+
+def is_single_day_data(df, x_col):
+    """Check if the data spans only a single day"""
+    if df.empty:
+        return True
+
+    start_date = df[x_col].min().date()
+    end_date = df[x_col].max().date()
+    return start_date == end_date
+
+
+def get_data_span_days(df, x_col):
+    """Get the number of days the data spans"""
+    if df.empty:
+        return 0
+
+    start_date = df[x_col].min().date()
+    end_date = df[x_col].max().date()
+    return (end_date - start_date).days + 1
+
+
 def create_enhanced_line_chart(df, x_col, y_col, chart_title, color_name="blue"):
-    """Create an enhanced single line chart with beautiful blue styling and time period shading"""
+    """Create an enhanced single line chart with beautiful blue styling and smart time period handling"""
 
     # Create the base figure using Graph Objects for more control
     fig = go.Figure()
@@ -63,59 +131,61 @@ def create_enhanced_line_chart(df, x_col, y_col, chart_title, color_name="blue")
             shade_toggle = not shade_toggle
             current_date += timedelta(days=1)
 
-        # Enhanced time period shading with beautiful blue-themed colors
-        start_datetime = df[x_col].min()
-        end_datetime = df[x_col].max()
+        # Only add time period shading and labels for single day data
+        if is_single_day_data(df, x_col):
+            # Enhanced time period shading with beautiful blue-themed colors
+            start_datetime = df[x_col].min()
+            end_datetime = df[x_col].max()
 
-        # Define time periods with modern blue-themed palette
-        time_periods = [
-            {"name": "AM (5:00 - 10:00)", "start": 5, "end": 10, "color": "#3498DB", "opacity": 0.15},  # Light blue
-            {"name": "MD (11:00 - 15:00)", "start": 11, "end": 15, "color": "#85C1E9", "opacity": 0.12},  # Lighter blue
-            {"name": "PM (16:00 - 20:00)", "start": 16, "end": 20, "color": "#5DADE2", "opacity": 0.18}  # Medium blue
-        ]
+            # Define time periods with modern blue-themed palette
+            time_periods = [
+                {"name": "AM Peak", "start": 5, "end": 10, "color": "#3498DB", "opacity": 0.15},  # Light blue
+                {"name": "Midday", "start": 11, "end": 15, "color": "#85C1E9", "opacity": 0.12},  # Lighter blue
+                {"name": "PM Peak", "start": 16, "end": 20, "color": "#5DADE2", "opacity": 0.18}  # Medium blue
+            ]
 
-        # Iterate through each day in the date range
-        current_date = start_datetime.date()
-        end_date = end_datetime.date()
+            # Iterate through each day in the date range
+            current_date = start_datetime.date()
+            end_date = end_datetime.date()
 
-        while current_date <= end_date:
-            for period in time_periods:
-                period_start = pd.Timestamp.combine(current_date, time(period["start"], 0))
-                period_end = pd.Timestamp.combine(current_date, time(period["end"], 0))
+            while current_date <= end_date:
+                for period in time_periods:
+                    period_start = pd.Timestamp.combine(current_date, time(period["start"], 0))
+                    period_end = pd.Timestamp.combine(current_date, time(period["end"], 0))
 
-                # Only add shading if the period overlaps with our data range
-                if period_start <= end_datetime and period_end >= start_datetime:
-                    fig.add_vrect(
-                        x0=max(period_start, start_datetime),
-                        x1=min(period_end, end_datetime),
-                        fillcolor=period["color"],
-                        opacity=period["opacity"],
-                        layer="below",
-                        line_width=0,
-                    )
-
-                    # Add elegant period labels (removed borderrad - not supported)
-                    if current_date == start_datetime.date():
-                        midpoint = period_start + (period_end - period_start) / 2
-                        fig.add_annotation(
-                            x=midpoint,
-                            y=df[y_col].max() * 0.95,
-                            text=period["name"],
-                            showarrow=False,
-                            font=dict(size=11, color="#1B4F72", family="Arial", weight="bold"),
-                            bgcolor="rgba(255,255,255,0.9)",
-                            bordercolor=period["color"],
-                            borderwidth=2,
+                    # Only add shading if the period overlaps with our data range
+                    if period_start <= end_datetime and period_end >= start_datetime:
+                        fig.add_vrect(
+                            x0=max(period_start, start_datetime),
+                            x1=min(period_end, end_datetime),
+                            fillcolor=period["color"],
+                            opacity=period["opacity"],
+                            layer="below",
+                            line_width=0,
                         )
 
-            current_date += timedelta(days=1)
+                        # Add elegant period labels
+                        if current_date == start_datetime.date():
+                            midpoint = period_start + (period_end - period_start) / 2
+                            fig.add_annotation(
+                                x=midpoint,
+                                y=df[y_col].max() * 0.95,
+                                text=period["name"],
+                                showarrow=False,
+                                font=dict(size=11, color="#1B4F72", family="Arial", weight="bold"),
+                                bgcolor="rgba(255,255,255,0.9)",
+                                bordercolor=period["color"],
+                                borderwidth=2,
+                            )
+
+                current_date += timedelta(days=1)
 
     # Enhanced peak/low annotations with blue theme
     if len(df) >= 5:
         highest_indices = df[y_col].nlargest(5).index
         lowest_indices = df[y_col].nsmallest(5).index
 
-        # Enhanced annotations for highest points (removed borderrad)
+        # Enhanced annotations for highest points
         for i, idx in enumerate(highest_indices):
             fig.add_annotation(
                 x=df.loc[idx, x_col],
@@ -135,7 +205,7 @@ def create_enhanced_line_chart(df, x_col, y_col, chart_title, color_name="blue")
                 opacity=0.95
             )
 
-        # Enhanced annotations for lowest points (removed borderrad)
+        # Enhanced annotations for lowest points
         for i, idx in enumerate(lowest_indices):
             fig.add_annotation(
                 x=df.loc[idx, x_col],
@@ -155,7 +225,7 @@ def create_enhanced_line_chart(df, x_col, y_col, chart_title, color_name="blue")
                 opacity=0.95
             )
 
-    # Enhanced layout with beautiful styling
+    # Enhanced layout with beautiful styling and smart axis naming
     fig.update_layout(
         title=dict(
             text=chart_title,
@@ -165,14 +235,27 @@ def create_enhanced_line_chart(df, x_col, y_col, chart_title, color_name="blue")
             yanchor='top',
             font=dict(size=20, family="Arial", weight="bold", color="#1B4F72")
         ),
-        xaxis_title="TIME (24-HOUR)",
-        yaxis_title="VEHICLE VOLUME" if "Vehicle Volume" in chart_title else y_col,
+        xaxis_title=get_smart_xaxis_title(x_col),  # Smart X-axis naming!
+        yaxis_title=get_smart_yaxis_title(y_col, chart_title),  # Smart Y-axis naming!
         hovermode='x unified',
         showlegend=True,
         margin=dict(t=80, b=50, l=50, r=50),
         height=520,
         plot_bgcolor='rgba(248,251,255,0.8)',  # Very light blue background
     )
+
+    # Smart X-axis tick configuration based on data span
+    data_span = get_data_span_days(df, x_col)
+
+    if data_span == 1:
+        # Single day - show every hour
+        fig.update_xaxes(dtick="H1", tickformat="%H:%M")
+    elif data_span <= 31:
+        # Up to a month - show every day
+        fig.update_xaxes(dtick="D1", tickformat="%b %d")
+    else:
+        # More than a month - show every month
+        fig.update_xaxes(dtick="M1", tickformat="%b %Y")
 
     # Enhanced axes styling
     fig.update_xaxes(
@@ -182,7 +265,8 @@ def create_enhanced_line_chart(df, x_col, y_col, chart_title, color_name="blue")
         showline=True,
         linewidth=2,
         linecolor='#5DADE2',
-        title_font=dict(size=14, color="#1B4F72", family="Arial", weight="bold")
+        title_font=dict(size=14, color="#1B4F72", family="Arial", weight="bold"),
+        tickangle=45  # Angle labels for better readability
     )
 
     fig.update_yaxes(
@@ -248,54 +332,56 @@ def create_enhanced_multi_line_chart(df, x_col, y_cols, chart_title):
             shade_toggle = not shade_toggle
             current_date += timedelta(days=1)
 
-        # Enhanced time period shading with beautiful blue-themed colors
-        start_datetime = df[x_col].min()
-        end_datetime = df[x_col].max()
+        # Only add time period shading and labels for single day data
+        if is_single_day_data(df, x_col):
+            # Enhanced time period shading with beautiful blue-themed colors
+            start_datetime = df[x_col].min()
+            end_datetime = df[x_col].max()
 
-        # Define time periods with modern blue-themed palette
-        time_periods = [
-            {"name": "AM (5:00 - 10:00)", "start": 5, "end": 10, "color": "#3498DB", "opacity": 0.15},  # Light blue
-            {"name": "MD (11:00 - 15:00)", "start": 11, "end": 15, "color": "#85C1E9", "opacity": 0.12},  # Lighter blue
-            {"name": "PM (16:00 - 20:00)", "start": 16, "end": 20, "color": "#5DADE2", "opacity": 0.18}  # Medium blue
-        ]
+            # Define time periods with modern blue-themed palette
+            time_periods = [
+                {"name": "AM Peak", "start": 5, "end": 10, "color": "#3498DB", "opacity": 0.15},  # Light blue
+                {"name": "Midday", "start": 11, "end": 15, "color": "#85C1E9", "opacity": 0.12},  # Lighter blue
+                {"name": "PM Peak", "start": 16, "end": 20, "color": "#5DADE2", "opacity": 0.18}  # Medium blue
+            ]
 
-        # Iterate through each day in the date range
-        current_date = start_datetime.date()
-        end_date = end_datetime.date()
+            # Iterate through each day in the date range
+            current_date = start_datetime.date()
+            end_date = end_datetime.date()
 
-        while current_date <= end_date:
-            for period in time_periods:
-                period_start = pd.Timestamp.combine(current_date, time(period["start"], 0))
-                period_end = pd.Timestamp.combine(current_date, time(period["end"], 0))
+            while current_date <= end_date:
+                for period in time_periods:
+                    period_start = pd.Timestamp.combine(current_date, time(period["start"], 0))
+                    period_end = pd.Timestamp.combine(current_date, time(period["end"], 0))
 
-                # Only add shading if the period overlaps with our data range
-                if period_start <= end_datetime and period_end >= start_datetime:
-                    fig.add_vrect(
-                        x0=max(period_start, start_datetime),
-                        x1=min(period_end, end_datetime),
-                        fillcolor=period["color"],
-                        opacity=period["opacity"],
-                        layer="below",
-                        line_width=0,
-                    )
-
-                    # Add elegant period labels (removed borderrad)
-                    if current_date == start_datetime.date():
-                        # Get max value from both columns for positioning
-                        max_y = max(df[y_cols[0]].max(), df[y_cols[1]].max())
-                        midpoint = period_start + (period_end - period_start) / 2
-                        fig.add_annotation(
-                            x=midpoint,
-                            y=max_y * 0.95,
-                            text=period["name"],
-                            showarrow=False,
-                            font=dict(size=11, color="#1B4F72", family="Arial", weight="bold"),
-                            bgcolor="rgba(255,255,255,0.9)",
-                            bordercolor=period["color"],
-                            borderwidth=2,
+                    # Only add shading if the period overlaps with our data range
+                    if period_start <= end_datetime and period_end >= start_datetime:
+                        fig.add_vrect(
+                            x0=max(period_start, start_datetime),
+                            x1=min(period_end, end_datetime),
+                            fillcolor=period["color"],
+                            opacity=period["opacity"],
+                            layer="below",
+                            line_width=0,
                         )
 
-            current_date += timedelta(days=1)
+                        # Add elegant period labels
+                        if current_date == start_datetime.date():
+                            # Get max value from both columns for positioning
+                            max_y = max(df[y_cols[0]].max(), df[y_cols[1]].max())
+                            midpoint = period_start + (period_end - period_start) / 2
+                            fig.add_annotation(
+                                x=midpoint,
+                                y=max_y * 0.95,
+                                text=period["name"],
+                                showarrow=False,
+                                font=dict(size=11, color="#1B4F72", family="Arial", weight="bold"),
+                                bgcolor="rgba(255,255,255,0.9)",
+                                bordercolor=period["color"],
+                                borderwidth=2,
+                            )
+
+                current_date += timedelta(days=1)
 
     # Enhanced annotations for each line's peaks and lows
     for i, col in enumerate(y_cols):
@@ -303,7 +389,7 @@ def create_enhanced_multi_line_chart(df, x_col, y_cols, chart_title):
             highest_indices = df[col].nlargest(3).index
             lowest_indices = df[col].nsmallest(3).index
 
-            # Enhanced peaks with improved styling (removed borderrad)
+            # Enhanced peaks with improved styling
             for j, idx in enumerate(highest_indices):
                 fig.add_annotation(
                     x=df.loc[idx, x_col],
@@ -323,7 +409,7 @@ def create_enhanced_multi_line_chart(df, x_col, y_cols, chart_title):
                     opacity=0.95
                 )
 
-            # Enhanced lows with improved styling (removed borderrad)
+            # Enhanced lows with improved styling
             for j, idx in enumerate(lowest_indices):
                 fig.add_annotation(
                     x=df.loc[idx, x_col],
@@ -343,7 +429,10 @@ def create_enhanced_multi_line_chart(df, x_col, y_cols, chart_title):
                     opacity=0.95
                 )
 
-    # Enhanced layout with beautiful styling
+    # Determine smart Y-axis title (use first column as representative)
+    smart_yaxis_title = get_smart_yaxis_title(y_cols[0], chart_title)
+
+    # Enhanced layout with beautiful styling and smart axis naming
     fig.update_layout(
         title=dict(
             text=chart_title,
@@ -353,8 +442,8 @@ def create_enhanced_multi_line_chart(df, x_col, y_cols, chart_title):
             yanchor='top',
             font=dict(size=20, family="Arial", weight="bold", color="#1B4F72")
         ),
-        xaxis_title="Time",
-        yaxis_title="Vehicle Volume" if "Vehicle Volume" in chart_title else "Value",
+        xaxis_title=get_smart_xaxis_title(x_col),  # Smart X-axis naming!
+        yaxis_title=smart_yaxis_title,  # Smart Y-axis naming!
         hovermode='x unified',
         showlegend=True,
         legend=dict(
@@ -368,6 +457,19 @@ def create_enhanced_multi_line_chart(df, x_col, y_cols, chart_title):
         plot_bgcolor='rgba(248,251,255,0.8)',  # Very light blue background
     )
 
+    # Smart X-axis tick configuration based on data span
+    data_span = get_data_span_days(df, x_col)
+
+    if data_span == 1:
+        # Single day - show every hour
+        fig.update_xaxes(dtick="H1", tickformat="%H:%M")
+    elif data_span <= 31:
+        # Up to a month - show every day
+        fig.update_xaxes(dtick="D1", tickformat="%b %d")
+    else:
+        # More than a month - show every month
+        fig.update_xaxes(dtick="M1", tickformat="%b %Y")
+
     # Enhanced axes styling
     fig.update_xaxes(
         showgrid=True,
@@ -376,7 +478,8 @@ def create_enhanced_multi_line_chart(df, x_col, y_cols, chart_title):
         showline=True,
         linewidth=2,
         linecolor='#5DADE2',
-        title_font=dict(size=14, color="#1B4F72", family="Arial", weight="bold")
+        title_font=dict(size=14, color="#1B4F72", family="Arial", weight="bold"),
+        tickangle=45  # Angle labels for better readability
     )
 
     fig.update_yaxes(
