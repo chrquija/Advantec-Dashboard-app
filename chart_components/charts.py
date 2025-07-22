@@ -271,7 +271,7 @@ def create_enhanced_line_chart(df, x_col, y_col, chart_title):
         # More than a month - show every month
         fig.update_xaxes(dtick="M1")
 
-    # Enhanced axes styling with better dark mode support
+    # Enhanced axes styling with dynamic color support for both light and dark modes
     fig.update_xaxes(
         showgrid=True,
         gridwidth=1,
@@ -281,13 +281,13 @@ def create_enhanced_line_chart(df, x_col, y_col, chart_title):
         linecolor='#5DADE2',
         title_font=dict(
             size=16,
-            color="#FFFFFF",  # White text for better visibility in both modes
+            color=None,  # Let Plotly use automatic theme-appropriate colors
             family="Arial",
             weight="bold"
         ),
         tickangle=45,  # Angle labels for better readability
         tickfont=dict(
-            color="#FFFFFF",  # White tick labels
+            color=None,  # Automatic theme colors for tick labels
             size=12
         )
     )
@@ -301,12 +301,12 @@ def create_enhanced_line_chart(df, x_col, y_col, chart_title):
         linecolor='#5DADE2',
         title_font=dict(
             size=16,
-            color="#FFFFFF",  # White text for better visibility in both modes
+            color=None,  # Let Plotly use automatic theme-appropriate colors
             family="Arial",
             weight="bold"
         ),
         tickfont=dict(
-            color="#FFFFFF",  # White tick labels
+            color=None,  # Automatic theme colors for tick labels
             size=12
         )
     )
@@ -433,7 +433,7 @@ def create_enhanced_multi_line_chart(df, x_col, y_cols, chart_title):
         # More than a month - show every month
         fig.update_xaxes(dtick="M1")
 
-    # Enhanced axes styling with better dark mode support
+    # Enhanced axes styling with dynamic color support for both light and dark modes
     fig.update_xaxes(
         showgrid=True,
         gridwidth=1,
@@ -443,13 +443,13 @@ def create_enhanced_multi_line_chart(df, x_col, y_cols, chart_title):
         linecolor='#5DADE2',
         title_font=dict(
             size=16,
-            color="#FFFFFF",  # White text for better visibility in both modes
+            color=None,  # Let Plotly use automatic theme-appropriate colors
             family="Arial",
             weight="bold"
         ),
         tickangle=45,  # Angle labels for better readability
         tickfont=dict(
-            color="#FFFFFF",  # White tick labels
+            color=None,  # Automatic theme colors for tick labels
             size=12
         )
     )
@@ -463,12 +463,12 @@ def create_enhanced_multi_line_chart(df, x_col, y_cols, chart_title):
         linecolor='#5DADE2',
         title_font=dict(
             size=16,
-            color="#FFFFFF",  # White text for better visibility in both modes
+            color=None,  # Let Plotly use automatic theme-appropriate colors
             family="Arial",
             weight="bold"
         ),
         tickfont=dict(
-            color="#FFFFFF",  # White tick labels
+            color=None,  # Automatic theme colors for tick labels
             size=12
         )
     )
