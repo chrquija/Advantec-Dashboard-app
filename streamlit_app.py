@@ -473,59 +473,120 @@ elif data_source == "API Connection":
     st.stop()
 
 
-# === Filepath Mapping Logic ===
-base_url = "https://raw.githubusercontent.com/chrquija/Advantec-Dashboard-app/refs/heads/main/hwy111_to_ave52/"
-corridor_segment = "Washington St: Highway 111 to Avenue 52"
+# === UPDATED Filepath Mapping Logic ===
+def get_washington_st_data_paths():
+    """Return paths for Washington St Corridor full datasets"""
+    base_url = "https://raw.githubusercontent.com/chrquija/Advantec-Dashboard-app/refs/heads/main/hwy111_to_ave52/"
 
-path_map = {
-    # === SPEED ===
-    ("Speed", "NB",
-     "April 11–20, 2025"): base_url + "SPEED/Weeks_04112025_to_04202025/NB_Washington_Avenue_52_to_Hwy_111_SPEED_1hr_0411_04202025.csv",
-    ("Speed", "SB",
-     "April 11–20, 2025"): base_url + "SPEED/Weeks_04112025_to_04202025/SB_Washington_Hwy_111_to_Avenue_52_SPEED_1hr_0411_04202025.csv",
-    ("Speed", "Both", "April 11–20, 2025"): "BOTH",
+    return {
+        # === SPEED DATA (9/1/2024 - 6/24/2025) ===
+        "speed_full_dataset": {
+            "url": base_url + "SPEED/Iteris/september_to_june/NSB_WashingtonCorridor_Ave52_to_HWY111_1hr_SPEED_090124to062325.csv",
+            "columns": {
+                "datetime": "local_datetime",
+                "nb_speed": "NB_avg_speed",
+                "sb_speed": "SB_avg_speed"
+            },
+            "date_range": "2024-09-01 to 2025-06-24",
+            "source": "Iteris ClearGuide",
+            "units": "mph"
+        },
 
-    ("Speed", "NB",
-     "May 9–18, 2025"): base_url + "SPEED/Weeks_05092025_to_05182025/NB_Washington_Avenue_52_to_Hwy_111_%20SPEED_1hr_0509_05182025.csv",
-    ("Speed", "SB",
-     "May 9–18, 2025"): base_url + "SPEED/Weeks_05092025_to_05182025/SB_Washington_Hwy%20111_to_Avenue%2052_SPEED_1hr_0509_05182025.csv",
-    ("Speed", "Both", "May 9–18, 2025"): "BOTH",
+        # === TRAVEL TIME DATA (9/1/2024 - 6/24/2025) ===
+        "travel_time_full_dataset": {
+            "url": base_url + "TRAVEL_TIME/Iteris/september_to_june/TrvltimeNSB_WashingtonCorr_Ave52_to_HWY111_1hr_901to0623.csv",
+            "columns": {
+                "datetime": "local_datetime",
+                "nb_travel_time": "NB_avg_travel_time",
+                "sb_travel_time": "SB_avg_travel_time"
+            },
+            "date_range": "2024-09-01 to 2025-06-24",
+            "source": "Iteris ClearGuide",
+            "units": "minutes"
+        },
 
-    # === TRAVEL TIME ===
-    ("Travel Time", "NB",
-     "April 11–20, 2025"): base_url + "TRAVEL_TIME/Weeks_04112025_to_04202025/NB_Washington_Avenue_52_to_Hwy_111_TRAVEL_TIME_1hr_0411_04202025.csv",
-    ("Travel Time", "SB",
-     "April 11–20, 2025"): base_url + "TRAVEL_TIME/Weeks_04112025_to_04202025/SB_Washington_Hwy_111_to_Avenue_52_TRAVEL_TIME_1hr_0411_04202025.csv",
-    ("Travel Time", "Both", "April 11–20, 2025"): "BOTH",
+        # === VOLUME DATA (10/30/2024 - 6/15/2025) ===
+        "volume_full_dataset": {
+            "url": base_url + "VOLUME/KMOB/September2024_to_June2025/ALL_MELTED_Washington_Ave52TOAve47__1hr_SUM_NS_VOLUME_OctoberTOJune.csv",
+            "columns": {
+                "datetime": "local_datetime",
+                "nb_volume": "NB_total_volume",
+                "sb_volume": "SB_total_volume"
+            },
+            "date_range": "2024-10-30 to 2025-06-15",
+            "source": "Kinetic Mobility",
+            "units": "vehicles"
+        }
+    }
 
-    ("Travel Time", "NB",
-     "May 9–18, 2025"): base_url + "TRAVEL_TIME/Weeks_05092025_to_05182025/NB_Washington_Avenue_52_to_Hwy_111_TRAVEL_TIME_1_hr_0509_05182025.csv",
-    ("Travel Time", "SB",
-     "May 9–18, 2025"): base_url + "TRAVEL_TIME/Weeks_05092025_to_05182025/SB_Washington_Hwy_111_to_Avenue_52_TRAVEL_TIME_1_hr_0509_05182025.csv",
-    ("Travel Time", "Both", "May 9–18, 2025"): "BOTH",
 
-    # === VEHICLE VOLUME (April 10) — All 3 use same file ===
-    ("Vehicle Volume", "NB",
-     "April 10, 2025"): base_url + "VOLUME/Thursday_April_10/Washington_and_Ave_52_NB_and_SB_VolumeDATA_THURSDAY_APRIL_10.csv",
-    ("Vehicle Volume", "SB",
-     "April 10, 2025"): base_url + "VOLUME/Thursday_April_10/Washington_and_Ave_52_NB_and_SB_VolumeDATA_THURSDAY_APRIL_10.csv",
-    ("Vehicle Volume", "Both",
-     "April 10, 2025"): base_url + "VOLUME/Thursday_April_10/Washington_and_Ave_52_NB_and_SB_VolumeDATA_THURSDAY_APRIL_10.csv",
+def load_washington_st_data(variable, direction):
+    """Load the appropriate full dataset"""
+    data_paths = get_washington_st_data_paths()
 
-    # === VEHICLE VOLUME (Feb 13) — All 3 use same file ===
-    ("Vehicle Volume", "NB",
-     "Feb 13, 2025"): base_url + "VOLUME/Thursday_Feb_13/Washington_and_Ave_52_NB_and_SB_VolumeDATA_Thursday_Feb_13.csv",
-    ("Vehicle Volume", "SB",
-     "Feb 13, 2025"): base_url + "VOLUME/Thursday_Feb_13/Washington_and_Ave_52_NB_and_SB_VolumeDATA_Thursday_Feb_13.csv",
-    ("Vehicle Volume", "Both",
-     "Feb 13, 2025"): base_url + "VOLUME/Thursday_Feb_13/Washington_and_Ave_52_NB_and_SB_VolumeDATA_Thursday_Feb_13.csv",
-}
+    # Map variable to dataset key
+    dataset_map = {
+        "Speed": "speed_full_dataset",
+        "Travel Time": "travel_time_full_dataset",
+        "Vehicle Volume": "volume_full_dataset"
+    }
 
-# Define date_range if not already defined
-if 'date_range' not in locals():
-    date_range = "uploaded_file"
+    dataset_key = dataset_map.get(variable)
+    if not dataset_key:
+        return None
 
-selected_path = path_map.get((variable, direction, date_range), "No path available for selection.")
+    dataset_info = data_paths[dataset_key]
+
+    try:
+        # Load the full dataset
+        df = pd.read_csv(dataset_info["url"])
+
+        # Convert datetime column
+        datetime_col = dataset_info["columns"]["datetime"]
+        df[datetime_col] = pd.to_datetime(df[datetime_col])
+
+        # Filter by direction if needed
+        if direction == "NB":
+            if variable == "Speed":
+                df = df[[datetime_col, dataset_info["columns"]["nb_speed"]]].copy()
+                df.columns = ['datetime', 'value']
+            elif variable == "Travel Time":
+                df = df[[datetime_col, dataset_info["columns"]["nb_travel_time"]]].copy()
+                df.columns = ['datetime', 'value']
+            elif variable == "Vehicle Volume":
+                df = df[[datetime_col, dataset_info["columns"]["nb_volume"]]].copy()
+                df.columns = ['datetime', 'value']
+
+        elif direction == "SB":
+            if variable == "Speed":
+                df = df[[datetime_col, dataset_info["columns"]["sb_speed"]]].copy()
+                df.columns = ['datetime', 'value']
+            elif variable == "Travel Time":
+                df = df[[datetime_col, dataset_info["columns"]["sb_travel_time"]]].copy()
+                df.columns = ['datetime', 'value']
+            elif variable == "Vehicle Volume":
+                df = df[[datetime_col, dataset_info["columns"]["sb_volume"]]].copy()
+                df.columns = ['datetime', 'value']
+
+        elif direction == "Both":
+            # Keep both directions
+            if variable == "Speed":
+                df = df[[datetime_col, dataset_info["columns"]["nb_speed"], dataset_info["columns"]["sb_speed"]]].copy()
+                df.columns = ['datetime', 'NB_value', 'SB_value']
+            elif variable == "Travel Time":
+                df = df[[datetime_col, dataset_info["columns"]["nb_travel_time"],
+                         dataset_info["columns"]["sb_travel_time"]]].copy()
+                df.columns = ['datetime', 'NB_value', 'SB_value']
+            elif variable == "Vehicle Volume":
+                df = df[
+                    [datetime_col, dataset_info["columns"]["nb_volume"], dataset_info["columns"]["sb_volume"]]].copy()
+                df.columns = ['datetime', 'NB_value', 'SB_value']
+
+        return df, dataset_info
+
+    except Exception as e:
+        st.error(f"Error loading {variable} data: {e}")
+        return None, None
 
 # === EXTENSIBLE DATA LOADING SYSTEM (helps the sidebar do its job) ===
 
