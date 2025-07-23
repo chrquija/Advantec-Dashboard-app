@@ -769,33 +769,15 @@ def load_data_by_source(data_source, **kwargs):
 
 # === USAGE IN MAIN APP ===
 if data_source == "GitHub Repository":
-    # Existing GitHub logic
-    selected_path = path_map.get((variable, direction, date_range), "No path available for selection.")
+    # NEW: Load data using the new function
+    df, dataset_info = load_washington_st_data(variable, direction)
 
-    if selected_path == "No path available for selection.":
+    if df is None:
         st.error("No data available for the selected combination.")
         st.stop()
-    elif selected_path == "BOTH":
-        # Handle "Both" direction
-        nb_path = path_map.get((variable, "NB", date_range))
-        sb_path = path_map.get((variable, "SB", date_range))
 
-        if nb_path and sb_path:
-            df_nb = load_data_by_source("GitHub Repository", url=nb_path)
-            df_sb = load_data_by_source("GitHub Repository", url=sb_path)
-
-            if df_nb is not None and df_sb is not None:
-                df = pd.concat([df_nb, df_sb], ignore_index=True)
-            else:
-                st.error("Error loading data for both directions.")
-                st.stop()
-        else:
-            st.error("Data not available for both directions.")
-            st.stop()
-    else:
-        df = load_data_by_source("GitHub Repository", url=selected_path)
-        if df is None:
-            st.stop()
+    # Set selected_path for compatibility (optional)
+    selected_path = dataset_info["url"] if dataset_info else "New data loading system"
 
 elif data_source == "Uploaded CSV":
     # Validate file selection before accessing
@@ -994,39 +976,6 @@ try:
                         fig_sb.update_yaxes(title="Date")
 
                         st.plotly_chart(fig_sb, use_container_width=True)
-
-        else:
-            # FLIR ACYCLICA: Load both NB and SB files separately
-            path_nb = path_map.get((variable, "NB", date_range))
-            path_sb = path_map.get((variable, "SB", date_range))
-
-            if not path_nb or not path_sb:
-                raise FileNotFoundError("One or both directional files not found.")
-
-            df_nb = pd.read_csv(path_nb)
-            df_sb = pd.read_csv(path_sb)
-
-            time_col = "Time"
-            df_nb[time_col] = pd.to_datetime(df_nb[time_col], errors="coerce")
-            df_sb[time_col] = pd.to_datetime(df_sb[time_col], errors="coerce")
-
-            df_nb.dropna(subset=[time_col], inplace=True)
-            df_sb.dropna(subset=[time_col], inplace=True)
-
-            df_nb.set_index(time_col, inplace=True)
-            df_sb.set_index(time_col, inplace=True)
-
-            # Use "Strength" column for Speed and Travel Time (instead of "Firsts")
-            y_col = "Strength"
-            df_nb[y_col] = pd.to_numeric(df_nb[y_col], errors='coerce')
-            df_sb[y_col] = pd.to_numeric(df_sb[y_col], errors='coerce')
-
-            df_nb = df_nb.rename(columns={y_col: "Northbound"})
-            df_sb = df_sb.rename(columns={y_col: "Southbound"})
-
-            combined = pd.concat([df_nb["Northbound"], df_sb["Southbound"]], axis=1)
-            combined.dropna(inplace=True)
-            combined.reset_index(inplace=True)
 
             # Use clean titles for charts
             clean_title = get_base_title(variable, direction)
