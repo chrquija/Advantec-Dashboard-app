@@ -163,8 +163,7 @@ with st.sidebar:
     # SMART DATE RANGE SELECTION (GitHub only, API will have different logic)
     if data_source == "GitHub Repository":
 
-        # Get data availability info based on variable
-        data_paths = get_washington_st_data_paths()
+
 
         if variable == "Speed" or variable == "Travel Time":
             min_date = datetime(2024, 9, 1)
