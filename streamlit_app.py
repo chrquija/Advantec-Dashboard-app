@@ -141,6 +141,7 @@ with st.sidebar:
     ["GitHub Repository", "Uploaded CSV", "API Connection"],
     key="data_source"
 )
+
     # === 2. DASHBOARD FILTERS ===
     st.markdown("## 🔍 Dashboard Filters")
 
@@ -159,18 +160,144 @@ with st.sidebar:
         key="direction"
     )
 
-    # Date range selection (GitHub only, API will have different logic)
+    # SMART DATE RANGE SELECTION (GitHub only, API will have different logic)
     if data_source == "GitHub Repository":
-        if variable == "Vehicle Volume":
-            date_options = ["April 10, 2025", "Feb 13, 2025"]
-        else:  # Speed or Travel Time
-            date_options = ["April 11–20, 2025", "May 9–18, 2025"]
 
-        date_range = st.selectbox(
-            "Select Date Range",
-            date_options,
-            key="date_range"
+        # Get data availability info based on variable
+        data_paths = get_washington_st_data_paths()
+
+        if variable == "Speed" or variable == "Travel Time":
+            min_date = datetime(2024, 9, 1)
+            max_date = datetime(2025, 6, 24)
+            data_source_name = "Iteris ClearGuide"
+            total_days = (max_date - min_date).days + 1
+        elif variable == "Vehicle Volume":
+            min_date = datetime(2024, 10, 30)
+            max_date = datetime(2025, 6, 15)
+            data_source_name = "Kinetic Mobility"
+            total_days = (max_date - min_date).days + 1
+        else:
+            min_date = datetime(2024, 9, 1)
+            max_date = datetime(2025, 6, 24)
+            data_source_name = "Iteris ClearGuide"
+            total_days = (max_date - min_date).days + 1
+
+        # Show data availability info
+        st.info(
+            f"📊 **{data_source_name}** data available: {min_date.strftime('%b %d, %Y')} - {max_date.strftime('%b %d, %Y')} ({total_days:,} days)")
+
+        # Smart date range selector with validation
+        date_range = st.date_input(
+            "📅 Select Date Range",
+            value=(min_date.date(), max_date.date()),
+            min_value=min_date.date(),
+            max_value=max_date.date(),
+            format="MM/DD/YYYY",
+            help=f"Select any date range within the available {data_source_name} data period",
+            key="smart_date_range"
         )
+
+        # Handle single date vs date range
+        if isinstance(date_range, tuple) and len(date_range) == 2:
+            start_date, end_date = date_range
+            days_selected = (end_date - start_date).days + 1
+
+            # Show selection summary
+            if days_selected == 1:
+                st.success(f"✅ Selected: **{start_date.strftime('%b %d, %Y')}** (1 day)")
+            else:
+                st.success(
+                    f"✅ Selected: **{start_date.strftime('%b %d, %Y')}** to **{end_date.strftime('%b %d, %Y')}** ({days_selected:,} days)")
+        else:
+            # Handle single date selection
+            if isinstance(date_range, date):
+                start_date = end_date = date_range
+                st.success(f"✅ Selected: **{start_date.strftime('%b %d, %Y')}** (1 day)")
+
+    # SMART GRANULARITY SELECTOR
+    if data_source == "GitHub Repository":
+
+        # Determine available granularities based on selected date range
+        if isinstance(date_range, tuple) and len(date_range) == 2:
+            days_span = (date_range[1] - date_range[0]).days + 1
+        elif isinstance(date_range, date):
+            days_span = 1
+        else:
+            days_span = 1
+
+        # Smart granularity options based on date range
+        if days_span == 1:
+            # Single day - offer hourly options
+            granularity_options = [
+                "1 Hour",
+                "2 Hours",
+                "4 Hours",
+                "6 Hours",
+                "12 Hours",
+                "1 Day"
+            ]
+            default_granularity = "1 Hour"
+            help_text = "For single day: Hourly granularity recommended"
+
+        elif days_span <= 7:
+            # Week or less - offer hourly to daily
+            granularity_options = [
+                "1 Hour",
+                "2 Hours",
+                "4 Hours",
+                "6 Hours",
+                "12 Hours",
+                "1 Day"
+            ]
+            default_granularity = "6 Hours"
+            help_text = "For week or less: 6-hour intervals recommended"
+
+        elif days_span <= 31:
+            # Month or less - offer daily to weekly
+            granularity_options = [
+                "6 Hours",
+                "12 Hours",
+                "1 Day",
+                "2 Days",
+                "3 Days",
+                "1 Week"
+            ]
+            default_granularity = "1 Day"
+            help_text = "For month or less: Daily aggregation recommended"
+
+        else:
+            # More than a month - offer daily to monthly
+            granularity_options = [
+                "1 Day",
+                "2 Days",
+                "3 Days",
+                "1 Week",
+                "2 Weeks",
+                "1 Month"
+            ]
+            default_granularity = "1 Week"
+            help_text = "For long periods: Weekly aggregation recommended"
+
+        # Granularity selector
+        granularity = st.selectbox(
+            "⏱️ Data Granularity",
+            granularity_options,
+            index=granularity_options.index(default_granularity) if default_granularity in granularity_options else 0,
+            help=help_text,
+            key="smart_granularity"
+        )
+
+        # Show granularity impact
+        if granularity in ["1 Hour", "2 Hours", "4 Hours", "6 Hours", "12 Hours"]:
+            hours = int(granularity.split()[0]) if granularity != "12 Hours" else 12
+            total_points = (days_span * 24) // hours
+            st.caption(f"📈 This will show ~{total_points:,} data points on your chart")
+        elif granularity == "1 Day":
+            st.caption(f"📈 This will show ~{days_span:,} data points on your chart")
+        elif "Week" in granularity:
+            weeks = int(granularity.split()[0]) if granularity != "1 Week" else 1
+            total_points = days_span // (weeks * 7)
+            st.caption(f"📈 This will show ~{total_points:,} data points on your chart")
 
     # === 3. KPI SETTINGS ===
     st.markdown("## ⚙️ KPI Settings")
