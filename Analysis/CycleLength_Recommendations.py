@@ -3,7 +3,7 @@ import pandas as pd
 from chart_components.title_section import find_column
 from helpers.reporting import get_hourly_cycle_length, get_existing_cycle_length, filter_by_period
 
-
+## == CREATE FUNCTION FOR TOGGLE ==
 def render_volume_analysis(df, time_period, direction):
     """Render the complete volume analysis section"""
     show_cycle_length = st.toggle("🚦 Get Cycle Length Recommendations", value=False)
@@ -13,7 +13,7 @@ def render_volume_analysis(df, time_period, direction):
     else:
         render_volume_summary(df)
 
-
+## == CREATE THE TABLE ==
 def render_cycle_length_analysis(df, time_period, direction):
     """Render cycle length analysis section"""
     st.markdown("### 🚦 Cycle Length Recommendations - Hourly Analysis")

@@ -1,9 +1,12 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import io
 import plotly.graph_objects as go
 from datetime import datetime, timedelta, date
 import numpy as np
+import requests
+
 
 
 
@@ -20,7 +23,7 @@ st.set_page_config(
     layout="wide"
 )
 
-
+@st.cache_data
 def find_time_column(df):
     """Find time column with better pattern matching"""
     time_patterns = [
@@ -600,6 +603,7 @@ elif data_source == "API Connection":
 
 
 # === UPDATED Filepath Mapping Logic ===
+@st.cache_data
 def get_washington_st_data_paths():
     """Return paths for Washington St Corridor full datasets"""
     base_url = "https://raw.githubusercontent.com/chrquija/Advantec-Dashboard-app/refs/heads/main/hwy111_to_ave52/"
@@ -645,7 +649,7 @@ def get_washington_st_data_paths():
         }
     }
 
-
+@st.cache_data
 def load_washington_st_data(variable, direction):
     """Load the appropriate full dataset"""
     data_paths = get_washington_st_data_paths()
@@ -710,8 +714,7 @@ def load_washington_st_data(variable, direction):
 
         return df, dataset_info
 
-    except Exception as e:
-        st.error(f"Error loading {variable} data: {e}")
+    except Exception:
         return None, None
 
 # === EXTENSIBLE DATA LOADING SYSTEM (helps the sidebar do its job) ===
@@ -719,163 +722,332 @@ def load_washington_st_data(variable, direction):
 class DataLoader:
     """Centralized data loading system supporting multiple sources"""
 
+# Pure cached function (outside class)
+@st.cache_data
+def load_github_data_cached(url):
+    """Cached GitHub data loading"""
+    try:
+        if url == "BOTH":
+            return None
+        return pd.read_csv(url)
+    except Exception:
+        return None
+
+# Class with clean static method
+class DataLoader:
     @staticmethod
     def load_github_data(url):
         """Load data from GitHub repository"""
+        return load_github_data_cached(url)
+
+@st.cache_data
+def process_uploaded_data(file_content, date_col, direction_col, variable_col, data_format="Long format",
+                          nb_col=None, sb_col=None):
+    """Process uploaded CSV data - NO UI elements"""
+    try:
+        # Create DataFrame from file content
+        df = pd.read_csv(io.StringIO(file_content))
+
+        # Check if dataframe is empty
+        if df.empty:
+            return None, "empty_data"
+
+        # Check if required columns exist
+        if data_format == "Wide format (NB/SB columns)":
+            if nb_col is None or sb_col is None:
+                return None, "missing_nb_sb_cols"
+
+            missing_cols = []
+            for col in [date_col, nb_col, sb_col]:
+                if col not in df.columns:
+                    missing_cols.append(col)
+
+            if missing_cols:
+                return None, f"missing_columns:{','.join(missing_cols)}"
+
+            # Keep only the required columns
+            df = df[[date_col, nb_col, sb_col]]
+            df = df.rename(columns={date_col: 'Date'})
+
+            # Convert to long format
+            df_melted = df.melt(
+                id_vars=['Date'],
+                value_vars=[nb_col, sb_col],
+                var_name='Direction',
+                value_name='Value'
+            )
+
+            # Map column names to direction labels
+            direction_map = {nb_col: 'NB', sb_col: 'SB'}
+            df_melted['Direction'] = df_melted['Direction'].map(direction_map)
+            df = df_melted
+
+        else:
+            # Handle long format data
+            missing_cols = []
+            for col in [date_col, direction_col, variable_col]:
+                if col not in df.columns:
+                    missing_cols.append(col)
+
+            if missing_cols:
+                return None, f"missing_columns:{','.join(missing_cols)}"
+
+            df = df.rename(columns={
+                date_col: 'Date',
+                direction_col: 'Direction',
+                variable_col: 'Value'
+            })
+
+        # Convert date column to datetime
         try:
-            if url == "BOTH":
-                return None
-            return pd.read_csv(url)
-        except Exception as e:
-            st.error(f"Error loading GitHub data: {e}")
-            return None
+            df['Date'] = pd.to_datetime(df['Date'])
+        except Exception:
+            return None, "date_conversion_error"
 
-    @staticmethod
-    def load_uploaded_data(file_obj, date_col, direction_col, variable_col, data_format="Long format", nb_col=None,
-                           sb_col=None):
-        """Load and process uploaded CSV data"""
-        try:
-            # Reset file pointer to beginning
-            file_obj.seek(0)
+        return df, "success"
 
-            # Try to read the CSV with error handling
-            try:
-                df = pd.read_csv(file_obj)
-            except pd.errors.EmptyDataError:
-                st.error("The uploaded file is empty or contains no data")
-                return None
-            except pd.errors.ParserError as e:
-                st.error(f"Error parsing CSV file: {e}")
-                return None
+    except pd.errors.EmptyDataError:
+        return None, "empty_file"
+    except pd.errors.ParserError:
+        return None, "parser_error"
+    except Exception:
+        return None, "general_error"
 
-            # Check if dataframe is empty
-            if df.empty:
-                st.error("The uploaded file contains no data rows")
-                return None
+def load_uploaded_data_with_ui(file_obj, date_col, direction_col, variable_col, data_format="Long format",
+                               nb_col=None, sb_col=None):
+    """Load uploaded data with UI feedback"""
 
-            # Display first few rows for debugging
-            st.write("**First few rows of uploaded data:**")
-            st.dataframe(df.head())
+    # Reset file pointer and read content
+    file_obj.seek(0)
+    file_content = file_obj.read().decode('utf-8')
 
-            # Check if required columns exist
-            if data_format == "Wide format (NB/SB columns)":
-                if nb_col is None or sb_col is None:
-                    st.error("NB and SB columns must be specified for wide format")
-                    return None
+    # Process data (this part is cached!)
+    df, status = process_uploaded_data(file_content, date_col, direction_col, variable_col, data_format, nb_col,
+                                       sb_col)
 
-                missing_cols = []
-                for col in [date_col, nb_col, sb_col]:
-                    if col not in df.columns:
-                        missing_cols.append(col)
+    # Handle UI based on status
+    if status == "success":
+        # ✅ SUCCESS - Show preview
+        st.success("✅ File uploaded successfully!")
+        st.write("**First few rows of uploaded data:**")
+        st.dataframe(df.head())
+        return df
 
-                if missing_cols:
-                    st.error(f"Missing columns in uploaded file: {missing_cols}")
-                    st.write(f"Available columns: {list(df.columns)}")
-                    return None
+    elif status == "empty_data":
+        st.error("The uploaded file contains no data rows")
+        return None
 
-                # Keep only the required columns
-                df = df[[date_col, nb_col, sb_col]]
+    elif status == "missing_nb_sb_cols":
+        st.error("NB and SB columns must be specified for wide format")
+        return None
 
-                # Rename date column
-                df = df.rename(columns={date_col: 'Date'})
+    elif status.startswith("missing_columns:"):
+        missing_cols = status.split(":")[1].split(",")
+        st.error(f"Missing columns in uploaded file: {missing_cols}")
+        # Show available columns by re-reading file
+        file_obj.seek(0)
+        temp_df = pd.read_csv(file_obj)
+        st.write(f"Available columns: {list(temp_df.columns)}")
+        return None
 
-                # Convert to long format
-                df_melted = df.melt(
-                    id_vars=['Date'],
-                    value_vars=[nb_col, sb_col],
-                    var_name='Direction',
-                    value_name='Value'
-                )
+    elif status == "date_conversion_error":
+        st.error("Error converting date column to datetime format")
+        st.info("💡 Make sure your date column contains valid dates (e.g., 2023-01-01, 01/01/2023)")
+        return None
 
-                # Map column names to direction labels
-                direction_map = {nb_col: 'NB', sb_col: 'SB'}
-                df_melted['Direction'] = df_melted['Direction'].map(direction_map)
+    elif status == "empty_file":
+        st.error("The uploaded file is empty or contains no data")
+        return None
 
-                df = df_melted
+    elif status == "parser_error":
+        st.error("Error parsing CSV file - please check file format")
+        st.info("💡 Make sure your file is a valid CSV with proper formatting")
+        return None
 
-            else:
-                # Handle long format data
-                missing_cols = []
-                for col in [date_col, direction_col, variable_col]:
-                    if col not in df.columns:
-                        missing_cols.append(col)
+    else:  # general_error
+        st.error("Error processing uploaded file - please try again")
+        st.info("💡 Try refreshing the page or check your file format")
+        return None
 
-                if missing_cols:
-                    st.error(f"Missing columns in uploaded file: {missing_cols}")
-                    st.write(f"Available columns: {list(df.columns)}")
-                    return None
+    # == END OF PROCESS UPLOAD DATA LOGIC AND UI CODE ==
 
-                df = df.rename(columns={
-                    date_col: 'Date',
-                    direction_col: 'Direction',
-                    variable_col: 'Value'
-                })
-
-            # Convert date column to datetime
-            try:
-                df['Date'] = pd.to_datetime(df['Date'])
-            except Exception as e:
-                st.error(f"Error converting date column: {e}")
-                return None
-
-            return df
-
-        except Exception as e:
-            st.error(f"Error processing uploaded file: {str(e)}")
-            return None
-
-    @staticmethod
-    def load_api_data(api_config):
-        """Load data from API (Future implementation)"""
-        # This will be implemented when API feature is ready
+    @st.cache_data
+    def load_api_data_cached(api_config):
+        """Cached data loading"""
         try:
             if api_config.get('type') == 'REST API':
-                return DataLoader._load_rest_api(api_config)
+                data = DataLoader._load_rest_api(api_config)
+                return data, "success"
             elif api_config.get('type') == 'Database API':
-                return DataLoader._load_database_api(api_config)
+                data = DataLoader._load_database_api(api_config)
+                return data, "success"
             else:
-                st.error("Unsupported API type")
-                return None
+                return None, "unsupported_api_type"
         except Exception as e:
-            st.error(f"Error loading API data: {e}")
+            return None, f"error: {str(e)}"
+
+    def load_api_data_with_ui(api_config):
+        """UI function with error handling"""
+        data, status = load_api_data_cached(api_config)
+
+        if status == "success":
+            st.success("✅ API data loaded successfully!")
+            return data
+        elif status == "unsupported_api_type":
+            st.error("❌ Unsupported API type")
+            return None
+        else:
+            st.error(f"❌ Error loading API data: {status.replace('error: ', '')}")
             return None
 
-    @staticmethod
-    def _load_rest_api(config):
-        """Load data from REST API"""
-        # Future implementation
-        import requests
+    class DataLoader:
+        @staticmethod
+        def load_api_data(api_config):
+            """Clean static method"""
+            return load_api_data_with_ui(api_config)
 
-        headers = {}
-        if config.get('auth_method') == 'API Key':
-            headers[config.get('key_header')] = config.get('api_key')
-        elif config.get('auth_method') == 'Bearer Token':
-            headers['Authorization'] = f"Bearer {config.get('bearer_token')}"
+    # Pure cached function - NO UI messages
+    @st.cache_data
+    def _load_rest_api_cached(config):
+        """Load data from REST API - cached version"""
+        try:
+            headers = {}
+            if config.get('auth_method') == 'API Key':
+                headers[config.get('key_header')] = config.get('api_key')
+            elif config.get('auth_method') == 'Bearer Token':
+                headers['Authorization'] = f"Bearer {config.get('bearer_token')}"
 
-        response = requests.get(config.get('url'), headers=headers)
-        # Process response and return DataFrame
-        return pd.DataFrame(response.json().get('data', []))
+            response = requests.get(config.get('url'), headers=headers, timeout=30)
+            response.raise_for_status()
 
-    @staticmethod
-    def _load_database_api(config):
-        """Load data from database"""
-        # Future implementation with SQLAlchemy
-        # import sqlalchemy
-        # engine = sqlalchemy.create_engine(config.get('connection_string'))
-        # return pd.read_sql(config.get('query'), engine)
-        pass
+            data = response.json()
+            if 'data' in data:
+                return pd.DataFrame(data['data']), "success"
+            else:
+                return pd.DataFrame(data if isinstance(data, list) else [data]), "success"
+
+        except requests.exceptions.RequestException as e:
+            return None, f"request_error: {str(e)}"
+        except ValueError as e:
+            return None, f"json_error: {str(e)}"
+        except Exception as e:
+            return None, f"unknown_error: {str(e)}"
+
+    # UI function handles messages
+    def load_rest_api_with_ui(config):
+        """Load REST API data with UI feedback"""
+        data, status = _load_rest_api_cached(config)
+
+        if status == "success":
+            st.success("✅ API data loaded successfully!")
+            return data
+        elif status.startswith("request_error"):
+            st.error(f"❌ API Request failed: {status.replace('request_error: ', '')}")
+            return None
+        elif status.startswith("json_error"):
+            st.error(f"❌ Invalid JSON response: {status.replace('json_error: ', '')}")
+            return None
+        else:
+            st.error(f"❌ Unexpected error: {status.replace('unknown_error: ', '')}")
+            return None
+
+    # Pure cached function (outside class)
+    @st.cache_data
+    def _load_database_api_cached(config):
+        """Load data from database - cached version"""
+        try:
+            # Future implementation with SQLAlchemy
+            import sqlalchemy
+            engine = sqlalchemy.create_engine(config.get('connection_string'))
+
+            # Execute query and return DataFrame
+            df = pd.read_sql(config.get('query'), engine)
+            engine.dispose()  # Clean up connection
+
+            return df, "success"
+
+        except sqlalchemy.exc.SQLAlchemyError as e:
+            return None, f"database_error: {str(e)}"
+        except Exception as e:
+            return None, f"unknown_error: {str(e)}"
+
+    # Class method (clean interface)
+    class DataLoader:
+        @staticmethod
+        def _load_database_api(config):
+            """Load data from database"""
+            return _load_database_api_cached(config)
 
 
 # === MAIN DATA LOADING WITH ROUTER ===
+# Pure cached functions for each data source
+@st.cache_data
+def _load_github_data_cached(url):
+    """Cached GitHub data loading"""
+    try:
+        if url == "BOTH":
+            return None, "both_selected"
+        df = pd.read_csv(url)
+        return df, "success"
+    except Exception as e:
+        return None, f"error: {str(e)}"
+
+
+@st.cache_data
+def _load_api_data_cached(api_config):
+    """Cached API data loading"""
+    try:
+        if api_config.get('type') == 'REST API':
+            # REST API logic inline
+            headers = {}
+            if api_config.get('auth_method') == 'API Key':
+                headers[api_config.get('key_header')] = api_config.get('api_key')
+            elif api_config.get('auth_method') == 'Bearer Token':
+                headers['Authorization'] = f"Bearer {api_config.get('bearer_token')}"
+
+            response = requests.get(api_config.get('url'), headers=headers, timeout=30)
+            response.raise_for_status()
+
+            data = response.json()
+            if 'data' in data:
+                return pd.DataFrame(data['data']), "success"
+            else:
+                return pd.DataFrame(data if isinstance(data, list) else [data]), "success"
+
+        elif api_config.get('type') == 'Database API':
+            # Database logic inline
+            import sqlalchemy
+            engine = sqlalchemy.create_engine(api_config.get('connection_string'))
+            df = pd.read_sql(api_config.get('query'), engine)
+            engine.dispose()
+            return df, "success"
+        else:
+            return None, "unsupported_api_type"
+    except Exception as e:
+        return None, f"error: {str(e)}"
+
+
+
+# Non-cached function for uploaded files (can't cache file objects)
+def _load_uploaded_data(file_obj, date_col, direction_col, variable_col,
+                        data_format, nb_col, sb_col):
+    """Load uploaded data (not cached due to file objects)"""
+    try:
+        # Your uploaded data logic here
+        return df, "success"
+    except Exception as e:
+        return None, f"error: {str(e)}"
+
+
+# Router function with UI handling
 def load_data_by_source(data_source, **kwargs):
-    """Load data based on selected source"""
-    loader = DataLoader()
+    """Load data based on selected source with UI feedback"""
 
     if data_source == "GitHub Repository":
-        return loader.load_github_data(kwargs.get('url'))
+        data, status = _load_github_data_cached(kwargs.get('url'))
 
     elif data_source == "Uploaded CSV":
-        return loader.load_uploaded_data(
+        data, status = _load_uploaded_data(
             kwargs.get('file_obj'),
             kwargs.get('date_col'),
             kwargs.get('direction_col'),
@@ -886,10 +1058,24 @@ def load_data_by_source(data_source, **kwargs):
         )
 
     elif data_source == "API Connection":
-        return loader.load_api_data(kwargs.get('api_config'))
+        data, status = _load_api_data_cached(kwargs.get('api_config'))
 
     else:
-        st.error(f"Unknown data source: {data_source}")
+        st.error(f"❌ Unknown data source: {data_source}")
+        return None
+
+    # Handle status and show UI messages
+    if status == "success":
+        st.success("✅ Data loaded successfully!")
+        return data
+    elif status == "both_selected":
+        st.info("ℹ️ Please select a specific repository")
+        return None
+    elif status.startswith("error"):
+        st.error(f"❌ Loading failed: {status.replace('error: ', '')}")
+        return None
+    else:
+        st.error(f"❌ {status}")
         return None
 
 
@@ -1312,6 +1498,7 @@ except Exception as e:
 
 
 # --- Robust find_column function ---
+@st.cache_data
 def find_column(df, search_terms):
     # Try exact matches (case-insensitive)
     for term in search_terms:
@@ -1346,6 +1533,7 @@ def find_column(df, patterns):
     return None
 
 # Helper function to get cycle length recommendation
+@st.cache_data
 def get_cycle_length_recommendation(hourly_volumes):
     """
     Return recommended cycle length based on the highest volume hour in the period.

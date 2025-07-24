@@ -6,6 +6,8 @@ from datetime import timedelta, time  # Add 'time' import
 import numpy as np
 
 
+
+
 def is_single_day_data(df, x_col):
     """Check if data spans only a single day"""
     if df.empty:

@@ -1,10 +1,12 @@
 import io
 import urllib.parse
+import streamlit as st
 from datetime import datetime
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.utils import ImageReader
 
+@st.cache_data
 def get_hourly_cycle_length(volume):
     """Get CVAG recommended cycle length based on volume"""
     if volume >= 2400:
@@ -18,6 +20,7 @@ def get_hourly_cycle_length(volume):
     else:
         return "Free mode"
 
+@st.cache_data
 def get_existing_cycle_length(volume):
     """Get current system cycle length based on volume"""
     if volume >= 300:
@@ -25,6 +28,7 @@ def get_existing_cycle_length(volume):
     else:
         return "Free mode"
 
+@st.cache_data
 def filter_by_period(df, time_col, period):
     """Filter dataframe by time period"""
     if period == "AM":
