@@ -1329,8 +1329,44 @@ def load_data_by_source(data_source, **kwargs):
 
 # === USAGE IN MAIN APP ===
 if data_source == "GitHub Repository":
-    # NEW: Load data using the new function
-    df, dataset_info = load_washington_st_data(variable, direction)
+    # Check if user needs to select a location first
+    if variable in ["Speed", "Travel Time", "Delay"]:
+        # These variables require segment selection
+        data_type = "segment"
+        available_locations = {k: v for k, v in get_washington_st_data_paths().items() if v["data_type"] == "segment"}
+    elif variable == "Vehicle Volume":
+        # Volume requires intersection selection
+        data_type = "intersection"
+        available_locations = {k: v for k, v in get_washington_st_data_paths().items() if
+                               v["data_type"] == "intersection"}
+    else:
+        st.error("Invalid variable selection")
+        st.stop()
+
+    # Add location selector
+    st.subheader(f"📍 Select {data_type.title()}")
+
+    # Create user-friendly options
+    location_options = {}
+    for key, info in available_locations.items():
+        if data_type == "segment":
+            display_name = info["segment_name"]
+        else:
+            display_name = info["intersection_name"]
+        location_options[display_name] = key
+
+    # Location selectbox
+    selected_location_display = st.selectbox(
+        f"Choose {data_type}:",
+        options=list(location_options.keys()),
+        key="location_selector"
+    )
+
+    # Get the actual key
+    selected_location_key = location_options[selected_location_display]
+
+    # Load data with location key
+    df, dataset_info = load_washington_st_data(variable, direction, selected_location_key)
 
     if df is None:
         st.error("No data available for the selected combination.")
