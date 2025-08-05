@@ -605,39 +605,184 @@ elif data_source == "API Connection":
 # === UPDATED Filepath Mapping Logic ===
 @st.cache_data
 def get_washington_st_data_paths():
-    """Return paths for Washington St Corridor full datasets"""
+    """Return paths for Washington St Corridor segment and intersection datasets"""
     base_url = "https://raw.githubusercontent.com/chrquija/Advantec-Dashboard-app/refs/heads/main/hwy111_to_ave52/"
 
     return {
-        # === SPEED DATA (9/1/2024 - 6/24/2025) ===
-        "speed_full_dataset": {
-            "url": base_url + "SPEED/Iteris/september_to_june/NSB_WashingtonCorridor_Ave52_to_HWY111_1hr_SPEED_090124to062325.csv",
+        # === SEGMENT DATA (Speed, Travel Time, Delay) - 9 segments ===
+        # Data Source: Iteris ClearGuide
+        # Each segment contains: NB/SB average_delay, average_traveltime, average_speed
+
+        "segment_ave52_to_calle_tampico": {
+            "url": base_url + "DELAY_TRAVELTIME_SPEED_byintersection/1_2_NSB_Ave52_CalleTampico_WashSt_1hr_septojuly.csv",
+            "segment_name": "Ave 52 to Calle Tampico",
+            "segment_description": "Avenue 52 → Calle Tampico (and reverse)",
             "columns": {
                 "datetime": "local_datetime",
-                "nb_speed": "NB_avg_speed",
-                "sb_speed": "SB_avg_speed"
+                "nb_delay": "NB_average_delay",
+                "sb_delay": "SB_average_delay",
+                "nb_travel_time": "NB_average_traveltime",
+                "sb_travel_time": "SB_average_traveltime",
+                "nb_speed": "NB_average_speed",
+                "sb_speed": "SB_average_speed"
             },
-            "date_range": "2024-09-01 to 2025-06-24",
+            "date_range": "2024-09-01 to 2025-07-31",
             "source": "Iteris ClearGuide",
-            "units": "mph"
+            "data_type": "segment"
         },
 
-        # === TRAVEL TIME DATA (9/1/2024 - 6/24/2025) ===
-        "travel_time_full_dataset": {
-            "url": base_url + "TRAVEL_TIME/Iteris/september_to_june/TrvltimeNSB_WashingtonCorr_Ave52_to_HWY111_1hr_901to0623.csv",
+        "segment_calle_tampico_to_village": {
+            "url": base_url + "DELAY_TRAVELTIME_SPEED_byintersection/2_3_NSB_CalleTampico_VillageShoppingCtr_WashSt_1hr_septojuly.csv",
+            "segment_name": "Calle Tampico to Village Shopping Center",
+            "segment_description": "Calle Tampico → Village Shopping Center (and reverse)",
             "columns": {
                 "datetime": "local_datetime",
-                "nb_travel_time": "NB_avg_travel_time",
-                "sb_travel_time": "SB_avg_travel_time"
+                "nb_delay": "NB_average_delay",
+                "sb_delay": "SB_average_delay",
+                "nb_travel_time": "NB_average_traveltime",
+                "sb_travel_time": "SB_average_traveltime",
+                "nb_speed": "NB_average_speed",
+                "sb_speed": "SB_average_speed"
             },
-            "date_range": "2024-09-01 to 2025-06-24",
+            "date_range": "2024-09-01 to 2025-07-31",
             "source": "Iteris ClearGuide",
-            "units": "minutes"
+            "data_type": "segment"
         },
 
-        # === VOLUME DATA (10/30/2024 - 6/15/2025) ===
-        "volume_full_dataset": {
-            "url": base_url + "VOLUME/KMOB/September2024_to_June2025/ALL_MELTED_Washington_Ave52TOAve47__1hr_SUM_NS_VOLUME_OctoberTOJune.csv",
+        "segment_village_to_ave50": {
+            "url": base_url + "DELAY_TRAVELTIME_SPEED_byintersection/3_4_NSB_VillageShoppingCtr_Avenue50_WashSt_1hr_septojuly.csv",
+            "segment_name": "Village Shopping Center to Avenue 50",
+            "segment_description": "Village Shopping Center → Avenue 50 (and reverse)",
+            "columns": {
+                "datetime": "local_datetime",
+                "nb_delay": "NB_average_delay",
+                "sb_delay": "SB_average_delay",
+                "nb_travel_time": "NB_average_traveltime",
+                "sb_travel_time": "SB_average_traveltime",
+                "nb_speed": "NB_average_speed",
+                "sb_speed": "SB_average_speed"
+            },
+            "date_range": "2024-09-01 to 2025-07-31",
+            "source": "Iteris ClearGuide",
+            "data_type": "segment"
+        },
+
+        "segment_ave50_to_sagebrush": {
+            "url": base_url + "DELAY_TRAVELTIME_SPEED_byintersection/4_5_NSB_Ave50_SagebrushAve_WashSt_1hr_septojuly.csv",
+            "segment_name": "Avenue 50 to Sagebrush Avenue",
+            "segment_description": "Avenue 50 → Sagebrush Avenue (and reverse)",
+            "columns": {
+                "datetime": "local_datetime",
+                "nb_delay": "NB_average_delay",
+                "sb_delay": "SB_average_delay",
+                "nb_travel_time": "NB_average_traveltime",
+                "sb_travel_time": "SB_average_traveltime",
+                "nb_speed": "NB_average_speed",
+                "sb_speed": "SB_average_speed"
+            },
+            "date_range": "2024-09-01 to 2025-07-31",
+            "source": "Iteris ClearGuide",
+            "data_type": "segment"
+        },
+
+        "segment_sagebrush_to_eisenhower": {
+            "url": base_url + "DELAY_TRAVELTIME_SPEED_byintersection/5_6_NSB_SagebrushAve_EisenhowerDr_WashSt_1hr_septojuly.csv",
+            "segment_name": "Sagebrush Avenue to Eisenhower Drive",
+            "segment_description": "Sagebrush Avenue → Eisenhower Drive (and reverse)",
+            "columns": {
+                "datetime": "local_datetime",
+                "nb_delay": "NB_average_delay",
+                "sb_delay": "SB_average_delay",
+                "nb_travel_time": "NB_average_traveltime",
+                "sb_travel_time": "SB_average_traveltime",
+                "nb_speed": "NB_average_speed",
+                "sb_speed": "SB_average_speed"
+            },
+            "date_range": "2024-09-01 to 2025-07-31",
+            "source": "Iteris ClearGuide",
+            "data_type": "segment"
+        },
+
+        "segment_eisenhower_to_ave48": {
+            "url": base_url + "DELAY_TRAVELTIME_SPEED_byintersection/6_7_NSB_EisenhowerDr_Avenue48_WashSt_1hr_septojuly.csv",
+            "segment_name": "Eisenhower Drive to Avenue 48",
+            "segment_description": "Eisenhower Drive → Avenue 48 (and reverse)",
+            "columns": {
+                "datetime": "local_datetime",
+                "nb_delay": "NB_average_delay",
+                "sb_delay": "SB_average_delay",
+                "nb_travel_time": "NB_average_traveltime",
+                "sb_travel_time": "SB_average_traveltime",
+                "nb_speed": "NB_average_speed",
+                "sb_speed": "SB_average_speed"
+            },
+            "date_range": "2024-09-01 to 2025-07-31",
+            "source": "Iteris ClearGuide",
+            "data_type": "segment"
+        },
+
+        "segment_ave48_to_ave47": {
+            "url": base_url + "DELAY_TRAVELTIME_SPEED_byintersection/7_8_NSB_Ave48_Ave47_WashSt_1hr_septojuly.csv",
+            "segment_name": "Avenue 48 to Avenue 47",
+            "segment_description": "Avenue 48 → Avenue 47 (and reverse)",
+            "columns": {
+                "datetime": "local_datetime",
+                "nb_delay": "NB_average_delay",
+                "sb_delay": "SB_average_delay",
+                "nb_travel_time": "NB_average_traveltime",
+                "sb_travel_time": "SB_average_traveltime",
+                "nb_speed": "NB_average_speed",
+                "sb_speed": "SB_average_speed"
+            },
+            "date_range": "2024-09-01 to 2025-07-31",
+            "source": "Iteris ClearGuide",
+            "data_type": "segment"
+        },
+
+        "segment_ave47_to_point_happy": {
+            "url": base_url + "DELAY_TRAVELTIME_SPEED_byintersection/8_9_NSB_Ave47_PointHappySimon_WashSt_1hr_septojuly.csv",
+            "segment_name": "Avenue 47 to Point Happy Simon",
+            "segment_description": "Avenue 47 → Point Happy Simon (and reverse)",
+            "columns": {
+                "datetime": "local_datetime",
+                "nb_delay": "NB_average_delay",
+                "sb_delay": "SB_average_delay",
+                "nb_travel_time": "NB_average_traveltime",
+                "sb_travel_time": "SB_average_traveltime",
+                "nb_speed": "NB_average_speed",
+                "sb_speed": "SB_average_speed"
+            },
+            "date_range": "2024-09-01 to 2025-07-31",
+            "source": "Iteris ClearGuide",
+            "data_type": "segment"
+        },
+
+        "segment_point_happy_to_hwy111": {
+            "url": base_url + "DELAY_TRAVELTIME_SPEED_byintersection/9_10_NSB_PointHappySimon_Hwy111_WashSt_1hr_septojuly.csv",
+            "segment_name": "Point Happy Simon to Highway 111",
+            "segment_description": "Point Happy Simon → Highway 111 (and reverse)",
+            "columns": {
+                "datetime": "local_datetime",
+                "nb_delay": "NB_average_delay",
+                "sb_delay": "SB_average_delay",
+                "nb_travel_time": "NB_average_traveltime",
+                "sb_travel_time": "SB_average_traveltime",
+                "nb_speed": "NB_average_speed",
+                "sb_speed": "SB_average_speed"
+            },
+            "date_range": "2024-09-01 to 2025-07-31",
+            "source": "Iteris ClearGuide",
+            "data_type": "segment"
+        },
+
+        # === INTERSECTION DATA (Volume Only) - 8 intersections ===
+        # Data Source: Kinetic Mobility
+        # Each intersection contains: NB/SB total_volume
+
+        "intersection_washington_ave52": {
+            "url": base_url + "VOLUME/KMOB_MELTED/MELTED_Washingtonst_and_Ave52_1hr_NS_VOLUME_OctoberTOJune.csv",
+            "intersection_name": "Washington St & Avenue 52",
+            "intersection_description": "Washington Street & Avenue 52 Intersection",
             "columns": {
                 "datetime": "local_datetime",
                 "nb_volume": "NB_total_volume",
@@ -645,43 +790,141 @@ def get_washington_st_data_paths():
             },
             "date_range": "2024-10-30 to 2025-06-15",
             "source": "Kinetic Mobility",
-            "units": "vehicles"
+            "data_type": "intersection"
+        },
+
+        "intersection_washington_calle_tampico": {
+            "url": base_url + "VOLUME/KMOB_MELTED/MELTED_Washington_and_Calle_Tampico_1hr_NS_VOLUME_OctoberTOJune.csv",
+            "intersection_name": "Washington St & Calle Tampico",
+            "intersection_description": "Washington Street & Calle Tampico Intersection",
+            "columns": {
+                "datetime": "local_datetime",
+                "nb_volume": "NB_total_volume",
+                "sb_volume": "SB_total_volume"
+            },
+            "date_range": "2024-10-30 to 2025-06-15",
+            "source": "Kinetic Mobility",
+            "data_type": "intersection"
+        },
+
+        "intersection_washington_village": {
+            "url": base_url + "VOLUME/KMOB_MELTED/MELTED_Washington_and_Village_Shop_Ctr_1hr_NS_VOLUME_OctoberTOJune.csv",
+            "intersection_name": "Washington St & Village Shopping Center",
+            "intersection_description": "Washington Street & Village Shopping Center Intersection",
+            "columns": {
+                "datetime": "local_datetime",
+                "nb_volume": "NB_total_volume",
+                "sb_volume": "SB_total_volume"
+            },
+            "date_range": "2024-10-30 to 2025-06-15",
+            "source": "Kinetic Mobility",
+            "data_type": "intersection"
+        },
+
+        "intersection_washington_ave50": {
+            "url": base_url + "VOLUME/KMOB_MELTED/MELTED_Washington_Ave50_1hr_NS_VOLUME_OctoberTOJune.csv",
+            "intersection_name": "Washington St & Avenue 50",
+            "intersection_description": "Washington Street & Avenue 50 Intersection",
+            "columns": {
+                "datetime": "local_datetime",
+                "nb_volume": "NB_total_volume",
+                "sb_volume": "SB_total_volume"
+            },
+            "date_range": "2024-10-30 to 2025-06-15",
+            "source": "Kinetic Mobility",
+            "data_type": "intersection"
+        },
+
+        "intersection_washington_sagebrush": {
+            "url": base_url + "VOLUME/KMOB_MELTED/MELTED_Washington_and_Sagebrush_Ave_1hr_NS_VOLUME_OctoberTOJune.csv",
+            "intersection_name": "Washington St & Sagebrush Avenue",
+            "intersection_description": "Washington Street & Sagebrush Avenue Intersection",
+            "columns": {
+                "datetime": "local_datetime",
+                "nb_volume": "NB_total_volume",
+                "sb_volume": "SB_total_volume"
+            },
+            "date_range": "2024-10-30 to 2025-06-15",
+            "source": "Kinetic Mobility",
+            "data_type": "intersection"
+        },
+
+        "intersection_washington_eisenhower": {
+            "url": base_url + "VOLUME/KMOB_MELTED/MELTED_Washington_and_Eisenhower_1hr_NS_VOLUME_OctoberTOJune.csv",
+            "intersection_name": "Washington St & Eisenhower Drive",
+            "intersection_description": "Washington Street & Eisenhower Drive Intersection",
+            "columns": {
+                "datetime": "local_datetime",
+                "nb_volume": "NB_total_volume",
+                "sb_volume": "SB_total_volume"
+            },
+            "date_range": "2024-10-30 to 2025-06-15",
+            "source": "Kinetic Mobility",
+            "data_type": "intersection"
+        },
+
+        "intersection_washington_ave48": {
+            "url": base_url + "VOLUME/KMOB_MELTED/MELTED_Washington_and_Ave48_1hr_NS_VOLUME_OctToDec_MayToJune.csv",
+            "intersection_name": "Washington St & Avenue 48",
+            "intersection_description": "Washington Street & Avenue 48 Intersection",
+            "columns": {
+                "datetime": "local_datetime",
+                "nb_volume": "NB_total_volume",
+                "sb_volume": "SB_total_volume"
+            },
+            "date_range": "2024-10-30 to 2025-06-15",
+            "source": "Kinetic Mobility",
+            "data_type": "intersection"
+        },
+
+        "intersection_washington_ave47": {
+            "url": base_url + "VOLUME/KMOB_MELTED/MELTED_Washington_and_Ave47_1hr_NS_VOLUME_OctoberTOJune.csv",
+            "intersection_name": "Washington St & Avenue 47",
+            "intersection_description": "Washington Street & Avenue 47 Intersection",
+            "columns": {
+                "datetime": "local_datetime",
+                "nb_volume": "NB_total_volume",
+                "sb_volume": "SB_total_volume"
+            },
+            "date_range": "2024-10-30 to 2025-06-15",
+            "source": "Kinetic Mobility",
+            "data_type": "intersection"
         }
     }
 
+
 @st.cache_data
-def load_washington_st_data(variable, direction):
-    """Load the appropriate full dataset"""
+def load_washington_st_data(variable, direction, location_key=None):
+    """Load the appropriate dataset based on variable, direction, and location"""
     data_paths = get_washington_st_data_paths()
 
-    # Map variable to dataset key
-    dataset_map = {
-        "Speed": "speed_full_dataset",
-        "Travel Time": "travel_time_full_dataset",
-        "Vehicle Volume": "volume_full_dataset"
-    }
+    # If no location_key provided, return None (user needs to select location)
+    if not location_key:
+        return None, None
 
-    dataset_key = dataset_map.get(variable)
-    if not dataset_key:
-        return None
-
-    dataset_info = data_paths[dataset_key]
+    # Get the dataset info
+    dataset_info = data_paths.get(location_key)
+    if not dataset_info:
+        return None, None
 
     try:
-        # Load the full dataset
+        # Load the dataset
         df = pd.read_csv(dataset_info["url"])
 
         # Convert datetime column
         datetime_col = dataset_info["columns"]["datetime"]
         df[datetime_col] = pd.to_datetime(df[datetime_col])
 
-        # Filter by direction if needed
+        # Handle different variable types and directions
         if direction == "NB":
             if variable == "Speed":
                 df = df[[datetime_col, dataset_info["columns"]["nb_speed"]]].copy()
                 df.columns = ['datetime', 'value']
             elif variable == "Travel Time":
                 df = df[[datetime_col, dataset_info["columns"]["nb_travel_time"]]].copy()
+                df.columns = ['datetime', 'value']
+            elif variable == "Delay":
+                df = df[[datetime_col, dataset_info["columns"]["nb_delay"]]].copy()
                 df.columns = ['datetime', 'value']
             elif variable == "Vehicle Volume":
                 df = df[[datetime_col, dataset_info["columns"]["nb_volume"]]].copy()
@@ -694,18 +937,23 @@ def load_washington_st_data(variable, direction):
             elif variable == "Travel Time":
                 df = df[[datetime_col, dataset_info["columns"]["sb_travel_time"]]].copy()
                 df.columns = ['datetime', 'value']
+            elif variable == "Delay":
+                df = df[[datetime_col, dataset_info["columns"]["sb_delay"]]].copy()
+                df.columns = ['datetime', 'value']
             elif variable == "Vehicle Volume":
                 df = df[[datetime_col, dataset_info["columns"]["sb_volume"]]].copy()
                 df.columns = ['datetime', 'value']
 
         elif direction == "Both":
-            # Keep both directions
             if variable == "Speed":
                 df = df[[datetime_col, dataset_info["columns"]["nb_speed"], dataset_info["columns"]["sb_speed"]]].copy()
                 df.columns = ['datetime', 'NB_value', 'SB_value']
             elif variable == "Travel Time":
                 df = df[[datetime_col, dataset_info["columns"]["nb_travel_time"],
                          dataset_info["columns"]["sb_travel_time"]]].copy()
+                df.columns = ['datetime', 'NB_value', 'SB_value']
+            elif variable == "Delay":
+                df = df[[datetime_col, dataset_info["columns"]["nb_delay"], dataset_info["columns"]["sb_delay"]]].copy()
                 df.columns = ['datetime', 'NB_value', 'SB_value']
             elif variable == "Vehicle Volume":
                 df = df[
