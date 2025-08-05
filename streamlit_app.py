@@ -947,18 +947,18 @@ def load_washington_st_data(variable, direction, location_key=None):
         elif direction == "Both":
             if variable == "Speed":
                 df = df[[datetime_col, dataset_info["columns"]["nb_speed"], dataset_info["columns"]["sb_speed"]]].copy()
-                df.columns = ['datetime', 'NB_value', 'SB_value']
+                df.columns = ['datetime', 'Northbound', 'Southbound']  # Fixed column names!
             elif variable == "Travel Time":
                 df = df[[datetime_col, dataset_info["columns"]["nb_travel_time"],
                          dataset_info["columns"]["sb_travel_time"]]].copy()
-                df.columns = ['datetime', 'NB_value', 'SB_value']
+                df.columns = ['datetime', 'Northbound', 'Southbound']  # Fixed column names!
             elif variable == "Delay":
                 df = df[[datetime_col, dataset_info["columns"]["nb_delay"], dataset_info["columns"]["sb_delay"]]].copy()
-                df.columns = ['datetime', 'NB_value', 'SB_value']
+                df.columns = ['datetime', 'Northbound', 'Southbound']  # Fixed column names!
             elif variable == "Vehicle Volume":
                 df = df[
                     [datetime_col, dataset_info["columns"]["nb_volume"], dataset_info["columns"]["sb_volume"]]].copy()
-                df.columns = ['datetime', 'NB_value', 'SB_value']
+                df.columns = ['datetime', 'Northbound', 'Southbound']  # Fixed column names!
 
         return df, dataset_info
 
