@@ -1,4 +1,4 @@
-local_datetime,NBaverage_delay,SBaverage_delay,NBaverage_traveltime,SBaverage_traveltime,min_units,NB_average_speed,SBaverage_speed,avg_speed_units
+local_datetime,NB_average_delay,SB_average_delay,NB_average_traveltime,SB_average_traveltime,min_units,NB_average_speed,SB_average_speed,avg_speed_units
 9/1/2024 0:00,0.07,0.09,0.48,0.53,mins,35.8,29.8,mph
 9/1/2024 1:00,0,0.05,0.38,0.47,mins,43.3,33.2,mph
 9/1/2024 2:00,0.01,0.03,0.4,0.47,mins,40.9,33.7,mph
@@ -7967,3 +7967,4 @@ local_datetime,NBaverage_delay,SBaverage_delay,NBaverage_traveltime,SBaverage_tr
 7/29/2025 21:00,0.4,0.19,0.86,0.63,mins,20.2,25,mph
 7/29/2025 22:00,0.36,0.1,0.81,0.54,mins,20.4,29.5,mph
 7/29/2025 23:00,0.22,0.07,0.65,0.5,mins,26.3,32.9,mph
+
